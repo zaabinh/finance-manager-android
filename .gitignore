@@ -6,3 +6,7 @@ node_modules/
 build/
 target/
 .idea/
+
+.claude
+.mcp.json
+skills-lock.json
