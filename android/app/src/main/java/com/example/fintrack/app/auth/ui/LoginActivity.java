@@ -100,7 +100,12 @@ public class LoginActivity extends AppCompatActivity {
                                 resource.getData().getName()
                         );
                         Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                        Intent intent;
+                        if (sessionManager.isSetupCompleted()) {
+                            intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                        } else {
+                            intent = new Intent(LoginActivity.this, SetupWelcomeActivity.class);
+                        }
                         startActivity(intent);
                         finish();
                     } else {
