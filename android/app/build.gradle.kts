@@ -18,13 +18,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        }
         release {
+            buildConfigField("String", "BASE_URL", "\"https://api.example.com/\"")
             optimization {
                 enable = false
             }
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -43,6 +52,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
+    implementation(libs.security.crypto)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

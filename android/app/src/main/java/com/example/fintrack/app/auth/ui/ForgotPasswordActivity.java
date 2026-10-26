@@ -21,6 +21,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private Button btnSend;
     private TextView tvBackToLogin;
     private AuthViewModel authViewModel;
+    private String requestedEmail = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
+        setupObservers();
     }
 
     private void initViews() {
@@ -41,8 +43,37 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnSend.setOnClickListener(v -> handleSend());
-
         tvBackToLogin.setOnClickListener(v -> finish());
+    }
+
+    private void setupObservers() {
+        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    btnSend.setEnabled(true);
+                    btnSend.setText(R.string.btn_send);
+                    Toast.makeText(this, R.string.forgot_password_success, Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(ForgotPasswordActivity.this, ChangePasswordActivity.class);
+                    intent.putExtra("email", requestedEmail);
+                    startActivity(intent);
+                    finish();
+                    break;
+
+                case ERROR:
+                    btnSend.setEnabled(true);
+                    btnSend.setText(R.string.btn_send);
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.forgot_password_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    btnSend.setEnabled(false);
+                    btnSend.setText(getString(R.string.loading_send_code));
+                    break;
+            }
+        });
     }
 
     private void handleSend() {
@@ -60,32 +91,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
-        btnSend.setEnabled(false);
-        btnSend.setText(getString(R.string.loading_send_code));
-
-        authViewModel.forgotPassword(email).observe(this, resource -> {
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    btnSend.setEnabled(true);
-                    btnSend.setText(R.string.btn_send);
-                    Toast.makeText(this, "Yêu cầu đặt lại mật khẩu đã được gửi!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(ForgotPasswordActivity.this, ChangePasswordActivity.class);
-                    intent.putExtra("email", email);
-                    startActivity(intent);
-                    finish();
-                    break;
-
-                case ERROR:
-                    btnSend.setEnabled(true);
-                    btnSend.setText(R.string.btn_send);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : "Gửi yêu cầu thất bại";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    break;
-            }
-        });
+        requestedEmail = email;
+        authViewModel.forgotPassword(email);
     }
 }

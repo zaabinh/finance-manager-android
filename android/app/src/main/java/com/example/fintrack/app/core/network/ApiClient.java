@@ -3,6 +3,7 @@ package com.example.fintrack.app.core.network;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.example.fintrack.BuildConfig;
 import com.example.fintrack.app.core.session.SessionManager;
 
 import java.util.concurrent.TimeUnit;
@@ -16,14 +17,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
 
-    public static final String BASE_URL = "http://10.0.2.2:8080/";
-
     private static Retrofit retrofit = null;
 
     public static synchronized Retrofit getClient(Context context) {
         if (retrofit == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            if (BuildConfig.DEBUG) {
+                logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+            } else {
+                logging.setLevel(HttpLoggingInterceptor.Level.NONE);
+            }
+            logging.redactHeader("Authorization");
 
             Interceptor authInterceptor = chain -> {
                 Request original = chain.request();
@@ -49,7 +53,7 @@ public class ApiClient {
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
+                    .baseUrl(BuildConfig.BASE_URL)
                     .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
