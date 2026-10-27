@@ -1,4 +1,6 @@
 # PRODUCT_CONTEXT_VI.md
+
+> Thuật ngữ đã chốt (26/10/2026): **Wallet / Ví** trong domain, API, database và UI. Dùng `wallets`, `walletId`, `walletType`; tài khoản đăng nhập thuộc User/Auth. Contract: `docs/api/CONTRACT.md`. Tài liệu này không xác nhận đã đổi file Figma.
 # Đồng — Tầm nhìn sản phẩm và định hướng triển khai
 
 > Phiên bản 0.1 · 25/10/2026 · Tài liệu thống nhất định hướng, **không phải báo cáo hoàn thành code**.  
@@ -11,7 +13,7 @@
 
 **Đã chốt:** tên thương hiệu **Đồng**, khái niệm trải nghiệm **Khoản**, và hướng **code nghiệp vụ tài chính cốt lõi trước, bổ sung lớp trải nghiệm Khoản sau**.
 
-**Thông điệp đề xuất:** *Hiểu từng đồng. Chủ động mỗi ngày.*
+**Thông điệp đề xuất:** *Đồng tiền. Đồng bộ. Đồng hành.*
 
 Đồng không hướng đến việc bắt người dùng hiểu các thuật ngữ ví, ngân sách, quỹ, mục tiêu tiết kiệm mới có thể ghi thu/chi. Ứng dụng phải dễ dùng ngay từ ngày đầu, nhưng vẫn có chiều sâu khi người dùng cần.
 
@@ -30,7 +32,7 @@
 |---|---|
 | Học sinh/sinh viên | Tiền sinh hoạt, ăn uống, đi lại, học phí, nhiều khoản nhỏ |
 | Người trẻ đi làm | Lương, trọ, thuê bao, mua sắm, mục tiêu tích lũy |
-| Người đi làm bận rộn | Nhiều nguồn tiền, chi phí chung, nợ, khoản định kỳ |
+| Người đi làm bận rộn | Nhiều ví, chi phí chung, nợ, khoản định kỳ |
 | Người quản lý tài chính kỹ | Hạn mức, phân bổ, báo cáo sâu, nhưng không muốn giao diện rối |
 
 **Trọng tâm:** người trẻ và người ít thời gian, nhưng không giới hạn đối tượng sử dụng.
@@ -42,7 +44,7 @@
 1. **Ít thao tác nhất có thể**, nhưng luôn có cách sửa thông tin.
 2. **Đơn giản hóa giao diện, không đơn giản hóa sai nghiệp vụ.**
 3. **Ngôn ngữ tiếng Việt tự nhiên**, không ép học thuật ngữ tài chính.
-4. **Mặc định thông minh:** gợi ý danh mục/nguồn tiền gần đây, có thể đổi.
+4. **Mặc định thông minh:** gợi ý danh mục/ví gần đây, có thể đổi.
 5. **Home trả lời câu hỏi quan trọng**, không phải bảng điều khiển dày đặc.
 6. **Tính năng nâng cao mở khi cần**, không cản trở người dùng cơ bản.
 7. **Khuyến khích không phán xét:** không dùng cảnh báo gây áp lực.
@@ -64,7 +66,7 @@
 
 **Phân biệt bắt buộc:**
 - **Giao dịch:** một sự kiện thu/chi/chuyển tiền.
-- **Tài khoản/Ví:** nơi tiền thực sự được giữ.
+- **Ví:** nơi tiền thực sự được giữ.
 - **Danh mục:** cách phân loại giao dịch.
 - **Ngân sách:** hạn mức/kế hoạch.
 - **Khoản:** cách người dùng nhìn và quản lý điều mình quan tâm.
@@ -80,7 +82,7 @@ Các ý định tạo Khoản đề xuất: **Kiểm soát chi tiêu; Dành ti�
 | Đối tượng | Vai trò | Giai đoạn |
 |---|---|---|
 | User/Auth | Danh tính, phân quyền | Core |
-| Account/Wallet | Nguồn tiền: tiền mặt, ngân hàng, tiết kiệm | Core |
+| Wallet | Ví: tiền mặt, ngân hàng, tiết kiệm | Core |
 | Transaction | Thu, chi, chuyển tiền, điều chỉnh | Core |
 | Category | Phân loại | Core |
 | Budget/SpendingPlan | Hạn mức theo thời gian/phạm vi | Core cơ bản |
@@ -91,7 +93,7 @@ Các ý định tạo Khoản đề xuất: **Kiểm soát chi tiêu; Dành ti�
 
 ### Quy tắc tài chính không được sai
 
-- Chuyển tiền giữa các tài khoản của chính người dùng không tạo thu nhập/chi tiêu mới.
+- Chuyển tiền giữa các ví của chính người dùng không tạo thu nhập/chi tiêu mới.
 - **Tổng tiền**, **tiền đã dành**, **tiền có thể chi** là các đại lượng khác nhau.
 - Sửa/xóa giao dịch phải cập nhật số dư/báo cáo nhất quán.
 - Đổi/xóa danh mục không được làm mất lịch sử.
@@ -113,7 +115,7 @@ Các ý định tạo Khoản đề xuất: **Kiểm soát chi tiêu; Dành ti�
 
 ### Hướng triển khai
 
-**Domain-first, Experience-later, Experience-aware:** xây đúng Account, Transaction, Category, Budget trước; Android có thể gọi API nghiệp vụ trực tiếp. Sau khi ổn định, thêm `MoneyFocusService` để tổng hợp và điều phối, không viết lại các service cũ.
+**Domain-first, Experience-later, Experience-aware:** xây đúng Wallet, Transaction, Category, Budget trước; Android có thể gọi API nghiệp vụ trực tiếp. Sau khi ổn định, thêm `MoneyFocusService` để tổng hợp và điều phối, không viết lại các service cũ.
 
 Backend nên tổ chức modular monolith, tách Controller/Application Service/Domain/Repository; API trả DTO; thay đổi database qua migration. Android dùng ViewModel + Repository, không đặt phép tính tài chính trong Activity/Fragment.
 
@@ -165,13 +167,13 @@ Phong cách **Friendly Minimal Finance**: tối giản nhưng không lạnh lùn
 - **Lịch sử:** tìm, lọc, xem, sửa giao dịch.
 - **+:** ghi thu/chi nhanh, chuyển tiền, chụp hóa đơn khi có.
 - **Khoản:** ưu tiên các khoản ghim, gần hạn, cần chú ý; có tìm kiếm/lọc.
-- **Cài đặt:** hồ sơ, thông báo, bảo mật, nguồn tiền, danh mục.
+- **Cài đặt:** hồ sơ, thông báo, bảo mật, ví, danh mục.
 
-Nguồn tiền phải truy cập được từ Home, không chỉ nằm trong Settings.
+Ví phải truy cập được từ Home, không chỉ nằm trong Settings.
 
 ### Luồng ưu tiên
 
-**Ghi giao dịch:** `+` → số tiền → danh mục → lưu; nguồn tiền/ngày có mặc định hợp lý và vẫn sửa được. Cho phép thêm nhanh danh mục/nguồn tiền mà không mất bản nháp.
+**Ghi giao dịch:** `+` → số tiền → danh mục → lưu; ví/ngày có mặc định hợp lý và vẫn sửa được. Cho phép thêm nhanh danh mục/ví mà không mất bản nháp.
 
 **Tạo Khoản:** chọn điều muốn quản lý → nhập tối thiểu → thấy trạng thái và hành động tiếp theo.
 
@@ -179,9 +181,9 @@ Nguồn tiền phải truy cập được từ Home, không chỉ nằm trong Se
 
 ## 8. Phạm vi chức năng
 
-**Core:** Auth, nguồn tiền, danh mục, thu/chi/chuyển tiền, lịch sử, sửa/xóa, hạn mức cơ bản, Home.
+**Core:** Auth, ví, danh mục, thu/chi/chuyển tiền, lịch sử, sửa/xóa, hạn mức cơ bản, Home.
 
-**Tiết kiệm thời gian:** Quick Add, gợi ý, tạo danh mục/nguồn tiền ngay trong form, ghi một chạm hằng ngày, OCR hóa đơn có bước kiểm tra, chia tiền.
+**Tiết kiệm thời gian:** Quick Add, gợi ý, tạo danh mục/ví ngay trong form, ghi một chạm hằng ngày, OCR hóa đơn có bước kiểm tra, chia tiền.
 
 **Nâng cao:** nợ, mục tiêu tiết kiệm, phân bổ, khoản cố định/linh hoạt/phát sinh, định kỳ, báo cáo Story.
 
@@ -197,7 +199,7 @@ Nguồn tiền phải truy cập được từ Home, không chỉ nằm trong Se
 - **Đầu ra:** báo cáo hiện trạng và quyết định còn thiếu.
 
 ### P1 — Hoàn thiện nghiệp vụ cốt lõi
-- User/Auth, Account/Wallet, Category, Transaction.
+- User/Auth, Wallet, Category, Transaction.
 - Thu/chi/chuyển tiền/sửa/xóa, hạn mức cơ bản.
 - Migration, API, kiểm thử, phân quyền.
 - **Đầu ra:** core đáng tin, API ổn định.
@@ -257,10 +259,10 @@ Không giao một prompt “vẽ lại toàn bộ app”. Chia phase nhỏ, có 
 | Vấn đề | Đề xuất hiện tại |
 |---|---|
 | Ngân sách bắt buộc? | Không |
-| Chọn nguồn tiền khi ghi? | Gợi ý gần nhất/mặc định, có thể đổi |
+| Chọn ví khi ghi? | Gợi ý gần nhất/mặc định, có thể đổi |
 | Tự tạo Khoản từ danh mục? | Có thể suy ra, không ép thiết lập |
 | Khoản có liên kết nhiều nghiệp vụ? | Có, theo quan hệ linh hoạt |
-| Tiết kiệm là tài khoản hay phân bổ? | Phân biệt tiền thực và tiền dành riêng |
+| Tiết kiệm là ví hay phân bổ? | Phân biệt tiền thực và tiền dành riêng |
 | Độ chính xác tiền, timezone? | Chốt trước khi lưu |
 | Offline? | Chờ audit |
 | Logo/token cuối? | Duyệt trên Figma |
@@ -275,4 +277,4 @@ Các dòng trên **chưa phải tất cả đã chốt**.
 - **Coding Agent:** đọc `PRODUCT_CONTEXT.md` tiếng Anh, **sau đó đọc repo thật**. Phân biệt **đã kiểm chứng / đã thống nhất / đề xuất / chưa biết**.
 - **Designer:** dùng tài liệu để đánh giá luồng, component, ngôn ngữ, và khả năng mở rộng.
 
-> **Nguyên tắc cuối:** Đồng giúp người dùng quản lý tiền tốt hơn mà không khiến họ cảm thấy phải dành quá nhiều thời gian để quản lý tiền. Nếu chỉ có 15 giây, họ vẫn nên ghi được một giao dịch hoặc biết việc tài chính tiếp theo cần làm.
+**Nguyên tắc cuối:** Đồng giúp người dùng quản lý tiền tốt hơn mà không khiến họ cảm thấy phải dành quá nhiều thời gian để quản lý tiền. Nếu chỉ có 15 giây, họ vẫn nên ghi được một giao dịch hoặc biết việc tài chính tiếp theo cần làm.
