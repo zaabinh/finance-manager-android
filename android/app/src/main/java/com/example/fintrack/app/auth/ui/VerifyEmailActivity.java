@@ -25,6 +25,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
     private static final String KEY_END_TIME_STAMP = "key_end_time_stamp";
     private static final String KEY_USER_EMAIL = "key_user_email";
+    private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
     private static final long TIMER_DURATION_MS = 60000;
 
     private EditText etOtp1, etOtp2, etOtp3, etOtp4;
@@ -34,6 +35,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
     private boolean isTimerRunning = false;
     private long endTimeStamp = 0;
     private boolean isFormattingOtp = false;
+    private boolean isResetPassword = false;
 
     private AuthViewModel authViewModel;
     private String userEmail;
@@ -51,6 +53,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
         setupObservers();
 
         if (savedInstanceState != null) {
+            isResetPassword = savedInstanceState.getBoolean(KEY_IS_RESET_PASSWORD, false);
             userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra("email"));
             endTimeStamp = savedInstanceState.getLong(KEY_END_TIME_STAMP, 0);
             long remaining = endTimeStamp - System.currentTimeMillis();
@@ -60,6 +63,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 resetResendUi();
             }
         } else {
+            isResetPassword = getIntent().getBooleanExtra("is_reset_password", false);
             userEmail = getIntent().getStringExtra("email");
             startResendTimer(TIMER_DURATION_MS);
         }
@@ -195,6 +199,27 @@ public class VerifyEmailActivity extends AppCompatActivity {
                     break;
             }
         });
+
+        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
+                    startResendTimer(TIMER_DURATION_MS);
+                    break;
+
+                case ERROR:
+                    resetResendUi();
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    tvResendOtp.setEnabled(false);
+                    tvResendOtp.setText(R.string.loading_send_code);
+                    break;
+            }
+        });
     }
 
     private void handleResendOtp() {
@@ -205,7 +230,11 @@ public class VerifyEmailActivity extends AppCompatActivity {
             return;
         }
 
-        authViewModel.resendOtp(userEmail);
+        if (isResetPassword) {
+            authViewModel.forgotPassword(userEmail);
+        } else {
+            authViewModel.resendOtp(userEmail);
+        }
     }
 
     private void startResendTimer(long durationMillis) {
@@ -251,12 +280,22 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
         String otp = o1 + o2 + o3 + o4;
 
-        authViewModel.verifyEmail(userEmail, otp);
+        if (isResetPassword) {
+            authViewModel.setResetOtp(otp);
+            Intent intent = new Intent(VerifyEmailActivity.this, ChangePasswordActivity.class);
+            intent.putExtra("email", userEmail);
+            intent.putExtra("otp", otp);
+            startActivity(intent);
+            finish();
+        } else {
+            authViewModel.verifyEmail(userEmail, otp);
+        }
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_IS_RESET_PASSWORD, isResetPassword);
         outState.putLong(KEY_END_TIME_STAMP, endTimeStamp);
         outState.putString(KEY_USER_EMAIL, userEmail);
     }

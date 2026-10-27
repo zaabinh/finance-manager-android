@@ -66,8 +66,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                         emailToPass = requestedEmail;
                     }
 
-                    Intent intent = new Intent(ForgotPasswordActivity.this, ChangePasswordActivity.class);
+                    Intent intent = new Intent(ForgotPasswordActivity.this, VerifyEmailActivity.class);
                     intent.putExtra("email", emailToPass);
+                    intent.putExtra("is_reset_password", true);
                     startActivity(intent);
                     finish();
                     break;

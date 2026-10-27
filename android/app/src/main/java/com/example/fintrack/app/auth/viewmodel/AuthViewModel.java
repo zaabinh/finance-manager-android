@@ -23,6 +23,7 @@ public class AuthViewModel extends AndroidViewModel {
 
     private String registeredEmail = "";
     private String forgotPasswordEmail = "";
+    private String resetOtp = "";
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
@@ -43,6 +44,14 @@ public class AuthViewModel extends AndroidViewModel {
 
     public void setForgotPasswordEmail(String forgotPasswordEmail) {
         this.forgotPasswordEmail = forgotPasswordEmail;
+    }
+
+    public String getResetOtp() {
+        return resetOtp;
+    }
+
+    public void setResetOtp(String resetOtp) {
+        this.resetOtp = resetOtp;
     }
 
     public LiveData<Resource<LoginResponse>> getLoginResult() {

@@ -19,8 +19,8 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 public class ChangePasswordActivity extends AppCompatActivity {
 
     private static final String KEY_EMAIL = "key_email";
+    private static final String KEY_OTP = "key_otp";
 
-    private EditText etResetOtp;
     private EditText etNewPassword;
     private EditText etConfirmNewPassword;
     private ImageView ivToggleNewPassword;
@@ -32,6 +32,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     private AuthViewModel authViewModel;
     private String email;
+    private String otp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +42,15 @@ public class ChangePasswordActivity extends AppCompatActivity {
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         if (savedInstanceState != null) {
             email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra("email"));
+            otp = savedInstanceState.getString(KEY_OTP, getIntent().getStringExtra("otp"));
         } else {
             email = getIntent().getStringExtra("email");
+            otp = getIntent().getStringExtra("otp");
         }
-        if (email == null) {
-            email = "";
+        if (email == null) email = "";
+        if (otp == null) otp = "";
+        if (TextUtils.isEmpty(otp)) {
+            otp = authViewModel.getResetOtp();
         }
 
         initViews();
@@ -54,7 +59,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        etResetOtp = findViewById(R.id.etResetOtp);
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword);
         ivToggleNewPassword = findViewById(R.id.ivToggleNewPassword);
@@ -100,15 +104,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void handleSubmit() {
-        String otp = etResetOtp.getText().toString().trim();
         String newPassword = etNewPassword.getText().toString();
         String confirmNewPassword = etConfirmNewPassword.getText().toString();
-
-        if (TextUtils.isEmpty(otp)) {
-            etResetOtp.setError(getString(R.string.error_required_field));
-            etResetOtp.requestFocus();
-            return;
-        }
 
         String passwordError = PasswordValidator.validatePassword(this, newPassword);
         if (passwordError != null) {
@@ -130,5 +127,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_EMAIL, email);
+        outState.putString(KEY_OTP, otp);
     }
 }
