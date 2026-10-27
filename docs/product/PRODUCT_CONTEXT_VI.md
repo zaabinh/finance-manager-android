@@ -277,4 +277,4 @@ Các dòng trên **chưa phải tất cả đã chốt**.
 - **Coding Agent:** đọc `PRODUCT_CONTEXT.md` tiếng Anh, **sau đó đọc repo thật**. Phân biệt **đã kiểm chứng / đã thống nhất / đề xuất / chưa biết**.
 - **Designer:** dùng tài liệu để đánh giá luồng, component, ngôn ngữ, và khả năng mở rộng.
 
-> **Nguyên tắc cuối:** Đồng giúp người dùng quản lý tiền tốt hơn mà không khiến họ cảm thấy phải dành quá nhiều thời gian để quản lý tiền. Nếu chỉ có 15 giây, họ vẫn nên ghi được một giao dịch hoặc biết việc tài chính tiếp theo cần làm.
+**Nguyên tắc cuối:** Đồng giúp người dùng quản lý tiền tốt hơn mà không khiến họ cảm thấy phải dành quá nhiều thời gian để quản lý tiền. Nếu chỉ có 15 giây, họ vẫn nên ghi được một giao dịch hoặc biết việc tài chính tiếp theo cần làm.
