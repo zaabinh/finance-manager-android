@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Brand Primary Greens -->
+    <color name="primary">#16A34A</color>
+    <color name="primary_dark">#15803D</color>
+    <color name="primary_light">#EAF8F0</color>
+    <color name="primary_container">#DCFCE7</color>
+
+    <!-- Backgrounds & Surfaces -->
+    <color name="background">#F8FAF9</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#667085</color>
+    <color name="text_hint">#98A2B3</color>
+
+    <!-- Borders & Dividers -->
+    <color name="border_default">#E4E7EC</color>
+    <color name="border_focused">#16A34A</color>
+    <color name="border_error">#DC2626</color>
+
+    <!-- Basic Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Status Colors -->
+    <color name="error">#DC2626</color>
+    <color name="success">#16A34A</color>
 </resources>

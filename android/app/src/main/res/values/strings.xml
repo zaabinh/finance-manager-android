@@ -1,3 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">fintrack</string>
+    <!-- App & Common -->
+    <string name="app_name">FinTrack</string>
+    <string name="app_slogan">Your Personal Finance Companion</string>
+    <string name="splash_brand_title">Where’s My Money</string>
+    <string name="splash_version">v1.0.0</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="login_subtitle">Your Personal Finance Companion</string>
+    <string name="login_email_label">Username or Email</string>
+    <string name="login_email_hint">VD: NguyenVanA</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_password_hint">VD: 123456</string>
+    <string name="login_button">Login</string>
+    <string name="login_register_prompt">Don’t have an account? Sign Up</string>
+
+    <string name="label_username_or_email">Username or Email</string>
+    <string name="hint_username">VD: NguyenVanA</string>
+    <string name="label_password">Password</string>
+    <string name="hint_password">VD: 123456</string>
+    <string name="forgot_password_link">Forgot Password?</string>
+    <string name="btn_login">Login</string>
+    <string name="prompt_dont_have_account">Don’t have an account? </string>
+    <string name="action_sign_up">Sign Up</string>
+
+    <!-- Register Screen -->
+    <string name="label_username">Username</string>
+    <string name="label_email">Email</string>
+    <string name="hint_email">VD: nguyenvana@gmail.com</string>
+    <string name="label_confirm_password">Confirm Password</string>
+    <string name="checkbox_terms_policies">I agree to the Terms &amp; Policies.</string>
+    <string name="btn_register">Register</string>
+    <string name="prompt_already_have_account">Do you already have an account? </string>
+    <string name="action_sign_in">Sign In</string>
+
+    <!-- Verify Email Screen -->
+    <string name="verify_email_title">Verify your email</string>
+    <string name="verify_email_subtitle">An OTP has been sent to your email</string>
+    <string name="btn_verify">Verify</string>
+    <string name="resend_otp_countdown">Resent OTP in %1$ds</string>
+    <string name="resend_otp_action">Resend OTP</string>
+
+    <!-- Forgot Password Screen -->
+    <string name="forgot_password_title">Forget Password</string>
+    <string name="btn_send">Send</string>
+    <string name="action_back_to_login">Back to login</string>
+
+    <!-- Change Password Screen -->
+    <string name="change_password_title">Change Password</string>
+    <string name="label_reset_otp">Mã OTP xác thực</string>
+    <string name="hint_reset_otp">Nhập mã OTP</string>
+    <string name="label_enter_new_password">Enter new password</string>
+    <string name="label_confirm_new_password">Confirm password</string>
+    <string name="btn_submit">Submit</string>
+
+    <!-- Validation Error Messages -->
+    <string name="error_required_field">Trường này không được để trống</string>
+    <string name="error_invalid_email">Email không đúng định dạng</string>
+    <string name="error_password_length">Mật khẩu phải có ít nhất 8 ký tự</string>
+    <string name="error_password_not_match">Mật khẩu xác nhận không khớp</string>
+    <string name="error_agree_terms">Bạn cần đồng ý với Điều khoản &amp; Chính sách</string>
+    <string name="error_invalid_otp">Vui lòng nhập đủ 4 chữ số OTP</string>
+
+    <!-- Error strings for ErrorMapper & PasswordValidator -->
+    <string name="error_timeout">Kết nối quá thời gian chờ. Vui lòng thử lại.</string>
+    <string name="error_connection">Không thể kết nối đến máy chủ.</string>
+    <string name="error_unknown">Đã xảy ra lỗi không xác định.</string>
+    <string name="error_server">Máy chủ đang gặp sự cố. Vui lòng thử lại sau.</string>
+    <string name="error_bad_request">Yêu cầu không hợp lệ.</string>
+    <string name="error_unauthorized">Thông tin xác thực không chính xác hoặc đã hết hạn.</string>
+    <string name="error_forbidden">Bạn không có quyền truy cập.</string>
+    <string name="error_not_found">Không tìm thấy tài nguyên yêu cầu.</string>
+
+    <string name="error_password_min_length">Mật khẩu phải có ít nhất 8 ký tự</string>
+    <string name="error_password_uppercase">Mật khẩu phải chứa ít nhất 1 chữ in hoa</string>
+    <string name="error_password_lowercase">Mật khẩu phải chứa ít nhất 1 chữ in thường</string>
+    <string name="error_password_digit">Mật khẩu phải chứa ít nhất 1 chữ số</string>
+    <string name="error_password_special_char">Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt</string>
+
+    <string name="login_success">Đăng nhập thành công!</string>
+    <string name="login_failed">Đăng nhập thất bại</string>
+    <string name="login_response_invalid">Dữ liệu đăng nhập không hợp lệ</string>
+    <string name="register_success">Đăng ký thành công! Vui lòng xác minh Email.</string>
+    <string name="register_failed">Đăng ký thất bại</string>
+    <string name="verify_email_success">Xác minh email thành công! Vui lòng đăng nhập.</string>
+    <string name="verify_email_failed">Xác thực email thất bại</string>
+    <string name="resend_otp_success">Mã OTP mới đã được gửi!</string>
+    <string name="resend_otp_failed">Gửi lại mã OTP thất bại</string>
+    <string name="forgot_password_success">Yêu cầu đặt lại mật khẩu đã được gửi!</string>
+    <string name="forgot_password_failed">Gửi yêu cầu đặt lại mật khẩu thất bại</string>
+    <string name="reset_password_success">Đổi mật khẩu thành công! Vui lòng đăng nhập lại.</string>
+    <string name="reset_password_failed">Đổi mật khẩu thất bại</string>
+
+    <!-- Step Navigation Buttons -->
+    <string name="step_1_3">Bước 1/3</string>
+    <string name="step_2_3">Bước 2/3</string>
+    <string name="step_3_3">Bước 3/3</string>
+    <string name="btn_start">Bắt đầu</string>
+    <string name="btn_continue">Tiếp tục</string>
+    <string name="btn_complete_setup">Hoàn tất thiết lập</string>
+    <string name="btn_go_home">Vào trang chủ</string>
+    <string name="see_more">Xem thêm</string>
+    <string name="see_all">Xem tất cả</string>
+
+    <!-- 02_SetupWelcome -->
+    <string name="setup_welcome_title">Bắt đầu quản lý\ntài chính của bạn</string>
+    <string name="setup_welcome_subtitle">Chỉ mất một chút thời gian để FinTrack hiểu cách bạn muốn quản lý tiền.</string>
+
+    <!-- 03_SetupBasicInfo -->
+    <string name="setup_basic_title">Mình nên gọi bạn là gì?</string>
+    <string name="setup_basic_subtitle">Thông tin này giúp FinTrack hiển thị mọi thứ phù hợp hơn với bạn.</string>
+    <string name="setup_display_name_label">Tên hiển thị</string>
+    <string name="setup_display_name_hint">Nhập tên của bạn</string>
+    <string name="setup_currency_label">Tiền tệ</string>
+    <string name="currency_vnd">VND (đ)</string>
+    <string name="currency_usd">USD ($)</string>
+    <string name="currency_eur">EUR (€)</string>
+
+    <!-- 04_SetupNotification -->
+    <string name="setup_notif_title">Để FinTrack nhắc bạn đúng lúc</string>
+    <string name="setup_notif_subtitle">Bạn có thể thay đổi các cài đặt này bất cứ lúc nào.</string>
+    <string name="notif_enable_title">Bật thông báo</string>
+    <string name="notif_enable_desc">Nhận những nhắc nhở quan trọng về tài chính của bạn.</string>
+    <string name="notif_remind_title">Nhắc ghi thu chi</string>
+    <string name="notif_remind_desc">Một lời nhắc nhẹ để bạn không quên cập nhật giao dịch trong ngày.</string>
+    <string name="notif_time_label">Thời gian nhắc</string>
+    <string name="notif_time_default">21:00</string>
+    <string name="notif_alert_title">Cảnh báo ngân sách</string>
+    <string name="notif_alert_desc">FinTrack sẽ báo khi chi tiêu của bạn sắp chạm giới hạn.</string>
+    <string name="notif_permission_note">FinTrack cần quyền thông báo để gửi những lời nhắc này. Bạn có thể tắt bất cứ lúc nào trong Cài đặt.</string>
+
+    <!-- 05_SetupWallet -->
+    <string name="setup_wallet_title">FinTrack đã chuẩn bị sẵn cho bạn</string>
+    <string name="setup_wallet_subtitle">Bạn có thể dùng ngay và chỉnh sửa sau bất cứ lúc nào.</string>
+    <string name="wallet_default_section">Ví mặc định</string>
+    <string name="wallet_cash">Tiền mặt</string>
+    <string name="wallet_default_badge">Mặc định</string>
+    <string name="wallet_initial_balance">Số dư ban đầu: đ0</string>
+    <string name="wallet_default_desc">Đây là ví mặc định để bạn có thể bắt đầu ghi giao dịch ngay.</string>
+    <string name="btn_add_other_wallet">+ Thêm ví khác</string>
+    <string name="loading_login">Đang đăng nhập...</string>
+    <string name="loading_register">Đang đăng ký...</string>
+    <string name="loading_verify">Đang xác thực...</string>
+    <string name="loading_send_code">Đang gửi...</string>
+    <string name="loading_processing">Đang xử lý...</string>
+    <string name="category_default_section">Danh mục mặc định</string>
+    <string name="category_expense">Chi tiêu</string>
+    <string name="category_income">Thu nhập</string>
+
+    <!-- Category items -->
+    <string name="cat_food">Ăn uống</string>
+    <string name="cat_transport">Di chuyển</string>
+
+    <string name="cat_shopping">Mua sắm</string>
+    <string name="cat_bills">Hóa đơn</string>
+    <string name="cat_plus_3">+3</string>
+    <string name="cat_salary">Lương</string>
+    <string name="cat_bonus">Thưởng</string>
+    <string name="cat_other_income">Thu nhập khác</string>
+    <string name="category_note">Danh mục đã được tạo sẵn để bạn có thể bắt đầu nhanh hơn.</string>
+
+    <!-- 06_SetupComplete -->
+    <string name="setup_complete_title">Mọi thứ đã sẵn sàng!</string>
+    <string name="setup_complete_subtitle">Bạn có thể bắt đầu ghi thu chi ngay bây giờ. FinTrack sẽ giúp bạn theo dõi phần còn lại.</string>
+
+    <!-- Dashboard -->
+    <string name="greeting_prefix">Xin chào,</string>
+    <string name="sample_user_name">Nguyễn Minh Anh</string>
+    <string name="total_balance_label">TỔNG SỐ DƯ</string>
+    <string name="total_balance_value">đ28.450.000</string>
+    <string name="available_label">Khả dụng</string>
+    <string name="available_value">đ22.412.000</string>
+    <string name="savings_label">Tiết kiệm</string>
+    <string name="savings_value">đ6.038.000</string>
+    <string name="your_wallets">Ví của bạn</string>
+    <string name="wallet_bank">Ngân hàng</string>
+    <string name="wallet_cash_val">đ1.100.000</string>
+    <string name="wallet_bank_val">đ21.312.000</string>
+    <string name="wallet_savings_val">đ6.038.000</string>
+    <string name="overview_analysis">Phân tích tổng quan</string>
+    <string name="tab_income_expense">Thu / Chi</string>
+    <string name="tab_time">Thời gian</string>
+    <string name="tab_budget">Ngân sách</string>
+    <string name="income_title">THU NHẬP</string>
+    <string name="income_val">đ18.500.000</string>
+    <string name="expense_title">CHI TIÊU</string>
+    <string name="expense_val">đ9.850.000</string>
+    <string name="remaining_this_month">Còn lại tháng này</string>
+    <string name="remaining_this_month_val">+đ8.650.000</string>
+
+    <!-- Wallet Feature -->
+    <string name="wallet_list_title">Danh sách ví</string>
+    <string name="wallet_add_action">+ Thêm</string>
+    <string name="wallet_detail_title">Chi tiết ví</string>
+    <string name="wallet_edit_action">Sửa</string>
+    <string name="wallet_add_title">Thêm ví</string>
+    <string name="wallet_edit_title">Sửa ví</string>
+    <string name="wallet_name_label">Tên ví</string>
+    <string name="wallet_name_hint">Nhập tên ví</string>
+    <string name="wallet_type_label">Loại ví</string>
+    <string name="wallet_type_cash">Tiền mặt</string>
+    <string name="wallet_type_bank">Ngân hàng</string>
+    <string name="wallet_type_ewallet">Ví điện tử</string>
+    <string name="wallet_type_savings">Tiết kiệm</string>
+    <string name="wallet_provider_label">Ngân hàng / Nhà cung cấp</string>
+    <string name="wallet_provider_hint">Chọn ngân hàng</string>
+    <string name="wallet_balance_label">Số dư hiện tại</string>
+    <string name="wallet_note_label">Ghi chú</string>
+    <string name="wallet_note_hint">Không bắt buộc</string>
+    <string name="btn_create_wallet">Tạo ví</string>
+    <string name="btn_cancel">Huỷ</string>
+    <string name="btn_save_changes">Lưu thay đổi</string>
+    <string name="btn_delete_wallet">Xoá ví</string>
+    <string name="btn_delete">Xoá</string>
+    <string name="btn_edit">Sửa</string>
+    <string name="btn_disable">Vô hiệu hoá</string>
+    <string name="recent_transactions">Giao dịch gần đây</string>
+    <string name="this_month_income">THU THÁNG NÀY</string>
+    <string name="this_month_expense">CHI THÁNG NÀY</string>
+    <string name="current_balance_label">Số dư hiện tại</string>
+
+    <!-- Transaction Feature -->
+    <string name="transaction_list_title">Danh sách giao dịch</string>
+    <string name="search_transaction_hint">Tìm kiếm giao dịch...</string>
+    <string name="btn_filter">Lọc</string>
+    <string name="transaction_detail_title">Chi tiết giao dịch</string>
+    <string name="transaction_create_title">Giao dịch mới</string>
+    <string name="ocr_import_title">Nhập nhanh OCR</string>
+    <string name="ocr_review_title">Xem lại kết quả quét (OCR)</string>
+    <string name="tab_expense">Chi tiêu</string>
+    <string name="tab_income">Thu nhập</string>
+
+    <string name="label_category">Danh mục</string>
+    <string name="label_wallet">Ví</string>
+    <string name="label_note">Ghi chú</string>
+    <string name="label_time">Thời gian</string>
+    <string name="btn_save">Lưu</string>
+
+    <string name="ocr_camera_title">Chụp trực tiếp hóa đơn</string>
+    <string name="ocr_camera_desc">Quét nhanh hóa đơn giấy của bạn</string>
+    <string name="ocr_gallery_title">Tải ảnh hóa đơn lên</string>
+    <string name="ocr_gallery_desc">Chọn ảnh hóa đơn từ thư viện máy</string>
+    <string name="ocr_extraction_info_title">Hệ thống sẽ trích xuất:</string>
+    <string name="ocr_extraction_info_1">• Số tiền giao dịch &amp; Ngày tháng</string>
+    <string name="ocr_extraction_info_2">• Đối tác / Nhà cung cấp (Cửa hàng)</string>
+    <string name="ocr_extraction_info_3">• Tự động đề xuất Hạng mục chi tiêu phù hợp</string>
+    <string name="ocr_detected_banner">Đã phát hiện 3 giao dịch mới</string>
+    <string name="ocr_selected_summary">Đã chọn: %1$d/%2$d giao dịch    Tổng cộng: %3$s</string>
+    <string name="ocr_confirm_import">Xác nhận nhập (%1$d giao dịch)</string>
+
+    <!-- Budget Feature -->
+    <string name="budget_list_title">Ngân sách</string>
+    <string name="budget_add_title">Tạo Ngân sách</string>
+    <string name="budget_edit_title">Sửa Ngân sách</string>
+    <string name="budget_detail_title">Chi tiết Ngân sách</string>
+    <string name="total_month_budget">Tổng ngân sách Tháng</string>
+    <string name="spent_label">Đã chi</string>
+    <string name="remaining_label">Còn lại</string>
+    <string name="limit_label">Hạn mức</string>
+    <string name="status_safe">An toàn</string>
+    <string name="status_warning">Cảnh báo</string>
+    <string name="status_exceeded">Vượt mức</string>
+    <string name="select_category">Chọn danh mục</string>
+    <string name="budget_limit_label">Giới hạn ngân sách</string>
+    <string name="budget_limit_hint">Nhập số tiền giới hạn</string>
+    <string name="apply_period_label">Thời gian áp dụng</string>
+    <string name="alert_threshold_label">Cảnh báo khi đạt</string>
+    <string name="alert_threshold_desc">Gửi thông báo khi tiêu hết %1$d%% ngân sách</string>
+    <string name="btn_create_budget">Tạo ngân sách</string>
+    <string name="btn_delete_budget">Xóa Ngân sách</string>
+    <string name="transactions_in_month">Giao dịch trong tháng (%1$d)</string>
+
+    <!-- Category Feature -->
+    <string name="category_list_title">Danh mục</string>
+    <string name="category_add_title">Tạo danh mục</string>
+    <string name="category_edit_title">Sửa danh mục</string>
+    <string name="search_category_hint">Tìm kiếm danh mục...</string>
+    <string name="category_name_label">Tên danh mục</string>
+    <string name="category_name_hint">Nhập tên danh mục...</string>
+    <string name="category_type_label">Loại danh mục</string>
+
+    <string name="category_icon_label">Icon</string>
+    <string name="category_description_label">Mô tả</string>
+    <string name="category_status_label">Trạng thái</string>
+    <string name="status_active">Đang hoạt động</string>
+    <string name="status_disabled">Đã vô hiệu hóa</string>
+    <string name="btn_create_category">Tạo danh mục</string>
+    <string name="btn_delete_category">Xóa danh mục</string>
+
+    <!-- Analytics, Notifications & Settings Features -->
+    <string name="analytics_title">Phân tích</string>
+    <string name="category_breakdown">Phân tích theo danh mục</string>
+    <string name="financial_analytics">Phân tích tài chính</string>
+    <string name="notification_title">Thông báo</string>
+    <string name="mark_all_read">Đánh dấu đã đọc</string>
+    <string name="no_notifications_title">Không có thông báo</string>
+    <string name="no_notifications_desc">Bạn đã xem tất cả thông báo</string>
+    <string name="settings_title">Cài đặt</string>
+    <string name="currency_unit">Đơn vị tiền tệ</string>
+    <string name="time_zone">Múi giờ</string>
+    <string name="notif_config">Cấu hình thông báo</string>
+    <string name="manage_wallets">Quản lý Ví (Wallets)</string>
+    <string name="manage_categories">Quản lý Danh mục</string>
+    <string name="security_account">Bảo mật &amp; Tài khoản</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="btn_change_password">Đổi mật khẩu</string>
+    <string name="logout_this_device">Đăng xuất khỏi thiết bị này</string>
+    <string name="logout_all_devices">Đăng xuất tất cả thiết bị</string>
+    <string name="delete_account">Xóa vĩnh viễn tài khoản</string>
+    <string name="daily_record_reminder">Nhắc nhở ghi chép hàng ngày</string>
+    <string name="near_limit_alert">Cảnh báo sắp chạm hạn mức</string>
+    <string name="over_budget_alert">Cảnh báo vượt quá ngân sách</string>
 </resources>
