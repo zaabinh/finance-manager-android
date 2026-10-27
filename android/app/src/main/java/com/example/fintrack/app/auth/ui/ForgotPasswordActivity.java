@@ -17,20 +17,28 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
+    private static final String KEY_REQUESTED_EMAIL = "key_requested_email";
+
     private EditText etEmail;
     private Button btnSend;
     private TextView tvBackToLogin;
     private AuthViewModel authViewModel;
+    private String requestedEmail = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
 
+        if (savedInstanceState != null) {
+            requestedEmail = savedInstanceState.getString(KEY_REQUESTED_EMAIL, "");
+        }
+
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         initViews();
         setupListeners();
+        setupObservers();
     }
 
     private void initViews() {
@@ -41,8 +49,43 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnSend.setOnClickListener(v -> handleSend());
-
         tvBackToLogin.setOnClickListener(v -> finish());
+    }
+
+    private void setupObservers() {
+        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    btnSend.setEnabled(true);
+                    btnSend.setText(R.string.btn_send);
+                    Toast.makeText(this, R.string.forgot_password_success, Toast.LENGTH_SHORT).show();
+
+                    String emailToPass = authViewModel.getForgotPasswordEmail();
+                    if (TextUtils.isEmpty(emailToPass)) {
+                        emailToPass = requestedEmail;
+                    }
+
+                    Intent intent = new Intent(ForgotPasswordActivity.this, VerifyEmailActivity.class);
+                    intent.putExtra("email", emailToPass);
+                    intent.putExtra("is_reset_password", true);
+                    startActivity(intent);
+                    finish();
+                    break;
+
+                case ERROR:
+                    btnSend.setEnabled(true);
+                    btnSend.setText(R.string.btn_send);
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.forgot_password_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    btnSend.setEnabled(false);
+                    btnSend.setText(getString(R.string.loading_send_code));
+                    break;
+            }
+        });
     }
 
     private void handleSend() {
@@ -60,32 +103,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
-        btnSend.setEnabled(false);
-        btnSend.setText(getString(R.string.loading_send_code));
+        requestedEmail = email;
+        authViewModel.forgotPassword(email);
+    }
 
-        authViewModel.forgotPassword(email).observe(this, resource -> {
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    btnSend.setEnabled(true);
-                    btnSend.setText(R.string.btn_send);
-                    Toast.makeText(this, "Yêu cầu đặt lại mật khẩu đã được gửi!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(ForgotPasswordActivity.this, ChangePasswordActivity.class);
-                    intent.putExtra("email", email);
-                    startActivity(intent);
-                    finish();
-                    break;
-
-                case ERROR:
-                    btnSend.setEnabled(true);
-                    btnSend.setText(R.string.btn_send);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : "Gửi yêu cầu thất bại";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    break;
-            }
-        });
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_REQUESTED_EMAIL, requestedEmail);
     }
 }

@@ -3,8 +3,6 @@ package com.example.fintrack.app.auth.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.method.HideReturnsTransformationMethod;
-import android.text.method.PasswordTransformationMethod;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -15,8 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.home.ui.HomeDashboardActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -34,13 +34,22 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sessionManager = SessionManager.getInstance(getApplicationContext());
+        if (sessionManager.isLoggedIn()) {
+            Intent intent = new Intent(this, HomeDashboardActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        sessionManager = SessionManager.getInstance(getApplicationContext());
 
         initViews();
         setupListeners();
+        setupObservers();
     }
 
     private void initViews() {
@@ -53,40 +62,64 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Toggle password visibility
-        ivTogglePassword.setOnClickListener(v -> togglePasswordVisibility());
-
-        // Login action
+        ivTogglePassword.setOnClickListener(v -> isPasswordVisible = PasswordToggleHelper.togglePasswordVisibility(etPassword, ivTogglePassword, isPasswordVisible));
         btnLogin.setOnClickListener(v -> handleLogin());
 
-        // Forgot password navigation
         tvForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
 
-        // Sign up navigation
         tvSignUp.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
     }
 
-    private void togglePasswordVisibility() {
-        if (isPasswordVisible) {
-            etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            ivTogglePassword.setAlpha(0.5f);
-        } else {
-            etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-            ivTogglePassword.setAlpha(1.0f);
-        }
-        isPasswordVisible = !isPasswordVisible;
-        etPassword.setSelection(etPassword.getText().length());
+    private void setupObservers() {
+        authViewModel.getLoginResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText(R.string.btn_login);
+                    if (resource.getData() != null && !TextUtils.isEmpty(resource.getData().getAccessToken())) {
+                        sessionManager.saveAuthToken(
+                                resource.getData().getAccessToken(),
+                                resource.getData().getRefreshToken()
+                        );
+                        sessionManager.saveUserProfile(
+                                resource.getData().getUserId(),
+                                resource.getData().getEmail(),
+                                resource.getData().getName()
+                        );
+                        Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
+                    }
+                    break;
+
+                case ERROR:
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText(R.string.btn_login);
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.login_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    btnLogin.setEnabled(false);
+                    btnLogin.setText(getString(R.string.loading_login));
+                    break;
+            }
+        });
     }
 
     private void handleLogin() {
         String usernameOrEmail = etUsernameOrEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
+        String password = etPassword.getText().toString();
 
         if (TextUtils.isEmpty(usernameOrEmail)) {
             etUsernameOrEmail.setError(getString(R.string.error_required_field));
@@ -100,48 +133,6 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        if (password.length() < 6) {
-            etPassword.setError(getString(R.string.error_password_length));
-            etPassword.requestFocus();
-            return;
-        }
-
-        btnLogin.setEnabled(false);
-        btnLogin.setText(getString(R.string.loading_login));
-
-        authViewModel.login(usernameOrEmail, password).observe(this, resource -> {
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText(R.string.btn_login);
-                    if (resource.getData() != null) {
-                        sessionManager.saveAuthToken(
-                                resource.getData().getAccessToken(),
-                                resource.getData().getRefreshToken()
-                        );
-                        sessionManager.saveUserProfile(
-                                resource.getData().getUserId(),
-                                resource.getData().getEmail(),
-                                resource.getData().getName()
-                        );
-                    }
-                    Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(LoginActivity.this, com.example.fintrack.app.home.ui.HomeDashboardActivity.class);
-                    startActivity(intent);
-                    finish();
-                    break;
-
-                case ERROR:
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText(R.string.btn_login);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : "Đăng nhập thất bại";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    // Already handled by disabling button and text change
-                    break;
-            }
-        });
+        authViewModel.login(usernameOrEmail, password);
     }
 }

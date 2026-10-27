@@ -17,6 +17,9 @@ public interface AuthApiService {
     @POST("api/v1/auth/verify-email")
     Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
 
+    @POST("api/v1/auth/resend-otp")
+    Call<ApiResponse<Void>> resendOtp(@Body ResendOtpRequest request);
+
     @POST("api/v1/auth/forgot-password")
     Call<ApiResponse<Void>> forgotPassword(@Body ForgotPasswordRequest request);
 

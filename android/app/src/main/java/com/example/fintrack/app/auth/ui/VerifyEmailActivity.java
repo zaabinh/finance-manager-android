@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -22,11 +23,20 @@ import java.util.Locale;
 
 public class VerifyEmailActivity extends AppCompatActivity {
 
+    private static final String KEY_END_TIME_STAMP = "key_end_time_stamp";
+    private static final String KEY_USER_EMAIL = "key_user_email";
+    private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
+    private static final long TIMER_DURATION_MS = 60000;
+
     private EditText etOtp1, etOtp2, etOtp3, etOtp4;
     private Button btnVerify;
     private TextView tvResendOtp;
     private CountDownTimer countDownTimer;
     private boolean isTimerRunning = false;
+    private long endTimeStamp = 0;
+    private boolean isFormattingOtp = false;
+    private boolean isResetPassword = false;
+
     private AuthViewModel authViewModel;
     private String userEmail;
 
@@ -36,15 +46,31 @@ public class VerifyEmailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify_email);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        userEmail = getIntent().getStringExtra("email");
-        if (userEmail == null) {
-            userEmail = "";
-        }
 
         initViews();
         setupOtpInputs();
         setupListeners();
-        startResendTimer();
+        setupObservers();
+
+        if (savedInstanceState != null) {
+            isResetPassword = savedInstanceState.getBoolean(KEY_IS_RESET_PASSWORD, false);
+            userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra("email"));
+            endTimeStamp = savedInstanceState.getLong(KEY_END_TIME_STAMP, 0);
+            long remaining = endTimeStamp - System.currentTimeMillis();
+            if (remaining > 0) {
+                startResendTimer(remaining);
+            } else {
+                resetResendUi();
+            }
+        } else {
+            isResetPassword = getIntent().getBooleanExtra("is_reset_password", false);
+            userEmail = getIntent().getStringExtra("email");
+            startResendTimer(TIMER_DURATION_MS);
+        }
+
+        if (userEmail == null) {
+            userEmail = "";
+        }
     }
 
     private void initViews() {
@@ -70,19 +96,36 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() == 1) {
+                if (isFormattingOtp) return;
+
+                String rawInput = s.toString();
+                String digits = rawInput.replaceAll("[^0-9]", "");
+
+                if (digits.length() >= 4) {
+                    isFormattingOtp = true;
+                    etOtp1.setText(String.valueOf(digits.charAt(0)));
+                    etOtp2.setText(String.valueOf(digits.charAt(1)));
+                    etOtp3.setText(String.valueOf(digits.charAt(2)));
+                    etOtp4.setText(String.valueOf(digits.charAt(3)));
+                    etOtp4.requestFocus();
+                    etOtp4.setSelection(etOtp4.getText().length());
+                    isFormattingOtp = false;
+                    return;
+                }
+
+                if (digits.length() == 1) {
                     if (next != null) {
                         next.requestFocus();
                     }
-                } else if (s.length() > 1) {
-                    String pasted = s.toString().trim();
-                    if (pasted.length() == 4) {
-                        etOtp1.setText(String.valueOf(pasted.charAt(0)));
-                        etOtp2.setText(String.valueOf(pasted.charAt(1)));
-                        etOtp3.setText(String.valueOf(pasted.charAt(2)));
-                        etOtp4.setText(String.valueOf(pasted.charAt(3)));
-                        etOtp4.requestFocus();
+                } else if (digits.length() > 1) {
+                    isFormattingOtp = true;
+                    char lastChar = digits.charAt(digits.length() - 1);
+                    current.setText(String.valueOf(lastChar));
+                    current.setSelection(current.getText().length());
+                    if (next != null) {
+                        next.requestFocus();
                     }
+                    isFormattingOtp = false;
                 }
             }
 
@@ -104,24 +147,106 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnVerify.setOnClickListener(v -> handleVerify());
+        tvResendOtp.setOnClickListener(v -> handleResendOtp());
+    }
 
-        tvResendOtp.setOnClickListener(v -> {
-            if (!isTimerRunning) {
-                Toast.makeText(this, "Mã OTP mới đã được gửi!", Toast.LENGTH_SHORT).show();
-                startResendTimer();
+    private void setupObservers() {
+        authViewModel.getVerifyEmailResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    btnVerify.setEnabled(true);
+                    btnVerify.setText(R.string.btn_verify);
+                    Toast.makeText(this, R.string.verify_email_success, Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(VerifyEmailActivity.this, LoginActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                    break;
+
+                case ERROR:
+                    btnVerify.setEnabled(true);
+                    btnVerify.setText(R.string.btn_verify);
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.verify_email_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    btnVerify.setEnabled(false);
+                    btnVerify.setText(getString(R.string.loading_verify));
+                    break;
+            }
+        });
+
+        authViewModel.getResendOtpResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
+                    startResendTimer(TIMER_DURATION_MS);
+                    break;
+
+                case ERROR:
+                    resetResendUi();
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    tvResendOtp.setEnabled(false);
+                    tvResendOtp.setText(R.string.loading_send_code);
+                    break;
+            }
+        });
+
+        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
+                    startResendTimer(TIMER_DURATION_MS);
+                    break;
+
+                case ERROR:
+                    resetResendUi();
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    tvResendOtp.setEnabled(false);
+                    tvResendOtp.setText(R.string.loading_send_code);
+                    break;
             }
         });
     }
 
-    private void startResendTimer() {
+    private void handleResendOtp() {
+        if (isTimerRunning) return;
+
+        if (TextUtils.isEmpty(userEmail)) {
+            Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (isResetPassword) {
+            authViewModel.forgotPassword(userEmail);
+        } else {
+            authViewModel.resendOtp(userEmail);
+        }
+    }
+
+    private void startResendTimer(long durationMillis) {
         isTimerRunning = true;
         tvResendOtp.setEnabled(false);
+        endTimeStamp = System.currentTimeMillis() + durationMillis;
 
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
 
-        countDownTimer = new CountDownTimer(60000, 1000) {
+        countDownTimer = new CountDownTimer(durationMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 int seconds = (int) (millisUntilFinished / 1000);
@@ -130,11 +255,16 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                isTimerRunning = false;
-                tvResendOtp.setEnabled(true);
-                tvResendOtp.setText(R.string.resend_otp_action);
+                resetResendUi();
             }
         }.start();
+    }
+
+    private void resetResendUi() {
+        isTimerRunning = false;
+        endTimeStamp = 0;
+        tvResendOtp.setEnabled(true);
+        tvResendOtp.setText(R.string.resend_otp_action);
     }
 
     private void handleVerify() {
@@ -150,33 +280,24 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
         String otp = o1 + o2 + o3 + o4;
 
-        btnVerify.setEnabled(false);
-        btnVerify.setText(getString(R.string.loading_verify));
+        if (isResetPassword) {
+            authViewModel.setResetOtp(otp);
+            Intent intent = new Intent(VerifyEmailActivity.this, ChangePasswordActivity.class);
+            intent.putExtra("email", userEmail);
+            intent.putExtra("otp", otp);
+            startActivity(intent);
+            finish();
+        } else {
+            authViewModel.verifyEmail(userEmail, otp);
+        }
+    }
 
-        authViewModel.verifyEmail(userEmail, otp).observe(this, resource -> {
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    btnVerify.setEnabled(true);
-                    btnVerify.setText(R.string.btn_verify);
-                    Toast.makeText(this, "Xác minh email thành công!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(VerifyEmailActivity.this, com.example.fintrack.app.setup.SetupWelcomeActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    finish();
-                    break;
-
-                case ERROR:
-                    btnVerify.setEnabled(true);
-                    btnVerify.setText(R.string.btn_verify);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : "Xác thực thất bại";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    break;
-            }
-        });
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_IS_RESET_PASSWORD, isResetPassword);
+        outState.putLong(KEY_END_TIME_STAMP, endTimeStamp);
+        outState.putString(KEY_USER_EMAIL, userEmail);
     }
 
     @Override

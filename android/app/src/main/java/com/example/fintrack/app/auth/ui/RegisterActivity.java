@@ -3,8 +3,6 @@ package com.example.fintrack.app.auth.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.method.HideReturnsTransformationMethod;
-import android.text.method.PasswordTransformationMethod;
 import android.util.Patterns;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -17,9 +15,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.auth.util.PasswordToggleHelper;
+import com.example.fintrack.app.auth.util.PasswordValidator;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 public class RegisterActivity extends AppCompatActivity {
+
+    private static final String KEY_REGISTERED_EMAIL = "key_registered_email";
 
     private EditText etUsername;
     private EditText etEmail;
@@ -34,16 +36,22 @@ public class RegisterActivity extends AppCompatActivity {
     private boolean isPasswordVisible = false;
     private boolean isConfirmPasswordVisible = false;
     private AuthViewModel authViewModel;
+    private String registeredEmail = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        if (savedInstanceState != null) {
+            registeredEmail = savedInstanceState.getString(KEY_REGISTERED_EMAIL, "");
+        }
+
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         initViews();
         setupListeners();
+        setupObservers();
     }
 
     private void initViews() {
@@ -59,43 +67,54 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        ivTogglePassword.setOnClickListener(v -> togglePasswordVisibility());
-        ivToggleConfirmPassword.setOnClickListener(v -> toggleConfirmPasswordVisibility());
+        ivTogglePassword.setOnClickListener(v -> isPasswordVisible = PasswordToggleHelper.togglePasswordVisibility(etPassword, ivTogglePassword, isPasswordVisible));
+        ivToggleConfirmPassword.setOnClickListener(v -> isConfirmPasswordVisible = PasswordToggleHelper.togglePasswordVisibility(etConfirmPassword, ivToggleConfirmPassword, isConfirmPasswordVisible));
 
         btnRegister.setOnClickListener(v -> handleRegister());
 
         tvSignIn.setOnClickListener(v -> finish());
     }
 
-    private void togglePasswordVisibility() {
-        if (isPasswordVisible) {
-            etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            ivTogglePassword.setAlpha(0.5f);
-        } else {
-            etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-            ivTogglePassword.setAlpha(1.0f);
-        }
-        isPasswordVisible = !isPasswordVisible;
-        etPassword.setSelection(etPassword.getText().length());
-    }
+    private void setupObservers() {
+        authViewModel.getRegisterResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    btnRegister.setEnabled(true);
+                    btnRegister.setText(R.string.btn_register);
+                    Toast.makeText(this, R.string.register_success, Toast.LENGTH_SHORT).show();
 
-    private void toggleConfirmPasswordVisibility() {
-        if (isConfirmPasswordVisible) {
-            etConfirmPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            ivToggleConfirmPassword.setAlpha(0.5f);
-        } else {
-            etConfirmPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-            ivToggleConfirmPassword.setAlpha(1.0f);
-        }
-        isConfirmPasswordVisible = !isConfirmPasswordVisible;
-        etConfirmPassword.setSelection(etConfirmPassword.getText().length());
+                    String emailToPass = authViewModel.getRegisteredEmail();
+                    if (TextUtils.isEmpty(emailToPass)) {
+                        emailToPass = registeredEmail;
+                    }
+
+                    Intent intent = new Intent(RegisterActivity.this, VerifyEmailActivity.class);
+                    intent.putExtra("email", emailToPass);
+                    startActivity(intent);
+                    finish();
+                    break;
+
+                case ERROR:
+                    btnRegister.setEnabled(true);
+                    btnRegister.setText(R.string.btn_register);
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.register_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    btnRegister.setEnabled(false);
+                    btnRegister.setText(getString(R.string.loading_register));
+                    break;
+            }
+        });
     }
 
     private void handleRegister() {
         String username = etUsername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-        String confirmPassword = etConfirmPassword.getText().toString().trim();
+        String password = etPassword.getText().toString();
+        String confirmPassword = etConfirmPassword.getText().toString();
 
         if (TextUtils.isEmpty(username)) {
             etUsername.setError(getString(R.string.error_required_field));
@@ -115,14 +134,9 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (TextUtils.isEmpty(password)) {
-            etPassword.setError(getString(R.string.error_required_field));
-            etPassword.requestFocus();
-            return;
-        }
-
-        if (password.length() < 6) {
-            etPassword.setError(getString(R.string.error_password_length));
+        String passwordError = PasswordValidator.validatePassword(this, password);
+        if (passwordError != null) {
+            etPassword.setError(passwordError);
             etPassword.requestFocus();
             return;
         }
@@ -138,32 +152,13 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        btnRegister.setEnabled(false);
-        btnRegister.setText(getString(R.string.loading_register));
+        registeredEmail = email;
+        authViewModel.register(username, email, password);
+    }
 
-        authViewModel.register(username, email, password).observe(this, resource -> {
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    btnRegister.setEnabled(true);
-                    btnRegister.setText(R.string.btn_register);
-                    Toast.makeText(this, "Đăng ký thành công! Vui lòng xác minh Email.", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(RegisterActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", email);
-                    startActivity(intent);
-                    finish();
-                    break;
-
-                case ERROR:
-                    btnRegister.setEnabled(true);
-                    btnRegister.setText(R.string.btn_register);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : "Đăng ký thất bại";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    break;
-            }
-        });
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_REGISTERED_EMAIL, registeredEmail);
     }
 }
