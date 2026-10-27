@@ -17,6 +17,8 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
+    private static final String KEY_REQUESTED_EMAIL = "key_requested_email";
+
     private EditText etEmail;
     private Button btnSend;
     private TextView tvBackToLogin;
@@ -27,6 +29,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
+
+        if (savedInstanceState != null) {
+            requestedEmail = savedInstanceState.getString(KEY_REQUESTED_EMAIL, "");
+        }
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
@@ -55,8 +61,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     btnSend.setText(R.string.btn_send);
                     Toast.makeText(this, R.string.forgot_password_success, Toast.LENGTH_SHORT).show();
 
+                    String emailToPass = authViewModel.getForgotPasswordEmail();
+                    if (TextUtils.isEmpty(emailToPass)) {
+                        emailToPass = requestedEmail;
+                    }
+
                     Intent intent = new Intent(ForgotPasswordActivity.this, ChangePasswordActivity.class);
-                    intent.putExtra("email", requestedEmail);
+                    intent.putExtra("email", emailToPass);
                     startActivity(intent);
                     finish();
                     break;
@@ -93,5 +104,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         requestedEmail = email;
         authViewModel.forgotPassword(email);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_REQUESTED_EMAIL, requestedEmail);
     }
 }

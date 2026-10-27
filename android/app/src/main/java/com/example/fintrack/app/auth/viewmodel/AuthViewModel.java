@@ -21,9 +21,28 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<Resource<Void>> forgotPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resetPasswordResult = new MutableLiveData<>();
 
+    private String registeredEmail = "";
+    private String forgotPasswordEmail = "";
+
     public AuthViewModel(@NonNull Application application) {
         super(application);
         this.authRepository = new AuthRepository(application);
+    }
+
+    public String getRegisteredEmail() {
+        return registeredEmail;
+    }
+
+    public void setRegisteredEmail(String registeredEmail) {
+        this.registeredEmail = registeredEmail;
+    }
+
+    public String getForgotPasswordEmail() {
+        return forgotPasswordEmail;
+    }
+
+    public void setForgotPasswordEmail(String forgotPasswordEmail) {
+        this.forgotPasswordEmail = forgotPasswordEmail;
     }
 
     public LiveData<Resource<LoginResponse>> getLoginResult() {
@@ -56,6 +75,7 @@ public class AuthViewModel extends AndroidViewModel {
     }
 
     public void register(String username, String email, String password) {
+        this.registeredEmail = email;
         registerResult.setValue(Resource.loading(null));
         authRepository.register(username, email, password, registerResult);
     }
@@ -71,6 +91,7 @@ public class AuthViewModel extends AndroidViewModel {
     }
 
     public void forgotPassword(String email) {
+        this.forgotPasswordEmail = email;
         forgotPasswordResult.setValue(Resource.loading(null));
         authRepository.forgotPassword(email, forgotPasswordResult);
     }

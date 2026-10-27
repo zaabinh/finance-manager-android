@@ -18,6 +18,8 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 public class ChangePasswordActivity extends AppCompatActivity {
 
+    private static final String KEY_EMAIL = "key_email";
+
     private EditText etResetOtp;
     private EditText etNewPassword;
     private EditText etConfirmNewPassword;
@@ -37,7 +39,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         setContentView(R.layout.activity_change_password);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        email = getIntent().getStringExtra("email");
+        if (savedInstanceState != null) {
+            email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra("email"));
+        } else {
+            email = getIntent().getStringExtra("email");
+        }
         if (email == null) {
             email = "";
         }
@@ -118,5 +124,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         }
 
         authViewModel.resetPassword(email, otp, newPassword);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_EMAIL, email);
     }
 }

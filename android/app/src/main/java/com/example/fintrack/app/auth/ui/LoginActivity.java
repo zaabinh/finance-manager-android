@@ -17,7 +17,6 @@ import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
-import com.example.fintrack.app.setup.SetupWelcomeActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -38,12 +37,7 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = SessionManager.getInstance(getApplicationContext());
         if (sessionManager.isLoggedIn()) {
-            Intent intent;
-            if (sessionManager.isSetupCompleted()) {
-                intent = new Intent(this, HomeDashboardActivity.class);
-            } else {
-                intent = new Intent(this, SetupWelcomeActivity.class);
-            }
+            Intent intent = new Intent(this, HomeDashboardActivity.class);
             startActivity(intent);
             finish();
             return;
@@ -100,12 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                                 resource.getData().getName()
                         );
                         Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-                        Intent intent;
-                        if (sessionManager.isSetupCompleted()) {
-                            intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
-                        } else {
-                            intent = new Intent(LoginActivity.this, SetupWelcomeActivity.class);
-                        }
+                        Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
                         startActivity(intent);
                         finish();
                     } else {

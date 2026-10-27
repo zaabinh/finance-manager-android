@@ -21,6 +21,8 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    private static final String KEY_REGISTERED_EMAIL = "key_registered_email";
+
     private EditText etUsername;
     private EditText etEmail;
     private EditText etPassword;
@@ -40,6 +42,10 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+
+        if (savedInstanceState != null) {
+            registeredEmail = savedInstanceState.getString(KEY_REGISTERED_EMAIL, "");
+        }
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
@@ -78,8 +84,13 @@ public class RegisterActivity extends AppCompatActivity {
                     btnRegister.setText(R.string.btn_register);
                     Toast.makeText(this, R.string.register_success, Toast.LENGTH_SHORT).show();
 
+                    String emailToPass = authViewModel.getRegisteredEmail();
+                    if (TextUtils.isEmpty(emailToPass)) {
+                        emailToPass = registeredEmail;
+                    }
+
                     Intent intent = new Intent(RegisterActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", registeredEmail);
+                    intent.putExtra("email", emailToPass);
                     startActivity(intent);
                     finish();
                     break;
@@ -143,5 +154,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         registeredEmail = email;
         authViewModel.register(username, email, password);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_REGISTERED_EMAIL, registeredEmail);
     }
 }

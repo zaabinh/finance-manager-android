@@ -24,6 +24,7 @@ import java.util.Locale;
 public class VerifyEmailActivity extends AppCompatActivity {
 
     private static final String KEY_END_TIME_STAMP = "key_end_time_stamp";
+    private static final String KEY_USER_EMAIL = "key_user_email";
     private static final long TIMER_DURATION_MS = 60000;
 
     private EditText etOtp1, etOtp2, etOtp3, etOtp4;
@@ -32,6 +33,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
     private CountDownTimer countDownTimer;
     private boolean isTimerRunning = false;
     private long endTimeStamp = 0;
+    private boolean isFormattingOtp = false;
 
     private AuthViewModel authViewModel;
     private String userEmail;
@@ -42,10 +44,6 @@ public class VerifyEmailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify_email);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        userEmail = getIntent().getStringExtra("email");
-        if (userEmail == null) {
-            userEmail = "";
-        }
 
         initViews();
         setupOtpInputs();
@@ -53,6 +51,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
         setupObservers();
 
         if (savedInstanceState != null) {
+            userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra("email"));
             endTimeStamp = savedInstanceState.getLong(KEY_END_TIME_STAMP, 0);
             long remaining = endTimeStamp - System.currentTimeMillis();
             if (remaining > 0) {
@@ -61,7 +60,12 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 resetResendUi();
             }
         } else {
+            userEmail = getIntent().getStringExtra("email");
             startResendTimer(TIMER_DURATION_MS);
+        }
+
+        if (userEmail == null) {
+            userEmail = "";
         }
     }
 
@@ -88,19 +92,36 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() == 1) {
+                if (isFormattingOtp) return;
+
+                String rawInput = s.toString();
+                String digits = rawInput.replaceAll("[^0-9]", "");
+
+                if (digits.length() >= 4) {
+                    isFormattingOtp = true;
+                    etOtp1.setText(String.valueOf(digits.charAt(0)));
+                    etOtp2.setText(String.valueOf(digits.charAt(1)));
+                    etOtp3.setText(String.valueOf(digits.charAt(2)));
+                    etOtp4.setText(String.valueOf(digits.charAt(3)));
+                    etOtp4.requestFocus();
+                    etOtp4.setSelection(etOtp4.getText().length());
+                    isFormattingOtp = false;
+                    return;
+                }
+
+                if (digits.length() == 1) {
                     if (next != null) {
                         next.requestFocus();
                     }
-                } else if (s.length() > 1) {
-                    String pasted = s.toString().trim();
-                    if (pasted.length() == 4) {
-                        etOtp1.setText(String.valueOf(pasted.charAt(0)));
-                        etOtp2.setText(String.valueOf(pasted.charAt(1)));
-                        etOtp3.setText(String.valueOf(pasted.charAt(2)));
-                        etOtp4.setText(String.valueOf(pasted.charAt(3)));
-                        etOtp4.requestFocus();
+                } else if (digits.length() > 1) {
+                    isFormattingOtp = true;
+                    char lastChar = digits.charAt(digits.length() - 1);
+                    current.setText(String.valueOf(lastChar));
+                    current.setSelection(current.getText().length());
+                    if (next != null) {
+                        next.requestFocus();
                     }
+                    isFormattingOtp = false;
                 }
             }
 
@@ -237,6 +258,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(KEY_END_TIME_STAMP, endTimeStamp);
+        outState.putString(KEY_USER_EMAIL, userEmail);
     }
 
     @Override
