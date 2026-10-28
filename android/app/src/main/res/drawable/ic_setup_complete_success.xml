@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Outer light green circle background -->
+    <path
+        android:fillColor="#F0FDF4"
+        android:pathData="M60,0 A60,60 0 1,1 59.99,0 Z" />
+
+    <!-- Dashed/Dotted compass tick ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#86EFAC"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M60,12 L60,17 M60,103 L60,108 M12,60 L17,60 M103,60 L108,60 M26.06,26.06 L29.59,29.59 M90.41,90.41 L93.94,93.94 M26.06,93.94 L29.59,90.41 M90.41,29.59 L93.94,26.06 M37.5,15 L40,18.7 M82.5,15 L80,18.7 M37.5,105 L40,101.3 M82.5,105 L80,101.3 M15,37.5 L18.7,40 M15,82.5 L18.7,80 M105,37.5 L101.3,40 M105,82.5 L101.3,80" />
+
+    <!-- Inner circle outline -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#15803D"
+        android:strokeWidth="3.5"
+        android:pathData="M60,28 A32,32 0 1,1 59.99,28 Z" />
+
+    <!-- Green checkmark -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#15803D"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M48,60 L56,68 L72,52" />
+
+</vector>

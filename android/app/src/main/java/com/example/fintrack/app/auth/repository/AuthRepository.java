@@ -23,21 +23,28 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository chịu trách nhiệm xử lý các tác vụ mạng (gọi API) liên quan đến xác thực (Auth),
+ * sau đó trả kết quả về cho ViewModel thông qua LiveData.
+ */
 public class AuthRepository {
     private final Context appContext;
     private final AuthApiService apiService;
 
+    // Khởi tạo Repository và tạo dịch vụ Retrofit (AuthApiService)
     public AuthRepository(Context context) {
         this.appContext = context.getApplicationContext();
         this.apiService = ApiClient.createService(appContext, AuthApiService.class);
     }
 
+    /** Gọi API Đăng nhập */
     public void login(String usernameOrEmail, String password, MutableLiveData<Resource<LoginResponse>> result) {
         apiService.login(new LoginRequest(usernameOrEmail, password)).enqueue(new Callback<ApiResponse<LoginResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<LoginResponse>> call, Response<ApiResponse<LoginResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<LoginResponse> apiResponse = response.body();
+                    // Kiểm tra xem API trả về thành công và có chứa Token hay không
                     if (apiResponse.isSuccess() && apiResponse.getData() != null && !TextUtils.isEmpty(apiResponse.getData().getAccessToken())) {
                         result.setValue(Resource.success(apiResponse.getData()));
                     } else {
@@ -45,17 +52,20 @@ public class AuthRepository {
                         result.setValue(Resource.error(msg, null));
                     }
                 } else {
+                    // Lỗi HTTP (ví dụ: 400, 401, 500)
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<LoginResponse>> call, Throwable t) {
+                // Lỗi kết nối mạng, mất mạng, timeout,...
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
     }
 
+    /** Gọi API Đăng ký tài khoản */
     public void register(String username, String email, String password, MutableLiveData<Resource<Void>> result) {
         apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
@@ -80,6 +90,7 @@ public class AuthRepository {
         });
     }
 
+    /** Gọi API Xác thực email bằng mã OTP */
     public void verifyEmail(String email, String otp, MutableLiveData<Resource<Void>> result) {
         apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
@@ -104,6 +115,7 @@ public class AuthRepository {
         });
     }
 
+    /** Gọi API Gửi lại mã OTP */
     public void resendOtp(String email, MutableLiveData<Resource<Void>> result) {
         apiService.resendOtp(new ResendOtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
@@ -128,6 +140,7 @@ public class AuthRepository {
         });
     }
 
+    /** Gọi API Yêu cầu quên mật khẩu (gửi OTP về email) */
     public void forgotPassword(String email, MutableLiveData<Resource<Void>> result) {
         apiService.forgotPassword(new ForgotPasswordRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
@@ -152,6 +165,7 @@ public class AuthRepository {
         });
     }
 
+    /** Gọi API Đặt lại mật khẩu mới */
     public void resetPassword(String email, String otp, String newPassword, MutableLiveData<Resource<Void>> result) {
         apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override

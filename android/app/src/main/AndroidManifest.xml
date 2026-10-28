@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Quyen truy cap internet, thong bao -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -47,12 +49,48 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Home Screens -->
         <activity
             android:name=".app.home.ui.HomeDashboardActivity"
             android:exported="false" />
 
+        <!-- Setting Screens -->
         <activity
-            android:name=".app.setup.SetupWelcomeActivity"
+            android:name=".app.settings.ui.SettingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingUserActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingNotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingSecurityActivity"
+            android:exported="false" />
+
+        <!-- Setup Screens -->
+        <activity
+            android:name=".app.setup.ui.SetupWelcomeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupBasicInfoActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".app.setup.ui.SetupNotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupWalletActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupCompleteActivity"
             android:exported="false" />
     </application>
 

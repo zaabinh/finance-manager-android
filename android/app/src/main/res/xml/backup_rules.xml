@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Quy tắc sao lưu dữ liệu cho Android 11 trở xuống (API <= 30) -->
 <full-backup-content>
+    <!-- Bỏ qua file lưu session đăng nhập khi backup ứng dụng -->
     <exclude domain="sharedpref" path="fintrack_session_pref.xml" />
 </full-backup-content>
