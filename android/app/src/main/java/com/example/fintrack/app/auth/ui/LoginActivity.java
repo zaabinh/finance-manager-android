@@ -17,6 +17,7 @@ import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
+import com.example.fintrack.app.setup.SetupWelcomeActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -37,8 +38,7 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = SessionManager.getInstance(getApplicationContext());
         if (sessionManager.isLoggedIn()) {
-            Intent intent = new Intent(this, HomeDashboardActivity.class);
-            startActivity(intent);
+            navigateAfterLogin(sessionManager.isSetupCompleted());
             finish();
             return;
         }
@@ -83,19 +83,16 @@ public class LoginActivity extends AppCompatActivity {
                 case SUCCESS:
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
-                    if (resource.getData() != null && !TextUtils.isEmpty(resource.getData().getAccessToken())) {
+                    if (resource.getData() != null && resource.getData().getToken() != null
+                            && !TextUtils.isEmpty(resource.getData().getToken().getAccessToken())) {
                         sessionManager.saveAuthToken(
-                                resource.getData().getAccessToken(),
-                                resource.getData().getRefreshToken()
+                                resource.getData().getToken().getAccessToken(),
+                                resource.getData().getToken().getRefreshToken()
                         );
-                        sessionManager.saveUserProfile(
-                                resource.getData().getUserId(),
-                                resource.getData().getEmail(),
-                                resource.getData().getName()
-                        );
+                        sessionManager.saveDisplayName(resource.getData().getDisplayName());
+                        sessionManager.setSetupCompleted(resource.getData().isOnboardingCompleted());
                         Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
-                        startActivity(intent);
+                        navigateAfterLogin(resource.getData().isOnboardingCompleted());
                         finish();
                     } else {
                         Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
@@ -115,6 +112,11 @@ public class LoginActivity extends AppCompatActivity {
                     break;
             }
         });
+    }
+
+    private void navigateAfterLogin(boolean onboardingCompleted) {
+        Class<?> destination = onboardingCompleted ? HomeDashboardActivity.class : SetupWelcomeActivity.class;
+        startActivity(new Intent(this, destination));
     }
 
     private void handleLogin() {

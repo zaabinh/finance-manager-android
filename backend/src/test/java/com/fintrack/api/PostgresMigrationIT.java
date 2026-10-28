@@ -101,15 +101,15 @@ class PostgresMigrationIT {
                     }
                 }
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("3");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
                      var statement = connection.createStatement();
                      var result = statement.executeQuery(
-                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3') AND success")) {
+                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4') AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(3);
+                    assertThat(result.getInt(1)).isEqualTo(4);
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
@@ -125,7 +125,8 @@ class PostgresMigrationIT {
                         }
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
-                            "wallets", "categories", "transactions", "transaction_entries", "budgets");
+                            "wallets", "categories", "transactions", "transaction_entries", "budgets",
+                            "verification_challenges");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();
                         statement.execute(new String(script.readAllBytes(), StandardCharsets.UTF_8));

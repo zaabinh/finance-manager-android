@@ -10,8 +10,8 @@ target/
 .idea/
 .agents/
 .claude/
-docs/design/assets/
+docs/design/
 .mcp.json
 skills-lock.json
 /database/
-
+CLAUDE.md

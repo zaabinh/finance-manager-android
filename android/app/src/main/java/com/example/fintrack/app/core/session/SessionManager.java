@@ -84,6 +84,12 @@ public class SessionManager {
                 .apply();
     }
 
+    public void saveDisplayName(String displayName) {
+        pref.edit()
+                .putString(KEY_USER_NAME, displayName)
+                .apply();
+    }
+
     public void setSetupCompleted(boolean completed) {
         pref.edit()
                 .putBoolean(KEY_IS_SETUP_COMPLETED, completed)

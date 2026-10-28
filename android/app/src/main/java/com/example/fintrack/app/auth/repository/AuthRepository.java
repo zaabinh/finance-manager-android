@@ -13,6 +13,7 @@ import com.example.fintrack.app.auth.remote.LoginResponse;
 import com.example.fintrack.app.auth.remote.RegisterRequest;
 import com.example.fintrack.app.auth.remote.ResendOtpRequest;
 import com.example.fintrack.app.auth.remote.ResetPasswordRequest;
+import com.example.fintrack.app.auth.remote.TokenResponse;
 import com.example.fintrack.app.auth.remote.VerifyEmailRequest;
 import com.example.fintrack.app.core.network.ApiClient;
 import com.example.fintrack.app.core.network.ApiResponse;
@@ -38,8 +39,11 @@ public class AuthRepository {
             public void onResponse(Call<ApiResponse<LoginResponse>> call, Response<ApiResponse<LoginResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<LoginResponse> apiResponse = response.body();
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null && !TextUtils.isEmpty(apiResponse.getData().getAccessToken())) {
-                        result.setValue(Resource.success(apiResponse.getData()));
+                    LoginResponse loginResponse = apiResponse.getData();
+                    TokenResponse token = loginResponse == null ? null : loginResponse.getToken();
+                    if (apiResponse.isSuccess() && token != null && !TextUtils.isEmpty(token.getAccessToken())
+                            && !TextUtils.isEmpty(token.getRefreshToken())) {
+                        result.setValue(Resource.success(loginResponse));
                     } else {
                         String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.login_response_invalid);
                         result.setValue(Resource.error(msg, null));
@@ -57,24 +61,18 @@ public class AuthRepository {
     }
 
     public void register(String username, String email, String password, MutableLiveData<Resource<Void>> result) {
-        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.register_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.code() == 201) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });

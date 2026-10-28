@@ -12,7 +12,7 @@ public interface AuthApiService {
     Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
 
     @POST("api/v1/auth/register")
-    Call<ApiResponse<Void>> register(@Body RegisterRequest request);
+    Call<Void> register(@Body RegisterRequest request);
 
     @POST("api/v1/auth/verify-email")
     Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
