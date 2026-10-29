@@ -47,8 +47,8 @@ jobs:
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - name: Build debug APK and unit tests
-        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleDebug :app:testDebugUnitTest
+      - name: Build mockDebug APK and unit tests
+        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleMockDebug :app:testMockDebugUnitTest
 
       - name: Upload test reports
         if: ${{ always() }}
@@ -56,18 +56,18 @@ jobs:
         with:
           name: android-reports-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            android/app/build/reports/tests/testDebugUnitTest/
-            android/app/build/test-results/testDebugUnitTest/
+            android/app/build/reports/tests/testMockDebugUnitTest/
+            android/app/build/test-results/testMockDebugUnitTest/
             android/build/reports/problems/
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload debug APK
+      - name: Upload mockDebug APK
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-${{ github.run_id }}-${{ github.run_attempt }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: android-mock-debug-${{ github.run_id }}-${{ github.run_attempt }}
+          path: android/app/build/outputs/apk/mock/debug/app-mock-debug.apk
           if-no-files-found: error
           retention-days: 7
           compression-level: 0

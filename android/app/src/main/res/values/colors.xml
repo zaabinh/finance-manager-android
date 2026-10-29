@@ -1,32 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand Primary Greens -->
-    <color name="primary">#16A34A</color>
-    <color name="primary_dark">#15803D</color>
-    <color name="primary_light">#EAF8F0</color>
-    <color name="primary_container">#DCFCE7</color>
+    <!-- ============================================================ -->
+    <!-- 1. PRIMITIVE PALETTE (Màu gốc từ Design System)             -->
+    <!-- ============================================================ -->
 
-    <!-- Backgrounds & Surfaces -->
-    <color name="background">#F8FAF9</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F1F5F9</color>
+    <!-- Green Brand -->
+    <color name="green_brand_700">#246B43</color>
+    <color name="green_brand_800">#1C5636</color>
+    <color name="green_accent_500">#4CAF50</color>
+    <color name="green_light_100">#E8F1EA</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#111827</color>
-    <color name="text_secondary">#667085</color>
-    <color name="text_hint">#98A2B3</color>
-
-    <!-- Borders & Dividers -->
-    <color name="border_default">#E4E7EC</color>
-    <color name="border_focused">#16A34A</color>
-    <color name="border_error">#DC2626</color>
-
-    <!-- Basic Colors -->
+    <!-- Neutrals (Nền & Chữ) -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="transparent">#00000000</color>
+    <color name="neutral_canvas">#F6F8F5</color>
+    <color name="neutral_surface">#FFFFFF</color>
+    <color name="neutral_surface_alt">#F0F4F0</color>
+    <color name="neutral_text_900">#1D2922</color>
+    <color name="neutral_text_600">#5D6C62</color>
+    <color name="neutral_text_400">#98A69C</color>
+    <color name="neutral_border">#D6E2D9</color>
+    <color name="neutral_border_strong">#7F8F84</color>
 
-    <!-- Status Colors -->
-    <color name="error">#DC2626</color>
-    <color name="success">#16A34A</color>
+    <!-- Semantics (Trạng thái) -->
+    <color name="semantic_success">#287B47</color>
+    <color name="semantic_warning">#9B5A0B</color>
+    <color name="semantic_warning_bg">#FFF3DE</color>
+    <color name="semantic_error">#B73E36</color>
+    <color name="semantic_error_bg">#FFF0EE</color>
+    <color name="semantic_info">#2E68B5</color>
+
+
+    <!-- ============================================================ -->
+    <!-- 2. SEMANTIC COLOR TOKENS (Sử dụng trực tiếp trong UI/Layout) -->
+    <!-- ============================================================ -->
+
+    <!-- Theme Core Colors -->
+    <color name="color_primary">@color/green_brand_700</color>
+    <color name="color_primary_pressed">@color/green_brand_800</color>
+    <color name="color_accent">@color/green_accent_500</color>
+
+    <!-- Backgrounds & Surfaces -->
+    <color name="bg_app_canvas">@color/neutral_canvas</color>
+    <color name="bg_card_surface">@color/neutral_surface</color>
+    <color name="bg_surface_secondary">@color/neutral_surface_alt</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">@color/neutral_text_900</color>
+    <color name="text_secondary">@color/neutral_text_600</color>
+    <color name="text_disabled">@color/neutral_text_400</color>
+    <color name="text_on_primary">@color/neutral_surface</color> <!-- Trắng -->
+
+    <!-- Borders & Dividers -->
+    <color name="divider_light">@color/neutral_border</color>
+    <color name="border_input_outline">@color/neutral_border_strong</color>
+
+    <!-- Feedback / Alert Colors -->
+    <color name="status_success">@color/semantic_success</color>
+    <color name="status_warning">@color/semantic_warning</color>
+    <color name="status_warning_bg">@color/semantic_warning_bg</color>
+    <color name="status_error">@color/semantic_error</color>
+    <color name="status_error_bg">@color/semantic_error_bg</color>
+    <color name="status_info">@color/semantic_info</color>
+
 </resources>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base Style cho Typography -->
+    <style name="TextAppearance.App" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:fontFamily">sans-serif</item> <!-- Hoặc sans-serif-medium / Roboto -->
+    </style>
+
+    <!-- Amount / Hero 30sp SemiBold -->
+    <style name="TextAppearance.App.AmountHero">
+        <item name="android:textSize">@dimen/text_size_amount_hero</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Amount / Medium 22sp SemiBold -->
+    <style name="TextAppearance.App.AmountMedium">
+        <item name="android:textSize">@dimen/text_size_amount_medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Title / Page 22sp SemiBold -->
+    <style name="TextAppearance.App.TitlePage">
+        <item name="android:textSize">@dimen/text_size_title_page</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Title / Section 16sp SemiBold -->
+    <style name="TextAppearance.App.TitleSection">
+        <item name="android:textSize">@dimen/text_size_title_section</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Body / Primary 14sp Regular -->
+    <style name="TextAppearance.App.BodyPrimary">
+        <item name="android:textSize">@dimen/text_size_body_primary</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Body / Secondary 13sp Regular -->
+    <style name="TextAppearance.App.BodySecondary">
+        <item name="android:textSize">@dimen/text_size_body_secondary</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Label 12sp Medium -->
+    <style name="TextAppearance.App.Label">
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Caption 11sp Regular -->
+    <style name="TextAppearance.App.Caption">
+        <item name="android:textSize">@dimen/text_size_caption</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/text_disabled</item>
+    </style>
+
+    <!-- Button 14sp SemiBold -->
+    <style name="TextAppearance.App.Button">
+        <item name="android:textSize">@dimen/text_size_button</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/color_primary</item>
+    </style>
+
+</resources>
