@@ -103,6 +103,14 @@
                 android:text="@string/transaction_history_title"
                 android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
+            <TextView
+                android:id="@+id/tvBudgetTransactionsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/finance_budget_transactions_empty"
+                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                android:visibility="gone" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvBudgetTransactions"
                 android:layout_width="match_parent"

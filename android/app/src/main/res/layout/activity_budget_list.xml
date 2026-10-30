@@ -81,6 +81,13 @@
                 tools:listitem="@layout/item_budget" />
 
             <include
+                android:id="@+id/stateLoadingList"
+                layout="@layout/view_state_loading_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
                 android:id="@+id/stateEmpty"
                 layout="@layout/view_state_empty"
                 android:layout_width="match_parent"

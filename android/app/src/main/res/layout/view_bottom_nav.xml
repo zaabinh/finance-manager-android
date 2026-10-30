@@ -145,7 +145,7 @@
             android:layout_marginTop="2dp"
             android:duplicateParentState="true"
             android:maxLines="1"
-            android:text="@string/nav_khoan"
+            android:text="@string/tab_budget"
             android:textAppearance="@style/TextAppearance.App.Label"
             android:textColor="@color/nav_tab_fg" />
     </LinearLayout>

@@ -143,6 +143,13 @@
                     tools:text="Chi 3.245.000&#160;đ · Thu 18.500.000&#160;đ" />
 
                 <TextView
+                    android:id="@+id/tvActiveTransactionFilters"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/tvMonthSummaryNote"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
