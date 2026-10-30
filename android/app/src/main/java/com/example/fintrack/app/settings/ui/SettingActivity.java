@@ -119,25 +119,16 @@ public class SettingActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // 3. Quản lý Ví -> Hiển thị Dialog danh sách ví mẫu
+        // 3. Quản lý Ví -> Mở WalletListActivity
         rowWallets.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Quản lý Ví")
-                    .setMessage("Danh sách ví hiện có:\n\n• Ví chính: 15.000.000 đ\n• Tiết kiệm: 50.000.000 đ")
-                    .setPositiveButton("Đóng", (dialog, which) -> dialog.dismiss())
-                    .setNeutralButton("Thêm ví", (dialog, which) ->
-                            Toast.makeText(this, "Chức năng thêm ví sẽ sớm ra mắt", Toast.LENGTH_SHORT).show()
-                    )
-                    .show();
+            Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.wallet.ui.WalletListActivity.class);
+            startActivity(intent);
         });
 
-        // 4. Quản lý Danh mục -> Hiển thị Dialog danh mục thu/chi
+        // 4. Quản lý Danh mục -> Mở CategoryListActivity
         rowCategories.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Quản lý Danh mục")
-                    .setMessage("Danh mục thu/chi hiện tại:\n\n• Ăn uống (Chi tiêu)\n• Lương (Thu nhập)\n• Di chuyển (Chi tiêu)")
-                    .setPositiveButton("Đóng", (dialog, which) -> dialog.dismiss())
-                    .show();
+            Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.category.ui.CategoryListActivity.class);
+            startActivity(intent);
         });
 
         // 5. Bảo mật & Tài khoản -> Mở SettingSecurityActivity

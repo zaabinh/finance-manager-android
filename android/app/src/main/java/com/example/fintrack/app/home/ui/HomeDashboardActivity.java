@@ -32,6 +32,12 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
         navSetting = findViewById(R.id.navSetting);
         tvUserName = findViewById(R.id.tvUserName);
+        TextView tvSeeMoreWallets = findViewById(R.id.tvSeeMoreWallets);
+
+        tvSeeMoreWallets.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.wallet.ui.WalletListActivity.class);
+            startActivity(intent);
+        });
 
         // Hiển thị tên từ SessionManager trước
         String name = sessionManager.getUserName();

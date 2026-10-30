@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true">
+
+    <!-- Header Toolbar -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/wallet_detail_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnEditWallet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackground"
+            android:padding="@dimen/spacing_4"
+            android:text="@string/wallet_edit_action"
+            android:textColor="@color/color_primary"
+            android:textSize="@dimen/text_size_body_primary"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Main Content ScrollView -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_16">
+
+            <!-- Hero Wallet Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_card_white"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_24">
+
+                <!-- Icon and Provider Name -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_chip"
+                        android:padding="6dp">
+
+                        <ImageView
+                            android:id="@+id/ivProviderIcon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_bank_card"
+                            app:tint="@color/text_primary" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvWalletName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_8"
+                        android:text="Techcombank"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:text="@string/current_balance_label"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_body_secondary" />
+
+                <!-- Big Amount Text -->
+                <TextView
+                    android:id="@+id/tvBalanceHero"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:text="đ15.736.000"
+                    android:textColor="@color/text_primary"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Monthly Income / Expense Summary Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:orientation="horizontal">
+
+                <!-- Income Summary Box -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/this_month_income"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvIncomeThisMonth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="+đ25.000.000"
+                        android:textColor="@color/status_success"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Expense Summary Box -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/this_month_expense"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvExpenseThisMonth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="-đ9.264.000"
+                        android:textColor="@color/status_error"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Recent Transactions Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_24">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/recent_transactions"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_title_section"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnSeeAllTransactions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/see_all"
+                    android:textColor="@color/color_primary"
+                    android:textSize="@dimen/text_size_body_secondary"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Transactions RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecentTransactions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:nestedScrollingEnabled="false" />
+
+            <!-- Bottom Action Buttons: Delete & Disable -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_32"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnDelete"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginEnd="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_danger"
+                    android:text="@string/btn_delete"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnDisable"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginStart="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_outline"
+                    android:text="@string/btn_disable"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
