@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Cấu hình bảo mật mạng: Bắt buộc dùng HTTPS, chặn hoàn toàn HTTP -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
+            <!-- Chỉ tin tưởng chứng chỉ SSL do hệ thống xác thực -->
             <certificates src="system" />
         </trust-anchors>
     </base-config>

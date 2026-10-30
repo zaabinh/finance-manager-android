@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:padding="@dimen/spacing_24"
+    android:fitsSystemWindows="true">
+
+    <!-- Header Bar -->
+    <LinearLayout
+        android:id="@+id/llHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="@dimen/spacing_4"
+            android:src="@drawable/ic_arrow_back" />
+
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_12"
+            android:text="@string/setup_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_amount_medium"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Progress Indicator Step 3/3 -->
+    <LinearLayout
+        android:id="@+id/llProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_20"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/llHeader">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bước 3/3"
+            android:textColor="@color/color_primary"
+            android:textSize="@dimen/text_size_body_secondary"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/progress_bar_height"
+            android:layout_marginTop="@dimen/spacing_8"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_progress_active" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/progress_bar_gap"
+                android:layout_weight="1"
+                android:background="@drawable/bg_progress_active" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/progress_bar_gap"
+                android:layout_weight="1"
+                android:background="@drawable/bg_progress_active" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Content Scroll -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/spacing_24"
+        android:layout_marginBottom="@dimen/spacing_16"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/btnCompleteSetup"
+        app:layout_constraintTop_toBottomOf="@id/llProgress">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setup_wallet_title"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_amount_medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:text="@string/setup_wallet_subtitle"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body_primary" />
+
+            <!-- Default Cash Wallet Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:background="@drawable/bg_card_white"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/spacing_16">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_wallet_size"
+                    android:layout_height="@dimen/icon_wallet_size"
+                    android:background="@drawable/bg_icon_container_green"
+                    android:contentDescription="@null"
+                    android:padding="@dimen/spacing_8"
+                    android:src="@drawable/ic_cash"
+                    app:tint="@color/color_primary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_12"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wallet_cash"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="@string/wallet_default_desc"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_body_secondary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_initial_balance"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_title_section"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Action Add Other Wallet -->
+            <TextView
+                android:id="@+id/tvAddWallet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="@dimen/spacing_4"
+                android:paddingBottom="@dimen/spacing_4"
+                android:text="@string/btn_add_other_wallet"
+                android:textColor="@color/color_primary"
+                android:textSize="@dimen/text_size_body_primary"
+                android:textStyle="bold" />
+
+            <!-- Category Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_24"
+                android:text="@string/category_default_section"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_title_section"
+                android:textStyle="bold" />
+
+            <!-- Category Chips Wrap -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_8"
+                        android:background="@drawable/bg_chip_outline"
+                        android:paddingStart="@dimen/chip_padding_horizontal"
+                        android:paddingTop="@dimen/chip_padding_vertical"
+                        android:paddingEnd="@dimen/chip_padding_horizontal"
+                        android:paddingBottom="@dimen/chip_padding_vertical"
+                        android:text="@string/cat_food"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_8"
+                        android:background="@drawable/bg_chip_outline"
+                        android:paddingStart="@dimen/chip_padding_horizontal"
+                        android:paddingTop="@dimen/chip_padding_vertical"
+                        android:paddingEnd="@dimen/chip_padding_horizontal"
+                        android:paddingBottom="@dimen/chip_padding_vertical"
+                        android:text="@string/cat_transport"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_chip_outline"
+                        android:paddingStart="@dimen/chip_padding_horizontal"
+                        android:paddingTop="@dimen/chip_padding_vertical"
+                        android:paddingEnd="@dimen/chip_padding_horizontal"
+                        android:paddingBottom="@dimen/chip_padding_vertical"
+                        android:text="@string/cat_shopping"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="@drawable/bg_chip_outline"
+                    android:paddingStart="@dimen/chip_padding_horizontal"
+                    android:paddingTop="@dimen/chip_padding_vertical"
+                    android:paddingEnd="@dimen/chip_padding_horizontal"
+                    android:paddingBottom="@dimen/chip_padding_vertical"
+                    android:text="@string/cat_salary"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:text="@string/category_note"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body_secondary" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Bottom Complete Button -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnCompleteSetup"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height_large"
+        android:layout_marginBottom="@dimen/spacing_12"
+        android:background="@drawable/bg_button_primary"
+        android:text="@string/btn_complete_setup"
+        android:textAllCaps="false"
+        android:textColor="@color/text_on_primary"
+        android:textSize="@dimen/text_size_button"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App & Common -->
-    <string name="app_name">FinTrack</string>
-    <string name="app_slogan">Your Personal Finance Companion</string>
-    <string name="splash_brand_title">Where’s My Money</string>
+    <string name="app_name">Đồng</string>
+    <string name="app_slogan">Người bạn đồng hành tài chính cá nhân của bạn</string>
+    <string name="splash_brand_title">Tiền của tôi ở đâu</string>
     <string name="splash_version">v1.0.0</string>
 
     <!-- Login Screen -->
-    <string name="login_title">Login</string>
-    <string name="login_subtitle">Your Personal Finance Companion</string>
-    <string name="login_email_label">Username or Email</string>
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_subtitle">Chào mừng bạn quay lại Đồng</string>
+    <string name="login_email_label">Tên đăng nhập hoặc Email</string>
     <string name="login_email_hint">VD: NguyenVanA</string>
-    <string name="login_password_label">Password</string>
-    <string name="login_password_hint">VD: 123456</string>
-    <string name="login_button">Login</string>
-    <string name="login_register_prompt">Don’t have an account? Sign Up</string>
+    <string name="login_password_label">Mật khẩu</string>
+    <string name="login_password_hint">VD: 12345678</string>
+    <string name="login_button">Đăng nhập</string>
+    <string name="login_register_prompt">Chưa có tài khoản? Đăng ký</string>
 
-    <string name="label_username_or_email">Username or Email</string>
+    <string name="label_username_or_email">Tên đăng nhập hoặc Email</string>
     <string name="hint_username">VD: NguyenVanA</string>
-    <string name="label_password">Password</string>
-    <string name="hint_password">VD: 123456</string>
-    <string name="forgot_password_link">Forgot Password?</string>
-    <string name="btn_login">Login</string>
-    <string name="prompt_dont_have_account">Don’t have an account? </string>
-    <string name="action_sign_up">Sign Up</string>
+    <string name="label_password">Mật khẩu</string>
+    <string name="hint_password">VD: 12345678</string>
+    <string name="forgot_password_link">Quên mật khẩu?</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="prompt_dont_have_account">Chưa có tài khoản? </string>
+    <string name="action_sign_up">Đăng ký</string>
 
     <!-- Register Screen -->
-    <string name="label_username">Username</string>
+    <string name="label_username">Tên đăng nhập</string>
     <string name="label_email">Email</string>
     <string name="hint_email">VD: nguyenvana@gmail.com</string>
-    <string name="label_confirm_password">Confirm Password</string>
-    <string name="checkbox_terms_policies">I agree to the Terms &amp; Policies.</string>
-    <string name="btn_register">Register</string>
-    <string name="prompt_already_have_account">Do you already have an account? </string>
-    <string name="action_sign_in">Sign In</string>
+    <string name="label_confirm_password">Xác nhận mật khẩu</string>
+    <string name="checkbox_terms_policies">Tôi đồng ý với Điều khoản &amp; Chính sách.</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="prompt_already_have_account">Bạn đã có tài khoản rồi chứ? </string>
+    <string name="action_sign_in">Đăng nhập</string>
 
     <!-- Verify Email Screen -->
-    <string name="verify_email_title">Verify your email</string>
-    <string name="verify_email_subtitle">An OTP has been sent to your email</string>
-    <string name="btn_verify">Verify</string>
-    <string name="resend_otp_countdown">Resent OTP in %1$ds</string>
-    <string name="resend_otp_action">Resend OTP</string>
+    <string name="verify_email_title">Xác thực email của bạn</string>
+    <string name="verify_email_subtitle">Một mã OTP đã được gửi đến email của bạn</string>
+    <string name="btn_verify">Xác thực</string>
+    <string name="resend_otp_countdown">Gửi lại OTP sau %1$ds</string>
+    <string name="resend_otp_action">Gửi lại OTP</string>
 
     <!-- Forgot Password Screen -->
-    <string name="forgot_password_title">Forget Password</string>
-    <string name="btn_send">Send</string>
-    <string name="action_back_to_login">Back to login</string>
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="btn_send">Gửi</string>
+    <string name="action_back_to_login">Quay lại đăng nhập</string>
 
     <!-- Change Password Screen -->
-    <string name="change_password_title">Change Password</string>
+    <string name="change_password_title">Đổi mật khẩu</string>
     <string name="label_reset_otp">Mã OTP xác thực</string>
     <string name="hint_reset_otp">Nhập mã OTP</string>
-    <string name="label_enter_new_password">Enter new password</string>
-    <string name="label_confirm_new_password">Confirm password</string>
-    <string name="btn_submit">Submit</string>
+    <string name="label_enter_new_password">Nhập mật khẩu mới</string>
+    <string name="label_confirm_new_password">Xác nhận mật khẩu</string>
+    <string name="btn_submit">Gửi</string>
 
     <!-- Validation Error Messages -->
     <string name="error_required_field">Trường này không được để trống</string>
@@ -103,43 +103,55 @@
     <string name="btn_go_home">Vào trang chủ</string>
     <string name="see_more">Xem thêm</string>
     <string name="see_all">Xem tất cả</string>
+    <string name="setup_title">Thiết lập</string>
 
     <!-- 02_SetupWelcome -->
-    <string name="setup_welcome_title">Bắt đầu quản lý\ntài chính của bạn</string>
-    <string name="setup_welcome_subtitle">Chỉ mất một chút thời gian để FinTrack hiểu cách bạn muốn quản lý tiền.</string>
+    <string name="setup_welcome_brand">Đồng</string>
+    <string name="setup_welcome_slogan_prefix">Đồng</string>
+    <string name="setup_welcome_slogan_part1"> tiền. </string>
+    <string name="setup_welcome_slogan_part2">Đồng</string>
+    <string name="setup_welcome_slogan_part3"> bộ. </string>
+    <string name="setup_welcome_slogan_part4">Đồng</string>
+    <string name="setup_welcome_slogan_part5"> hành.</string>
+    <string name="setup_welcome_title">Đồng tiền, Đồng bộ, Đồng hành</string>
+    <string name="setup_welcome_subtitle">Một cách đơn giản hơn\nđê quản lý tài chính cá nhận của bạn</string>
 
     <!-- 03_SetupBasicInfo -->
-    <string name="setup_basic_title">Mình nên gọi bạn là gì?</string>
-    <string name="setup_basic_subtitle">Thông tin này giúp FinTrack hiển thị mọi thứ phù hợp hơn với bạn.</string>
+    <string name="setup_basic_title">Chúng tôi nên gọi bạn là gì?</string>
+    <string name="setup_basic_subtitle">Tên này hiển thị trong lời chào trên Trang chủ. Bạn có thể đổi sau trong Cài đặt.</string>
     <string name="setup_display_name_label">Tên hiển thị</string>
     <string name="setup_display_name_hint">Nhập tên của bạn</string>
-    <string name="setup_currency_label">Tiền tệ</string>
+    <string name="setup_display_name_default">Minh Anh</string>
+    <string name="setup_display_name_max">Tối đa 50 ký tự.</string>
+    <string name="setup_currency_label">Đơn vị tiền tệ</string>
+    <string name="setup_currency_info">Việt Nam Đồng (VND, đ) · hiện chỉ hỗ trợ VND</string>
     <string name="currency_vnd">VND (đ)</string>
     <string name="currency_usd">USD ($)</string>
     <string name="currency_eur">EUR (€)</string>
 
     <!-- 04_SetupNotification -->
-    <string name="setup_notif_title">Để FinTrack nhắc bạn đúng lúc</string>
-    <string name="setup_notif_subtitle">Bạn có thể thay đổi các cài đặt này bất cứ lúc nào.</string>
+    <string name="setup_notif_title">Nhắc bạn đúng lúc</string>
+    <string name="setup_notif_subtitle">Bạn có thể đổi các cài đặt này bất cứ lúc nào.</string>
     <string name="notif_enable_title">Bật thông báo</string>
-    <string name="notif_enable_desc">Nhận những nhắc nhở quan trọng về tài chính của bạn.</string>
-    <string name="notif_remind_title">Nhắc ghi thu chi</string>
-    <string name="notif_remind_desc">Một lời nhắc nhẹ để bạn không quên cập nhật giao dịch trong ngày.</string>
+    <string name="notif_enable_desc">Cho phép Đồng gửi nhắc nhớ và cảnh báo</string>
+    <string name="notif_remind_title">Nhắc nhớ hằng ngày</string>
+    <string name="notif_remind_desc">Một lời nhắc nhẹ để không quên ghi chi tiêu</string>
     <string name="notif_time_label">Thời gian nhắc</string>
-    <string name="notif_time_default">21:00</string>
+    <string name="notif_time_default">20:00</string>
     <string name="notif_alert_title">Cảnh báo ngân sách</string>
-    <string name="notif_alert_desc">FinTrack sẽ báo khi chi tiêu của bạn sắp chạm giới hạn.</string>
-    <string name="notif_permission_note">FinTrack cần quyền thông báo để gửi những lời nhắc này. Bạn có thể tắt bất cứ lúc nào trong Cài đặt.</string>
+    <string name="notif_alert_desc">Báo khi chi tiêu sắp chạm hoặc vượt hạn mức bạn đặt</string>
+    <string name="notif_permission_note">Đồng sẽ xin quyền gửi thông báo của Android khi bạn bấm Tiếp tục. Nếu bạn từ chối, bạn vẫn tiếp tục bình thường và có thể bật lại trong Cài đặt.</string>
+    <string name="btn_later">Để sau</string>
 
     <!-- 05_SetupWallet -->
-    <string name="setup_wallet_title">FinTrack đã chuẩn bị sẵn cho bạn</string>
-    <string name="setup_wallet_subtitle">Bạn có thể dùng ngay và chỉnh sửa sau bất cứ lúc nào.</string>
+    <string name="setup_wallet_title">Đồng đã chuẩn bị sẵn cho bạn</string>
+    <string name="setup_wallet_subtitle">Bắt đầu ngay, chỉnh sửa sau bất cứ lúc nào.</string>
     <string name="wallet_default_section">Ví mặc định</string>
     <string name="wallet_cash">Tiền mặt</string>
     <string name="wallet_default_badge">Mặc định</string>
-    <string name="wallet_initial_balance">Số dư ban đầu: đ0</string>
-    <string name="wallet_default_desc">Đây là ví mặc định để bạn có thể bắt đầu ghi giao dịch ngay.</string>
-    <string name="btn_add_other_wallet">+ Thêm ví khác</string>
+    <string name="wallet_initial_balance">0 đ</string>
+    <string name="wallet_default_desc">Ví mặc định</string>
+    <string name="btn_add_other_wallet">+ Thêm ví khác (không bắt buộc)</string>
     <string name="loading_login">Đang đăng nhập...</string>
     <string name="loading_register">Đang đăng ký...</string>
     <string name="loading_verify">Đang xác thực...</string>
@@ -159,11 +171,16 @@
     <string name="cat_salary">Lương</string>
     <string name="cat_bonus">Thưởng</string>
     <string name="cat_other_income">Thu nhập khác</string>
-    <string name="category_note">Danh mục đã được tạo sẵn để bạn có thể bắt đầu nhanh hơn.</string>
+    <string name="category_note">Có sẵn các danh mục chi tiêu và thu nhập phổ biến. Bạn có thể tùy chỉnh sau trong Cài đặt.</string>
 
     <!-- 06_SetupComplete -->
-    <string name="setup_complete_title">Mọi thứ đã sẵn sàng!</string>
-    <string name="setup_complete_subtitle">Bạn có thể bắt đầu ghi thu chi ngay bây giờ. FinTrack sẽ giúp bạn theo dõi phần còn lại.</string>
+    <string name="setup_complete_title">Hoàn tất thiết lập!</string>
+    <string name="setup_complete_subtitle">Đồng đã sẵn sàng đồng hành cùng bạn.</string>
+    <string name="summary_display_name">Tên hiển thị</string>
+    <string name="summary_currency">Đơn vị tiền tệ</string>
+    <string name="summary_default_wallet">Ví mặc định</string>
+    <string name="summary_daily_reminder">Nhắc nhớ hằng ngày</string>
+    <string name="btn_enter_app">Vào ứng dụng</string>
 
     <!-- Dashboard -->
     <string name="greeting_prefix">Xin chào,</string>

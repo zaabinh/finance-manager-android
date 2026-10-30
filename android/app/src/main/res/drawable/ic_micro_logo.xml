@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="343dp"
+    android:height="330dp"
+    android:viewportWidth="343"
+    android:viewportHeight="330">
+
+    <!-- Outer circular ring -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#216B45"
+        android:strokeWidth="20"
+        android:pathData="M 310.5,160 A 142,142 0,1 1,26.5 160 A 142,142 0,1 1,310.5 160" />
+
+    <!-- Stylized D -->
+    <path
+        android:fillColor="#216B45"
+        android:pathData="M 133,71
+            L 171,71
+            C 222.4,71 264,110.8 264,160
+            C 264,209.2 222.4,249 171,249
+            L 133,249
+            L 133,213
+            L 171,213
+            C 202.2,213 228,189.3 228,160
+            C 228,130.7 202.2,106 171,106
+            L 133,106
+            Z" />
+
+    <!-- Horizontal bar -->
+    <path
+        android:fillColor="#216B45"
+        android:pathData="M 79,142 L 186,142 L 186,178 L 79,178 Z" />
+</vector>

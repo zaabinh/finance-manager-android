@@ -1,28 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Spacing -->
-    <dimen name="spacing_xs">4dp</dimen>
-    <dimen name="spacing_sm">8dp</dimen>
-    <dimen name="spacing_md">16dp</dimen>
-    <dimen name="spacing_lg">24dp</dimen>
-    <dimen name="spacing_xl">32dp</dimen>
-    <dimen name="spacing_xxl">48dp</dimen>
+    <!-- ============================================================ -->
+    <!-- 1. SPACING (Chuẩn 4-pt Grid System)                          -->
+    <!-- ============================================================ -->
+    <dimen name="spacing_4">4dp</dimen>
+    <dimen name="spacing_8">8dp</dimen>
+    <dimen name="spacing_12">12dp</dimen>
+    <dimen name="spacing_14">14dp</dimen>
+    <dimen name="spacing_16">16dp</dimen>
+    <dimen name="spacing_18">18dp</dimen>
+    <dimen name="spacing_20">20dp</dimen>
+    <dimen name="spacing_24">24dp</dimen>
+    <dimen name="spacing_32">32dp</dimen>
+    <dimen name="spacing_48">48dp</dimen>
 
-    <!-- Component Sizes -->
-    <dimen name="input_height">52dp</dimen>
-    <dimen name="button_height">52dp</dimen>
-    <dimen name="corner_radius_sm">8dp</dimen>
-    <dimen name="corner_radius_md">12dp</dimen>
-    <dimen name="corner_radius_lg">16dp</dimen>
+    <!-- ============================================================ -->
+    <!-- 2. CORNER RADIUS (Độ bo góc chuẩn)                           -->
+    <!-- ============================================================ -->
+    <dimen name="radius_xs">8dp</dimen>
+    <dimen name="radius_input_button">12dp</dimen>
+    <dimen name="radius_card">16dp</dimen>
+    <dimen name="radius_hero">20dp</dimen>
+    <dimen name="radius_bottom_sheet">24dp</dimen>
+    <dimen name="radius_full">999dp</dimen> <!-- Dùng cho Chip / Pill button -->
 
-    <!-- OTP Input Box -->
+    <!-- ============================================================ -->
+    <!-- 3. FONT SIZES (Kích thước chữ)                               -->
+    <!-- ============================================================ -->
+    <dimen name="text_size_amount_hero">30sp</dimen>
+    <dimen name="text_size_amount_medium">22sp</dimen>
+    <dimen name="text_size_title_page">22sp</dimen>
+    <dimen name="text_size_title_section">16sp</dimen>
+    <dimen name="text_size_body_primary">14sp</dimen>
+    <dimen name="text_size_body_secondary">13sp</dimen>
+    <dimen name="text_size_label">12sp</dimen>
+    <dimen name="text_size_caption">11sp</dimen>
+    <dimen name="text_size_button">14sp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- 4. COMPONENTS & CONTROLS (Buttons, Inputs, OTP, Chips)       -->
+    <!-- ============================================================ -->
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_height_large">52dp</dimen>
+    <dimen name="input_height">48dp</dimen>
     <dimen name="otp_box_size">56dp</dimen>
 
-    <!-- Typography Sizes -->
-    <dimen name="text_size_xs">12sp</dimen>
-    <dimen name="text_size_sm">14sp</dimen>
-    <dimen name="text_size_md">16sp</dimen>
-    <dimen name="text_size_lg">20sp</dimen>
-    <dimen name="text_size_xl">24sp</dimen>
-    <dimen name="text_size_xxl">28sp</dimen>
+    <dimen name="chip_padding_horizontal">16dp</dimen>
+    <dimen name="chip_padding_vertical">8dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- 5. ICONS & AVATARS                                           -->
+    <!-- ============================================================ -->
+    <dimen name="icon_small_size">20dp</dimen>
+    <dimen name="icon_medium_size">20dp</dimen>
+    <dimen name="icon_nav_size">22dp</dimen>
+    <dimen name="icon_notification_size">22dp</dimen>
+    <dimen name="icon_fab_size">24dp</dimen>
+    <dimen name="icon_back_size">32dp</dimen>
+    <dimen name="icon_container_size">36dp</dimen>
+    <dimen name="icon_wallet_size">40dp</dimen>
+    <dimen name="avatar_header_size">44dp</dimen>
+
+    <!-- ============================================================ -->
+    <!-- 6. LAYOUTS, SCREENS & SPECIFIC VIEWS                         -->
+    <!-- ============================================================ -->
+    <!-- Progress Bar -->
+    <dimen name="progress_bar_height">4dp</dimen>
+    <dimen name="progress_bar_gap">6dp</dimen>
+    <dimen name="divider_height">1dp</dimen>
+
+    <!-- Welcome & Setup Screen -->
+    <dimen name="welcome_logo_size">96dp</dimen>
+    <dimen name="welcome_landscape_height">140dp</dimen>
+    <dimen name="setup_success_graphic_size">120dp</dimen>
+
+    <!-- Dashboard & Navigation Bar -->
+    <dimen name="fab_size">48dp</dimen>
+    <dimen name="nav_bar_height">64dp</dimen>
+    <dimen name="badge_dot_size">8dp</dimen>
+    <dimen name="wallet_card_width_sm">120dp</dimen>
+    <dimen name="wallet_card_width_md">130dp</dimen>
 </resources>
