@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Input/Amount 628:2576 (Regular). Binding code:
+     - label: transaction_amount_label / transfer_amount_label / receipt_amount_label
+     - sign: "−" amount_expense, "+" amount_income, GONE for transfer
+     - error: layoutAmountRow background = bg_amount_underline_error, tvAmountError VISIBLE -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/amountInput"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvAmountLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@id/etAmount"
+        android:text="@string/transaction_amount_label"
+        android:textAppearance="@style/TextAppearance.App.Label"
+        android:textColor="@color/text_secondary" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutAmountRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4"
+        android:addStatesFromChildren="true"
+        android:background="@drawable/bg_amount_underline"
+        android:minHeight="@dimen/input_min_height"
+        android:paddingTop="@dimen/spacing_8"
+        android:paddingBottom="@dimen/spacing_8">
+
+        <TextView
+            android:id="@+id/tvAmountSign"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/spacing_4"
+            android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.App.AmountHero"
+            android:textColor="@color/amount_expense"
+            app:layout_constraintBaseline_toBaselineOf="@id/etAmount"
+            app:layout_constraintEnd_toStartOf="@id/etAmount"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="−" />
+
+        <EditText
+            android:id="@+id/etAmount"
+            style="@style/Widget.App.TextView.Amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:hint="@string/transaction_amount_hint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:minWidth="24dp"
+            android:padding="0dp"
+            android:textAppearance="@style/TextAppearance.App.AmountHero"
+            android:textColorHint="@color/text_primary"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tvAmountCurrency"
+            app:layout_constraintStart_toEndOf="@id/tvAmountSign"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="95.000" />
+
+        <TextView
+            android:id="@+id/tvAmountCurrency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_4"
+            android:text="@string/currency_symbol"
+            android:textAppearance="@style/TextAppearance.App.AmountMedium"
+            android:textColor="@color/text_secondary"
+            app:layout_constraintBaseline_toBaselineOf="@id/etAmount"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/etAmount" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tvAmountError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4"
+        android:accessibilityLiveRegion="polite"
+        android:text="@string/transaction_amount_error"
+        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+        android:textColor="@color/status_error"
+        android:visibility="gone" />
+</LinearLayout>

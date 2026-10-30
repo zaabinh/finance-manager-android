@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma State/Loading Type=Form 629:2964: label/field ×2 + button skeleton. Decorative only. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateLoadingForm"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/bg_card_surface"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_16">
+
+    <View
+        android:layout_width="80dp"
+        android:layout_height="12dp"
+        android:background="@drawable/bg_skeleton" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/input_min_height"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:background="@drawable/bg_skeleton_field" />
+
+    <View
+        android:layout_width="96dp"
+        android:layout_height="12dp"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:background="@drawable/bg_skeleton" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/input_min_height"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:background="@drawable/bg_skeleton_field" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:background="@drawable/bg_skeleton_field" />
+</LinearLayout>

@@ -1,34 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Brand/Logo/Micro 625:1951. Use at <= 48dp; tint to @color/text_on_primary on brand backgrounds. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="343dp"
-    android:height="330dp"
-    android:viewportWidth="343"
-    android:viewportHeight="330">
-
-    <!-- Outer circular ring -->
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
     <path
-        android:fillColor="@android:color/transparent"
-        android:strokeColor="#216B45"
-        android:strokeWidth="20"
-        android:pathData="M 310.5,160 A 142,142 0,1 1,26.5 160 A 142,142 0,1 1,310.5 160" />
-
-    <!-- Stylized D -->
-    <path
-        android:fillColor="#216B45"
-        android:pathData="M 133,71
-            L 171,71
-            C 222.4,71 264,110.8 264,160
-            C 264,209.2 222.4,249 171,249
-            L 133,249
-            L 133,213
-            L 171,213
-            C 202.2,213 228,189.3 228,160
-            C 228,130.7 202.2,106 171,106
-            L 133,106
-            Z" />
-
-    <!-- Horizontal bar -->
-    <path
-        android:fillColor="#216B45"
-        android:pathData="M 79,142 L 186,142 L 186,178 L 79,178 Z" />
+        android:fillColor="@color/green_brand_700"
+        android:fillType="evenOdd"
+        android:pathData="M1,24a23,23 0,1 0,46 0a23,23 0,1 0,-46 0Z M4,24a20,20 0,1 0,40 0a20,20 0,1 0,-40 0Z" />
+    <group
+        android:translateX="10.5"
+        android:translateY="10.5">
+        <path
+            android:fillColor="@color/green_brand_700"
+            android:pathData="M8.1,0L14.4,0C17.98,0 21.41,1.42 23.95,3.95C26.48,6.49 27.9,9.92 27.9,13.5C27.9,17.08 26.48,20.51 23.95,23.05C21.41,25.58 17.98,27 14.4,27L8.1,27L8.1,21.6L14.4,21.6C16.55,21.6 18.61,20.75 20.13,19.23C21.65,17.71 22.5,15.65 22.5,13.5C22.5,11.35 21.65,9.29 20.13,7.77C18.61,6.25 16.55,5.4 14.4,5.4L8.1,5.4Z M0,10.8L16.2,10.8L16.2,16.2L0,16.2Z" />
+    </group>
 </vector>

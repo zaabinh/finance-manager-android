@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:padding="@dimen/spacing_24"
+    android:fitsSystemWindows="true">
+
+    <!-- Top Graphic & Title Container -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/btnEnterApp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/spacing_24">
+
+            <!-- Success Graphic -->
+            <ImageView
+                android:layout_width="@dimen/setup_success_graphic_size"
+                android:layout_height="@dimen/setup_success_graphic_size"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_setup_complete_success" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_24"
+                android:text="@string/setup_complete_title"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_amount_medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:gravity="center"
+                android:text="@string/setup_complete_subtitle"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body_primary" />
+
+            <!-- Summary Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_32"
+                android:background="@drawable/bg_card_white"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_18">
+
+                <!-- Row 1: Tên hiển thị -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_medium_size"
+                        android:layout_height="@dimen/icon_medium_size"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_person"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/summary_display_name"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:id="@+id/tvSummaryName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setup_display_name_default"
+                        android:textColor="@color/color_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/divider_height"
+                    android:layout_marginTop="@dimen/spacing_14"
+                    android:layout_marginBottom="@dimen/spacing_14"
+                    android:background="@color/divider_light" />
+
+                <!-- Row 2: Đơn vị tiền tệ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_medium_size"
+                        android:layout_height="@dimen/icon_medium_size"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_cash"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/summary_currency"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/currency_vnd"
+                        android:textColor="@color/color_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/divider_height"
+                    android:layout_marginTop="@dimen/spacing_14"
+                    android:layout_marginBottom="@dimen/spacing_14"
+                    android:background="@color/divider_light" />
+
+                <!-- Row 3: Ví mặc định -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_medium_size"
+                        android:layout_height="@dimen/icon_medium_size"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_wallet"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/summary_default_wallet"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wallet_cash"
+                        android:textColor="@color/color_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/divider_height"
+                    android:layout_marginTop="@dimen/spacing_14"
+                    android:layout_marginBottom="@dimen/spacing_14"
+                    android:background="@color/divider_light" />
+
+                <!-- Row 4: Nhắc nhớ hằng ngày -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_medium_size"
+                        android:layout_height="@dimen/icon_medium_size"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_bell"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/summary_daily_reminder"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:id="@+id/tvSummaryReminderTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="20:00"
+                        android:textColor="@color/color_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Bottom Enter App Button -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnEnterApp"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height_large"
+        android:layout_marginBottom="@dimen/spacing_12"
+        android:background="@drawable/bg_button_primary"
+        android:text="@string/btn_enter_app"
+        android:textAllCaps="false"
+        android:textColor="@color/text_on_primary"
+        android:textSize="@dimen/text_size_button"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
