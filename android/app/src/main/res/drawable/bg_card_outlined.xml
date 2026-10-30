@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Detail summary/details card and option group: surface, 1dp border/default, radius/large -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/bg_card_surface" />
+    <stroke android:width="@dimen/divider_height" android:color="@color/divider_light" />
+    <corners android:radius="@dimen/radius_card" />
+</shape>

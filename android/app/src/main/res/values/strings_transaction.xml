@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Transaction feature UI copy (Figma P5 section 658:3998). Sample data lives in tools:text only. -->
+<resources>
+    <string name="action_back">Quay lại</string>
+    <string name="action_close">Đóng</string>
+
+    <!-- Types / filters -->
+    <string name="transaction_filter_all">Tất cả</string>
+    <string name="transaction_type_expense">Chi tiêu</string>
+    <string name="transaction_type_income">Thu nhập</string>
+    <string name="transaction_type_transfer">Chuyển tiền</string>
+
+    <!-- History (658:4618) -->
+    <string name="transaction_history_title">Lịch sử</string>
+    <string name="transaction_search_hint">Tìm giao dịch</string>
+    <string name="transaction_filters_label">Lọc theo loại giao dịch</string>
+    <string name="transaction_month_format">Tháng %1$s</string>
+    <string name="transaction_change_month">Đổi tháng</string>
+    <string name="transaction_month_summary">Chi %1$s · Thu %2$s</string>
+    <string name="transaction_summary_excludes_transfer">Không gồm chuyển tiền giữa các ví</string>
+    <string name="transaction_group_today">Hôm nay · %1$s</string>
+    <string name="transaction_group_yesterday">Hôm qua · %1$s</string>
+    <string name="transaction_empty_title">Chưa có giao dịch nào</string>
+    <string name="transaction_empty_body">Ghi lại khoản chi đầu tiên để Đồng giúp bạn theo dõi tiền mỗi ngày.</string>
+    <string name="transaction_empty_action">Ghi giao dịch</string>
+    <string name="transaction_no_results_title">Không tìm thấy kết quả</string>
+    <!-- %1$s = filter label (e.g. Thu nhập), %2$s = month (e.g. tháng 10/2026) -->
+    <string name="transaction_no_results_body">Không có khoản %1$s nào trong %2$s. Thử chọn “Tất cả” hoặc đổi tháng.</string>
+    <string name="transaction_clear_filters">Xoá bộ lọc</string>
+    <string name="state_error_title">Không tải được dữ liệu</string>
+    <string name="state_error_body">Kiểm tra kết nối mạng rồi thử lại.</string>
+    <string name="action_retry">Thử lại</string>
+    <string name="transaction_saved_toast">Đã lưu giao dịch %1$s</string>
+    <string name="transaction_save_failed_toast">Không lưu được. Nội dung bạn nhập vẫn được giữ.</string>
+
+    <!-- Bottom navigation (643:2498) -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_khoan">Khoản</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_add_transaction">Ghi giao dịch</string>
+
+    <!-- Form (658:4617) -->
+    <string name="transaction_add_title">Ghi giao dịch</string>
+    <string name="transaction_edit_title">Sửa giao dịch</string>
+    <string name="transfer_add_title">Chuyển tiền</string>
+    <string name="transaction_type_label">Loại giao dịch</string>
+    <string name="transaction_amount_label">Số tiền</string>
+    <string name="transfer_amount_label">Số tiền chuyển</string>
+    <string name="transaction_amount_hint">0</string>
+    <string name="currency_symbol">đ</string>
+    <string name="transaction_amount_error">Số tiền phải lớn hơn 0 đ</string>
+    <string name="transaction_category_label">Danh mục</string>
+    <string name="transaction_category_placeholder">Chọn danh mục</string>
+    <string name="transaction_wallet_label">Ví</string>
+    <string name="transaction_wallet_placeholder">Chọn ví</string>
+    <string name="transfer_source_wallet_label">Ví nguồn</string>
+    <string name="transfer_destination_wallet_label">Ví đích</string>
+    <string name="transfer_destination_wallet_placeholder">Chọn ví nhận</string>
+    <string name="transfer_info_note">Chuyển tiền giữa các ví của bạn không tính là thu hay chi và không trừ vào ngân sách. Tổng tài sản không đổi.</string>
+    <string name="transfer_same_wallet_error">Ví nguồn và ví đích phải khác nhau. Hãy chọn một ví khác để nhận tiền.</string>
+    <string name="transaction_date_label">Thời gian</string>
+    <string name="transaction_note_label">Ghi chú (không bắt buộc)</string>
+    <string name="transaction_note_hint">Thêm ghi chú</string>
+    <string name="transaction_save">Lưu giao dịch</string>
+    <string name="transfer_save">Lưu chuyển tiền</string>
+
+    <!-- Picker sheets (629:2895, 658:5800) -->
+    <string name="picker_category_title">Chọn danh mục</string>
+    <string name="picker_wallet_title">Chọn ví</string>
+    <string name="picker_confirm">Chọn</string>
+    <string name="picker_add_category">+ Thêm danh mục mới</string>
+
+    <!-- Detail (658:5588, 674:7018) -->
+    <string name="transfer_detail_title">Chi tiết chuyển tiền</string>
+    <string name="transaction_store_label">Cửa hàng</string>
+    <string name="transaction_note_short_label">Ghi chú</string>
+    <string name="transfer_from_label">Từ ví</string>
+    <string name="transfer_to_label">Đến ví</string>
+    <string name="transfer_impact_label">Ảnh hưởng</string>
+    <!-- %1$s source wallet, %2$s amount, %3$s destination wallet -->
+    <string name="transfer_impact_value">%1$s −%2$s · %3$s +%2$s. Không tính vào thu, chi hay ngân sách; tổng tài sản không đổi.</string>
+    <string name="transaction_delete_title">Xóa giao dịch này?</string>
+    <!-- %1$s signed amount, %2$s time, %3$s date, %4$s wallet -->
+    <string name="transaction_delete_body">Giao dịch %1$s lúc %2$s ngày %3$s sẽ bị xóa và số dư %4$s được tính lại. Không thể hoàn tác.</string>
+
+    <!-- Receipt import / OCR (658:6489 concept, 658:6660) -->
+    <string name="receipt_import_title">Quét hóa đơn</string>
+    <string name="receipt_import_experimental">Tính năng đang thử nghiệm. Kết quả chỉ là gợi ý — bạn luôn kiểm tra trước khi lưu.</string>
+    <string name="receipt_import_camera">Chụp hóa đơn</string>
+    <string name="receipt_import_library">Chọn ảnh từ thư viện (nhiều ảnh)</string>
+    <string name="receipt_import_explainer">Mỗi ảnh hóa đơn là 1 giao dịch. Bạn có thể chọn nhiều ảnh cùng lúc. Đồng gợi ý số tiền, ngày, cửa hàng và danh mục — không có giao dịch nào được lưu cho đến khi bạn xác nhận.</string>
+    <string name="receipt_import_reading">Đang đọc hóa đơn… Việc này có thể mất vài giây.</string>
+    <string name="receipt_camera_permission_title">Cho phép dùng camera?</string>
+    <string name="receipt_camera_permission_body">Đồng cần camera để chụp hóa đơn. Ảnh chỉ dùng để đọc số tiền và không tự lưu giao dịch.</string>
+    <string name="action_later">Để sau</string>
+    <string name="action_allow">Cho phép</string>
+    <string name="receipt_review_title">Kiểm tra hóa đơn</string>
+    <string name="receipt_review_title_batch">Kiểm tra hóa đơn · %1$d/%2$d</string>
+    <string name="receipt_review_uncertain">%1$d thông tin Đồng chưa chắc chắn (viền vàng). Hãy kiểm tra trước khi lưu.</string>
+    <string name="receipt_review_multi_item">Hóa đơn có %1$d mặt hàng. Đồng ghi thành 1 giao dịch theo tổng tiền — tách từng mặt hàng chưa được hỗ trợ.</string>
+    <string name="receipt_amount_label">Số tiền trên hóa đơn</string>
+    <string name="receipt_category_suggested_label">Danh mục (gợi ý)</string>
+    <string name="receipt_date_suggested_label">Thời gian (gợi ý)</string>
+    <string name="receipt_confirm_save">Xác nhận &amp; lưu</string>
+    <string name="receipt_add_more">Chụp thêm hóa đơn</string>
+    <string name="receipt_rescan">Quét lại</string>
+    <string name="receipt_unreadable_title">Không đọc được hóa đơn</string>
+    <string name="receipt_unreadable_body">Ảnh bị mờ hoặc thiếu sáng. Đặt hóa đơn phẳng, đủ sáng rồi chụp lại — hoặc nhập tay.</string>
+    <string name="receipt_retake">Chụp lại</string>
+    <string name="receipt_manual_entry">Nhập tay thay thế</string>
+</resources>

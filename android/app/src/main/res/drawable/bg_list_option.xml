@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- List/Option 628:2749: surface; Selected = bg/brand-subtle (View.setSelected) -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true"><color android:color="@color/bg_brand_subtle" /></item>
+    <item android:state_pressed="true"><color android:color="@color/bg_surface_secondary" /></item>
+    <item><color android:color="@color/bg_card_surface" /></item>
+</selector>

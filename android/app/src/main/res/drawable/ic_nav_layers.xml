@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lucide icon (Figma lucide set 189:901), 2dp stroke. Tint with app:tint for other states. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12.83,2.18A2,2 0,0 0,11.17 2.18L2.6,6.08A1,1 0,0 0,2.6 7.91L11.18,11.82A2,2 0,0 0,12.84 11.82L21.42,7.92A1,1 0,0 0,21.42 6.09Z"
+        android:strokeColor="@color/text_secondary"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M2,12A1,1 0,0 0,2.58 12.91L11.18,16.82A2,2 0,0 0,12.83 16.82L21.41,12.92A1,1 0,0 0,22 12"
+        android:strokeColor="@color/text_secondary"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M2,17A1,1 0,0 0,2.58 17.91L11.18,21.82A2,2 0,0 0,12.83 21.82L21.41,17.92A1,1 0,0 0,22 17"
+        android:strokeColor="@color/text_secondary"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

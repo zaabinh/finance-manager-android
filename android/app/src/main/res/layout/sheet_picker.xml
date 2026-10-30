@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Sheet/Container 629:2895 (Scrollable) for BottomSheetDialog content.
+     Category picker (658:5800): title picker_category_title, btnPickerAddNew VISIBLE.
+     Wallet picker (Ví / Ví nguồn / Ví đích): title picker_wallet_title, btnPickerAddNew GONE.
+     Bottom gesture inset comes from the BottomSheetDialog window insets, not a fixed spacer. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheetPicker"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sheet_handle_area_height">
+
+        <View
+            android:layout_width="@dimen/sheet_handle_width"
+            android:layout_height="@dimen/sheet_handle_height"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_sheet_handle" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sheet_header_height"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/spacing_16"
+        android:paddingEnd="@dimen/spacing_4">
+
+        <TextView
+            android:id="@+id/tvPickerTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:accessibilityHeading="true"
+            android:textAppearance="@style/TextAppearance.App.TitleSection"
+            tools:text="@string/picker_category_title" />
+
+        <ImageButton
+            android:id="@+id/btnPickerClose"
+            android:layout_width="@dimen/touch_target_min"
+            android:layout_height="@dimen/touch_target_min"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_close"
+            android:src="@drawable/ic_close" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPickerOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:overScrollMode="ifContentScrolls"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_picker_option" />
+
+    <TextView
+        android:id="@+id/btnPickerAddNew"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/selector_min_height"
+        android:paddingStart="@dimen/spacing_16"
+        android:paddingEnd="@dimen/spacing_16"
+        android:text="@string/picker_add_category"
+        android:textAppearance="@style/TextAppearance.App.Button"
+        android:textColor="@color/color_primary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet_action_divider"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_12"
+        android:paddingEnd="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_16">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPickerConfirm"
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/picker_confirm" />
+    </LinearLayout>
+</LinearLayout>

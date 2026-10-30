@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Field/Selector 628:2477 Default/Selected: surface, 1dp border/strong, radius/medium -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/bg_card_surface" />
+    <stroke android:width="@dimen/divider_height" android:color="@color/border_input_outline" />
+    <corners android:radius="@dimen/radius_input_button" />
+</shape>
