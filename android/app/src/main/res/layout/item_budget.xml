@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Card/BudgetProgress 641:2358 and Budget List item 676:8462 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardBudget"
+    style="@style/Widget.App.CardOutlined"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_12"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_16">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="@dimen/icon_tile_size"
+            android:layout_height="@dimen/icon_tile_size"
+            android:layout_marginEnd="@dimen/spacing_12"
+            android:background="@drawable/bg_icon_tile"
+            android:backgroundTint="@color/bg_surface_secondary">
+
+            <ImageView
+                android:id="@+id/ivBudgetCategoryIcon"
+                android:layout_width="@dimen/icon_size_default"
+                android:layout_height="@dimen/icon_size_default"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:tint="@color/text_secondary"
+                tools:src="@drawable/ic_category" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvBudgetCategoryName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+                tools:text="Ăn uống &amp; Cafe" />
+
+            <TextView
+                android:id="@+id/tvBudgetPeriod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                tools:text="Tháng 10/2026" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvBudgetPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textColor="@color/text_secondary"
+            tools:text="65%" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_12"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvBudgetSpent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.App.TitleSection"
+            tools:text="3.245.000&#160;đ" />
+
+        <TextView
+            android:id="@+id/tvBudgetLimit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+            tools:text="/ 5.000.000&#160;đ" />
+    </LinearLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressBudget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_8"
+        app:trackCornerRadius="4dp"
+        app:trackThickness="8dp"
+        tools:progress="65" />
+
+    <TextView
+        android:id="@+id/tvBudgetStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+        tools:text="Còn lại 1.755.000&#160;đ" />
+</LinearLayout>
