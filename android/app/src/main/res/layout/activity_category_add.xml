@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true">
+
+    <!-- Header Toolbar -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/category_add_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Form ScrollView -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_16">
+
+            <!-- Field 1: Tên danh mục -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:text="@string/category_name_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etCategoryName"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_currency_box"
+                android:hint="@string/category_name_hint"
+                android:inputType="textCapWords"
+                android:paddingHorizontal="@dimen/spacing_16"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_disabled"
+                android:textSize="@dimen/text_size_body_primary" />
+
+            <!-- Field 2: Loại danh mục -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:text="@string/category_type_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                android:textStyle="bold" />
+
+            <RelativeLayout
+                android:id="@+id/btnSelectCategoryType"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_currency_box"
+                android:paddingHorizontal="@dimen/spacing_16">
+
+                <TextView
+                    android:id="@+id/tvSelectedCategoryType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Chọn loại danh mục"
+                    android:textColor="@color/text_disabled"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="@color/text_secondary" />
+            </RelativeLayout>
+
+            <!-- Field 3: Icon Grid -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:text="@string/category_icon_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvIconPicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_card_white"
+                android:padding="@dimen/spacing_8" />
+
+            <!-- Field 4: Mô tả -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:text="@string/category_description_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etDescription"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_currency_box"
+                android:hint="Không bắt buộc"
+                android:inputType="text"
+                android:paddingHorizontal="@dimen/spacing_16"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_disabled"
+                android:textSize="@dimen/text_size_body_primary" />
+
+            <!-- Field 5: Trạng thái -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:text="@string/category_status_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    app:useMaterialThemeColors="true" />
+
+                <TextView
+                    android:id="@+id/tvStatusLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_8"
+                    android:text="@string/status_active"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_body_primary" />
+            </LinearLayout>
+
+            <!-- Bottom Action Buttons: Create & Cancel -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCreateCategory"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:layout_marginTop="@dimen/spacing_32"
+                android:background="@drawable/bg_button_primary"
+                android:text="@string/btn_create_category"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/text_size_button"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCancel"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:background="@drawable/bg_button_outline"
+                android:text="@string/btn_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_button"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
