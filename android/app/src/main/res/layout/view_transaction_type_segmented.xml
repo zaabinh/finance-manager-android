@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Control/Segmented 364:1866 (3-way, Show Transfer on). Single selection is enforced by
+     binding code (check one, uncheck the others); Expense is the default type. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/segmentedTransactionType"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_segmented_track"
+    android:contentDescription="@string/transaction_type_label"
+    android:minHeight="@dimen/segmented_height"
+    android:orientation="horizontal"
+    android:padding="@dimen/spacing_4">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTypeExpense"
+        style="@style/Widget.App.Button.Segment"
+        android:checked="true"
+        android:text="@string/transaction_type_expense" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTypeIncome"
+        style="@style/Widget.App.Button.Segment"
+        android:layout_marginStart="@dimen/spacing_4"
+        android:text="@string/transaction_type_income" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTypeTransfer"
+        style="@style/Widget.App.Button.Segment"
+        android:layout_marginStart="@dimen/spacing_4"
+        android:text="@string/transaction_type_transfer" />
+</LinearLayout>

@@ -44,6 +44,7 @@ public class ApiClient {
                 // Lấy AccessToken từ SessionManager
                 SessionManager sessionManager = SessionManager.getInstance(context.getApplicationContext());
                 String token = sessionManager.getAccessToken();
+                String requestUserId = sessionManager.getUserId();
 
                 // Nếu đã đăng nhập (có token), tự động thêm vào Header "Authorization: Bearer <token>"
                 if (!TextUtils.isEmpty(token)) {
@@ -54,7 +55,8 @@ public class ApiClient {
                 Response response = chain.proceed(requestBuilder.build());
 
                 // Nếu gặp lỗi 401 Unauthorized, tự động xóa phiên đăng nhập bảo mật
-                if (response.code() == 401) {
+                if (response.code() == 401 && java.util.Objects.equals(token, sessionManager.getAccessToken())
+                        && java.util.Objects.equals(requestUserId, sessionManager.getUserId())) {
                     sessionManager.clearSession();
                 }
 

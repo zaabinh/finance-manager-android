@@ -549,7 +549,4 @@
 
     </FrameLayout>
 
-    <!-- Speed Dial Overlay -->
-    <include layout="@layout/layout_speed_dial_fab" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

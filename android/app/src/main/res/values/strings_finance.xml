@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="finance_saved">Đã cập nhật</string>
+    <string name="finance_loading_value">—</string>
+    <string name="finance_conflict">Dữ liệu đã thay đổi hoặc bị trùng. Hãy tải lại và kiểm tra trước khi lưu.</string>
+    <string name="finance_amount_error">Nhập số tiền VND nguyên từ 1 đến 999.999.999.999 đ.</string>
+    <string name="finance_category_error">Chọn danh mục phù hợp với loại giao dịch.</string>
+    <string name="finance_wallet_error">Hãy chọn hoặc thêm ví trước khi lưu.</string>
+    <string name="finance_duplicate_budget">Danh mục này đã có ngân sách trong tháng đã chọn.</string>
+    <string name="finance_not_found">Dữ liệu không còn tồn tại. Hãy tải lại danh sách.</string>
+    <string name="finance_name_error">Tên không được trùng, phải có từ 1 đến 100 ký tự. Ghi chú tối đa 2.000 ký tự.</string>
+    <string name="finance_date_error">Thời gian hoặc tháng không hợp lệ.</string>
+    <string name="finance_storage_error">Không đọc hoặc lưu được dữ liệu trên máy. Dữ liệu đã lưu được giữ nguyên; hãy thử lại.</string>
+    <string name="finance_delete_title">Xóa dữ liệu này?</string>
+    <string name="finance_delete_body">Thao tác không thể hoàn tác. Xóa giao dịch sẽ tính lại số dư và ngân sách; xóa ngân sách vẫn giữ lịch sử giao dịch.</string>
+    <string name="finance_year">Năm</string>
+    <string name="finance_wallet_name">Tên ví</string>
+    <string name="finance_opening_balance">Số dư ban đầu (VND, mặc định 0)</string>
+    <string name="finance_add_wallet">Thêm ví</string>
+    <string name="finance_wallet_bank">Ngân hàng</string>
+    <string name="finance_wallet_savings">Tiết kiệm</string>
+    <string name="finance_wallet_type">Loại ví</string>
+    <string name="finance_wallet_empty">Chưa có ví. Thêm ví khi ghi giao dịch.</string>
+    <string name="finance_category_name">Tên danh mục</string>
+    <string name="finance_filters">Lọc ví / danh mục</string>
+    <string name="finance_no_results">Không có giao dịch phù hợp. Thử đổi tháng hoặc xóa bộ lọc.</string>
+    <string name="finance_budget_empty">Chưa có ngân sách tháng này</string>
+    <string name="finance_budget_empty_body">Đặt giới hạn cho một danh mục chi tiêu để theo dõi số tiền còn lại.</string>
+    <string name="finance_budget_remaining">Còn lại %1$s trong ngân sách</string>
+    <string name="finance_budget_warning">Sắp đạt giới hạn, còn %1$s</string>
+    <string name="finance_budget_exceeded">Đã đạt hoặc vượt giới hạn (%1$s)</string>
+    <string name="finance_budget_limit">Giới hạn tháng: %1$s</string>
+    <string name="finance_budget_transactions_empty">Chưa có giao dịch chi tiêu cho ngân sách này.</string>
+    <string name="finance_payee_label">Cửa hàng / đối tác (không bắt buộc)</string>
+    <string name="finance_camera_error">Không mở được ảnh hoặc camera. Hãy thử chọn ảnh từ thư viện.</string>
+    <string name="finance_view_receipt">Xem ảnh hóa đơn</string>
+    <string name="finance_receipt_check">Kiểm tra lại số tiền, cửa hàng, danh mục, ví và thời gian trước khi lưu. OCR chỉ đưa ra gợi ý.</string>
+    <string name="finance_skip_receipt">Bỏ qua hóa đơn này</string>
+</resources>

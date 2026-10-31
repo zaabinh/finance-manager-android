@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Input/Amount 628:2576: 2dp bottom rule, border/strong; brand while a child has focus -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item android:gravity="bottom" android:height="@dimen/border_width_focus">
+        <shape><solid android:color="@color/color_primary" /></shape>
+    </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item android:gravity="bottom" android:height="@dimen/border_width_focus">
+        <shape><solid android:color="@color/border_input_outline" /></shape>
+    </item>
+        </layer-list>
+    </item>
+</selector>

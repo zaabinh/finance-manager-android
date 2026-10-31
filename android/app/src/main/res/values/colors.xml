@@ -63,4 +63,15 @@
     <color name="status_error_bg">@color/semantic_error_bg</color>
     <color name="status_info">@color/semantic_info</color>
 
+    <!-- v2 tokens not covered above (Figma Đồng · Primitive/Semantic, docs/design/01-02) -->
+    <color name="semantic_error_800">#8F2F29</color>
+    <color name="bg_brand_subtle">@color/green_light_100</color>
+    <color name="bg_inverse">@color/neutral_text_900</color>
+    <color name="bg_scrim">#661D2922</color> <!-- text-900 @ 40 % -->
+    <color name="status_success_bg">@color/green_light_100</color>
+    <!-- Amounts: expense is neutral, the sign carries meaning -->
+    <color name="amount_income">@color/semantic_success</color>
+    <color name="amount_expense">@color/neutral_text_900</color>
+    <color name="transparent_color">#00000000</color>
+    <color name="amount_transfer">@color/neutral_text_600</color>
 </resources>

@@ -1,5 +1,8 @@
 # FinTrack - Finance Manager Application
 
+See [the API contract](docs/api/CONTRACT.md),
+[Product Context](docs/product/PRODUCT_CONTEXT_VI.md), and [UI terminology](docs/design/TERMINOLOGY.md).
+
 A personal finance management system for tracking income and expenses, managing multiple wallets, categorizing transactions, planning monthly budgets, and analyzing spending, all in one platform.
 
 The system consists of:
@@ -154,6 +157,7 @@ finance-manager-android/
 │   │   │       ├── db/migration/              # Flyway scripts: V1__init_schema.sql, V2__seed_default_categories.sql, ...
 │   │   │       ├── application.yml
 │   │   │       ├── application-dev.yml
+│   │   │       ├── application-staging.yml
 │   │   │       └── application-prod.yml
 │   │   └── test/
 │   │       └── java/com/fintrack/api/         # Unit + integration tests (Testcontainers PostgreSQL)
@@ -270,6 +274,12 @@ Image (CameraX / Gallery)
 ---
 
 ## Getting Started
+
+Start with [local environment setup](docs/development/LOCAL_ENVIRONMENT.md) and
+[basic Backend/Android CI](.github/workflows/README.md). Development uses `dev`, staging uses `staging`,
+and production uses `prod`. Admin CI is deferred; no production CD is configured.
+The first staging deployment is documented in [STAGING.md](docs/deployment/STAGING.md), including
+isolated PostgreSQL, Flyway, HTTPS health checks and future Android/admin integration.
 
 ### Prerequisites
 

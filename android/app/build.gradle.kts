@@ -126,6 +126,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.splashscreen)
     implementation(libs.material)
+    implementation(libs.mlkit.text.recognition)
 
     // Networking
     implementation(libs.gson)
