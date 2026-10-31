@@ -210,6 +210,7 @@
                 android:scrollbars="none">
 
                 <LinearLayout
+                    android:id="@+id/homeWallets"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -356,6 +357,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:paddingHorizontal="@dimen/spacing_12"
+                    android:id="@+id/homeBudgetLink"
                     android:text="@string/tab_budget"
                     android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_size_label" />
@@ -486,16 +488,16 @@
                 android:src="@drawable/ic_home"
                 app:tint="@color/color_primary" />
 
-            <!-- Item 2: Report -->
+            <!-- Item 2: Transaction history -->
             <ImageView
                 android:id="@+id/navReport"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@null"
+                android:contentDescription="@string/transaction_history_title"
                 android:padding="@dimen/spacing_12"
-                android:src="@drawable/ic_report"
+                android:src="@drawable/ic_nav_history"
                 app:tint="@color/text_secondary" />
 
             <!-- Placeholder for Center FAB -->

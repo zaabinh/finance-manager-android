@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Card/Transaction 429:2230 (Expense 429:2231 shown). Per type, binding code sets:
+     Expense: sign "−", amount colour @color/amount_expense, tile tint bg_surface_secondary.
+     Income:  sign "+", @color/amount_income, tile tint status_success_bg, icon tint amount_income.
+     Transfer: sign GONE, @color/amount_transfer, icon ic_arrow_left_right, meta "A → B · hh:mm". -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardTransaction"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_8"
+    android:background="@drawable/bg_card_transaction"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="68dp"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/spacing_16"
+    android:paddingTop="@dimen/spacing_12"
+    android:paddingEnd="@dimen/spacing_16"
+    android:paddingBottom="@dimen/spacing_12">
+
+    <FrameLayout
+        android:id="@+id/flTransactionIcon"
+        android:layout_width="@dimen/icon_tile_size"
+        android:layout_height="@dimen/icon_tile_size"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:background="@drawable/bg_icon_tile"
+        android:backgroundTint="@color/bg_surface_secondary">
+
+        <ImageView
+            android:id="@+id/ivTransactionIcon"
+            android:layout_width="@dimen/icon_size_default"
+            android:layout_height="@dimen/icon_size_default"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            app:tint="@color/text_secondary"
+            tools:src="@drawable/ic_credit_card" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTransactionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+            tools:text="Highlands Coffee" />
+
+        <TextView
+            android:id="@+id/tvTransactionMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_4"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+            tools:text="Ăn uống · Techcombank · 15:45" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvTransactionSign"
+        style="@style/Widget.App.TextView.Amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:textAppearance="@style/TextAppearance.App.Button"
+        android:textColor="@color/amount_expense"
+        tools:text="−" />
+
+    <TextView
+        android:id="@+id/tvTransactionAmount"
+        style="@style/Widget.App.TextView.Amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.App.Button"
+        android:textColor="@color/amount_expense"
+        tools:text="95.000&#160;đ" />
+</LinearLayout>

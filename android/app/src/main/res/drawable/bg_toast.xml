@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Feedback/Toast 628:2706: bg/inverse, radius/small -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/bg_inverse" />
+    <corners android:radius="@dimen/radius_xs" />
+</shape>

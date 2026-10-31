@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Input/Amount State=Error 628:2541 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:gravity="bottom" android:height="@dimen/border_width_focus">
+        <shape><solid android:color="@color/status_error" /></shape>
+    </item>
+</layer-list>

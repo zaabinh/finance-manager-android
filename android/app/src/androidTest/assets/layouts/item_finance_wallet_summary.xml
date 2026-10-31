@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content" android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/spacing_12" android:orientation="vertical"
+    android:background="@drawable/bg_card_outlined" android:padding="@dimen/spacing_12">
+    <TextView android:id="@+id/tvFinanceWalletName" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.App.BodySecondary" />
+    <TextView android:id="@+id/tvFinanceWalletBalance" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:layout_marginTop="@dimen/spacing_8"
+        android:textAppearance="@style/TextAppearance.App.Button" />
+</LinearLayout>

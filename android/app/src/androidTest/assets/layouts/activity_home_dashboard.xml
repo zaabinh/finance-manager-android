@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true">
+
+    <!-- Header View -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/spacing_20"
+        android:paddingTop="@dimen/spacing_20"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/greeting_prefix"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body_secondary" />
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_4"
+                android:text="@string/sample_user_name"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_amount_medium"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/flNotification"
+            android:layout_width="@dimen/avatar_header_size"
+            android:layout_height="@dimen/avatar_header_size"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_card_white">
+
+            <ImageView
+                android:layout_width="@dimen/icon_notification_size"
+                android:layout_height="@dimen/icon_notification_size"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_bell"
+                app:tint="@color/text_primary" />
+
+            <View
+                android:layout_width="@dimen/badge_dot_size"
+                android:layout_height="@dimen/badge_dot_size"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_badge_dot" />
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <!-- Main Scrollable Dashboard -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_16"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavContainer"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_20">
+
+            <!-- Total Balance Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_card_green"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_20">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/total_balance_label"
+                    android:textColor="@color/green_light_100"
+                    android:textSize="@dimen/text_size_label"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTotalBalance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:text="@string/total_balance_value"
+                    android:textColor="@color/text_on_primary"
+                    android:textSize="@dimen/text_size_amount_hero"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:layout_marginBottom="@dimen/spacing_16"
+                    android:background="@color/color_accent" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/available_label"
+                            android:textColor="@color/green_light_100"
+                            android:textSize="@dimen/text_size_caption" />
+
+                        <TextView
+                            android:id="@+id/tvAvailableBalance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="@string/available_value"
+                            android:textColor="@color/text_on_primary"
+                            android:textSize="@dimen/text_size_button"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/savings_label"
+                            android:textColor="@color/green_light_100"
+                            android:textSize="@dimen/text_size_caption" />
+
+                        <TextView
+                            android:id="@+id/tvSavingsBalance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="@string/savings_value"
+                            android:textColor="@color/text_on_primary"
+                            android:textSize="@dimen/text_size_button"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Your Wallets Section -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_24">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/your_wallets"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_title_section"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/see_more"
+                    android:textColor="@color/color_primary"
+                    android:textSize="@dimen/text_size_body_secondary"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Horizontal Wallets List -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:clipToPadding="false"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/homeWallets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Wallet 1: Tiền mặt -->
+                    <LinearLayout
+                        android:layout_width="@dimen/wallet_card_width_sm"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_12"
+                        android:background="@drawable/bg_card_white"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_12">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/wallet_cash"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/text_size_label" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_8"
+                            android:text="@string/wallet_cash_val"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_button"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Wallet 2: Ngân hàng -->
+                    <LinearLayout
+                        android:layout_width="@dimen/wallet_card_width_md"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_12"
+                        android:background="@drawable/bg_card_white"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_12">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/wallet_bank"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/text_size_label" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_8"
+                            android:text="@string/wallet_bank_val"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_button"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Wallet 3: Tiết kiệm -->
+                    <LinearLayout
+                        android:layout_width="@dimen/wallet_card_width_sm"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_card_white"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_12">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/savings_label"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/text_size_label" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_8"
+                            android:text="@string/wallet_savings_val"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_button"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Overview Analysis Section -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_24">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/overview_analysis"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_title_section"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/see_more"
+                    android:textColor="@color/color_primary"
+                    android:textSize="@dimen/text_size_body_secondary"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Segmented Tabs -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/spacing_32"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:background="@drawable/bg_chip"
+                android:orientation="horizontal"
+                android:padding="@dimen/spacing_4">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_chip_green"
+                    android:gravity="center"
+                    android:paddingHorizontal="@dimen/spacing_12"
+                    android:text="@string/tab_income_expense"
+                    android:textColor="@color/color_primary"
+                    android:textSize="@dimen/text_size_label"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:paddingHorizontal="@dimen/spacing_12"
+                    android:text="@string/tab_time"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_label" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:paddingHorizontal="@dimen/spacing_12"
+                    android:id="@+id/homeBudgetLink"
+                    android:text="@string/tab_budget"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_label" />
+            </LinearLayout>
+
+            <!-- Income vs Expense Cards Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:orientation="horizontal">
+
+                <!-- Income Card -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_income_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/income_title"
+                        android:textColor="@color/status_success"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvIncomeVal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/income_val"
+                        android:textColor="@color/status_success"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Expense Card -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_expense_card"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/expense_title"
+                        android:textColor="@color/status_error"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvExpenseVal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/expense_val"
+                        android:textColor="@color/status_error"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Remaining Summary Bar -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:background="@drawable/bg_card_white"
+                android:padding="@dimen/spacing_16">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/remaining_this_month"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_body_secondary" />
+
+                <TextView
+                    android:id="@+id/tvRemainingVal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/remaining_this_month_val"
+                    android:textColor="@color/color_primary"
+                    android:textSize="@dimen/text_size_body_primary"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation Bar -->
+    <FrameLayout
+        android:id="@+id/bottomNavContainer"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/nav_bar_height"
+        android:background="@color/bg_card_surface"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Item 1: Home -->
+            <ImageView
+                android:id="@+id/navHome"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/app_name"
+                android:padding="@dimen/spacing_12"
+                android:src="@drawable/ic_home"
+                app:tint="@color/color_primary" />
+
+            <!-- Item 2: Transaction history -->
+            <ImageView
+                android:id="@+id/navReport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/transaction_history_title"
+                android:padding="@dimen/spacing_12"
+                android:src="@drawable/ic_nav_history"
+                app:tint="@color/text_secondary" />
+
+            <!-- Placeholder for Center FAB -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <!-- Item 4: Wallet -->
+            <ImageView
+                android:id="@+id/navWallet"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="@dimen/spacing_12"
+                android:src="@drawable/ic_wallet"
+                app:tint="@color/text_secondary" />
+
+            <!-- Item 5: Menu -->
+            <ImageView
+                android:id="@+id/navSetting"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="@dimen/spacing_12"
+                android:src="@drawable/ic_menu"
+                app:tint="@color/text_secondary" />
+        </LinearLayout>
+
+        <!-- Floating Action Button in Middle -->
+        <FrameLayout
+            android:id="@+id/fabAddTransaction"
+            android:layout_width="@dimen/fab_size"
+            android:layout_height="@dimen/fab_size"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_fab_circle"
+            android:elevation="4dp">
+
+            <ImageView
+                android:layout_width="@dimen/icon_fab_size"
+                android:layout_height="@dimen/icon_fab_size"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_plus"
+                app:tint="@color/text_on_primary" />
+        </FrameLayout>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

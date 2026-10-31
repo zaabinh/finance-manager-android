@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Feedback/Toast 628:2706 (Success shown). Custom Snackbar content; binding code swaps the
+     icon (ic_circle_alert for Error, GONE for Neutral) and shows btnToastAction for "Thử lại".
+     Saved toast has no undo (P5 decision). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/toast"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:accessibilityLiveRegion="polite"
+    android:background="@drawable/bg_toast"
+    android:elevation="@dimen/spacing_8"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/touch_target_min"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/spacing_16"
+    android:paddingTop="@dimen/spacing_4"
+    android:paddingEnd="@dimen/spacing_8"
+    android:paddingBottom="@dimen/spacing_4">
+
+    <ImageView
+        android:id="@+id/ivToastIcon"
+        android:layout_width="@dimen/icon_small_size"
+        android:layout_height="@dimen/icon_small_size"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_circle_check"
+        app:tint="@color/text_on_primary" />
+
+    <TextView
+        android:id="@+id/tvToastMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_8"
+        android:layout_marginBottom="@dimen/spacing_8"
+        android:layout_weight="1"
+        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+        android:textColor="@color/text_on_primary"
+        tools:text="Đã lưu giao dịch −95.000&#160;đ" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnToastAction"
+        style="@style/Widget.App.Button.Tertiary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_8"
+        android:textColor="@color/green_light_100"
+        android:visibility="gone"
+        tools:text="@string/action_retry" />
+</LinearLayout>

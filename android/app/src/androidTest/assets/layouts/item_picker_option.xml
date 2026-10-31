@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma List/Option 628:2749: icon + label (+ check when selected), min 56dp.
+     Selected state = View.setSelected(true) on the root (background + check follow via selectors). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/itemPickerOption"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_list_option"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/selector_min_height"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/spacing_16"
+    android:paddingTop="@dimen/spacing_8"
+    android:paddingEnd="@dimen/spacing_16"
+    android:paddingBottom="@dimen/spacing_8">
+
+    <ImageView
+        android:id="@+id/ivOptionIcon"
+        android:layout_width="@dimen/icon_size_default"
+        android:layout_height="@dimen/icon_size_default"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:importantForAccessibility="no"
+        app:tint="@color/text_secondary"
+        tools:src="@drawable/ic_landmark" />
+
+    <TextView
+        android:id="@+id/tvOptionLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+        tools:text="Ngân hàng Thương mại Cổ phần Kỹ Thương Việt Nam" />
+
+    <ImageView
+        android:id="@+id/ivOptionCheck"
+        android:layout_width="@dimen/icon_size_default"
+        android:layout_height="@dimen/icon_size_default"
+        android:layout_marginStart="@dimen/spacing_12"
+        android:duplicateParentState="true"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_list_option_check" />
+</LinearLayout>

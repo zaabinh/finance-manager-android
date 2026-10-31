@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma 02_TransactionDetail — v2 658:5588 (expense, shown) and 674:7018 (transfer).
+     Transfer: title transfer_detail_title, badge transaction_type_transfer, amount colour amount_transfer
+     (no sign), rowCategory/rowStore/rowWallet GONE, rowTransferFrom/rowTransferTo/rowImpact VISIBLE.
+     Income: badge transaction_type_income, amount colour amount_income with "+".
+     Delete opens dialog_confirm (Destructive, 658:5645). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarTransactionDetail"
+        style="@style/Widget.App.Toolbar.Back"
+        app:title="@string/transaction_detail_title" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/spacing_16"
+            android:paddingTop="@dimen/spacing_8"
+            android:paddingEnd="@dimen/spacing_16"
+            android:paddingBottom="@dimen/spacing_16">
+
+            <!-- Amount summary -->
+            <LinearLayout
+                android:id="@+id/cardDetailSummary"
+                style="@style/Widget.App.CardOutlined"
+                android:padding="@dimen/spacing_20">
+
+                <TextView
+                    android:id="@+id/tvDetailTypeBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_neutral"
+                    android:paddingStart="@dimen/spacing_8"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="@dimen/spacing_8"
+                    android:paddingBottom="2dp"
+                    android:text="@string/transaction_type_expense"
+                    android:textAppearance="@style/TextAppearance.App.Label"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvDetailAmount"
+                    style="@style/Widget.App.TextView.Amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:textAppearance="@style/TextAppearance.App.AmountHero"
+                    android:textColor="@color/amount_expense"
+                    tools:text="−95.000&#160;đ" />
+
+                <TextView
+                    android:id="@+id/tvDetailDateTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                    tools:text="Hôm nay · 26/10/2026, 15:45" />
+            </LinearLayout>
+
+            <!-- Details -->
+            <LinearLayout
+                android:id="@+id/cardDetailRows"
+                style="@style/Widget.App.CardOutlined"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:showDividers="middle">
+
+                <LinearLayout
+                    android:id="@+id/rowCategory"
+                    style="@style/Widget.App.DataRow">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transaction_category_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailCategory"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="Ăn uống &amp; Cafe" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowStore"
+                    style="@style/Widget.App.DataRow">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transaction_store_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailStore"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="Highlands Coffee" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowWallet"
+                    style="@style/Widget.App.DataRow">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transaction_wallet_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailWallet"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="Techcombank" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowTransferFrom"
+                    style="@style/Widget.App.DataRow"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transfer_from_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailTransferFrom"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="Techcombank" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowTransferTo"
+                    style="@style/Widget.App.DataRow"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transfer_to_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailTransferTo"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="Tiền mặt" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowTime"
+                    style="@style/Widget.App.DataRow">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label"
+                        android:text="@string/transaction_date_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailTime"
+                        style="@style/Widget.App.DataRow.Value"
+                        tools:text="26/10/2026, 15:45" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowNote"
+                    style="@style/Widget.App.DataRow.Stacked">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label.Stacked"
+                        android:text="@string/transaction_note_short_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailNote"
+                        style="@style/Widget.App.DataRow.Value.Stacked"
+                        tools:text="Đi chơi với nhóm. Latte + sandwich" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowImpact"
+                    style="@style/Widget.App.DataRow.Stacked"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/Widget.App.DataRow.Label.Stacked"
+                        android:text="@string/transfer_impact_label" />
+
+                    <TextView
+                        android:id="@+id/tvDetailImpact"
+                        style="@style/Widget.App.DataRow.Value.Stacked"
+                        tools:text="Techcombank −2.000.000&#160;đ · Tiền mặt +2.000.000&#160;đ. Không tính vào thu, chi hay ngân sách; tổng tài sản không đổi." />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        style="@style/Widget.App.BottomActionBar"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/spacing_8"
+        android:paddingBottom="@dimen/spacing_16">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeleteTransaction"
+            style="@style/Widget.App.Button.Destructive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_delete" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEditTransaction"
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_12"
+            android:layout_weight="1"
+            android:text="@string/btn_edit" />
+    </LinearLayout>
+</LinearLayout>
