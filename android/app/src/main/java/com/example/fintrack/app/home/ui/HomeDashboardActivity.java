@@ -2,6 +2,7 @@ package com.example.fintrack.app.home.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,8 +32,26 @@ public class HomeDashboardActivity extends AppCompatActivity {
         userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         navSetting = findViewById(R.id.navSetting);
+        ImageView navReport = findViewById(R.id.navReport);
+        ImageView navWallet = findViewById(R.id.navWallet);
         tvUserName = findViewById(R.id.tvUserName);
         TextView tvSeeMoreWallets = findViewById(R.id.tvSeeMoreWallets);
+        TextView tvSeeMoreOverview = findViewById(R.id.tvSeeMoreOverview);
+
+        View.OnClickListener openAnalyticsListener = v -> {
+            Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.analytics.ui.AnalyticsActivity.class);
+            startActivity(intent);
+        };
+
+        if (navReport != null) navReport.setOnClickListener(openAnalyticsListener);
+        if (tvSeeMoreOverview != null) tvSeeMoreOverview.setOnClickListener(openAnalyticsListener);
+
+        if (navWallet != null) {
+            navWallet.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.wallet.ui.WalletListActivity.class);
+                startActivity(intent);
+            });
+        }
 
         tvSeeMoreWallets.setOnClickListener(v -> {
             Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.wallet.ui.WalletListActivity.class);
@@ -63,13 +82,26 @@ public class HomeDashboardActivity extends AppCompatActivity {
         // Tải profile khi mở màn hình
         userViewModel.fetchProfile();
 
-        navSetting.setOnClickListener(v -> {
-            Intent intent = new Intent(
-                    HomeDashboardActivity.this,
-                    SettingActivity.class
-            );
-            startActivity(intent);
-        });
+        View fabAddTransaction = findViewById(R.id.fabAddTransaction);
+        com.example.fintrack.app.component.FabSpeedDialHelper fabSpeedDialHelper = new com.example.fintrack.app.component.FabSpeedDialHelper(
+                getWindow().getDecorView().getRootView(),
+                new com.example.fintrack.app.component.FabSpeedDialHelper.OnSpeedDialActionListener() {
+                    @Override
+                    public void onManualInputClick() {
+                        android.widget.Toast.makeText(HomeDashboardActivity.this, "Mở màn hình nhập thủ công", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onOcrScanClick() {
+                        Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class);
+                        startActivity(intent);
+                    }
+                }
+        );
+
+        if (fabAddTransaction != null) {
+            fabAddTransaction.setOnClickListener(v -> fabSpeedDialHelper.showSpeedDial());
+        }
     }
 
     @Override

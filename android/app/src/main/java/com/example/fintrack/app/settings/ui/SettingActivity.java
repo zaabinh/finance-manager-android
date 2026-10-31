@@ -145,5 +145,34 @@ public class SettingActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
+
+        ImageView navReport = findViewById(R.id.navReport);
+        if (navReport != null) {
+            navReport.setOnClickListener(v -> {
+                Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.analytics.ui.AnalyticsActivity.class);
+                startActivity(intent);
+            });
+        }
+
+        View fabAddTransaction = findViewById(R.id.fabAddTransaction);
+        com.example.fintrack.app.component.FabSpeedDialHelper fabSpeedDialHelper = new com.example.fintrack.app.component.FabSpeedDialHelper(
+                getWindow().getDecorView().getRootView(),
+                new com.example.fintrack.app.component.FabSpeedDialHelper.OnSpeedDialActionListener() {
+                    @Override
+                    public void onManualInputClick() {
+                        Toast.makeText(SettingActivity.this, "Mở màn hình nhập thủ công", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onOcrScanClick() {
+                        Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class);
+                        startActivity(intent);
+                    }
+                }
+        );
+
+        if (fabAddTransaction != null) {
+            fabAddTransaction.setOnClickListener(v -> fabSpeedDialHelper.showSpeedDial());
+        }
     }
 }
