@@ -189,9 +189,12 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSeeMoreWallets"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="@dimen/spacing_4"
                     android:text="@string/see_more"
                     android:textColor="@color/color_primary"
                     android:textSize="@dimen/text_size_body_secondary"
@@ -308,9 +311,12 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSeeMoreOverview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="@dimen/spacing_4"
                     android:text="@string/see_more"
                     android:textColor="@color/color_primary"
                     android:textSize="@dimen/text_size_body_secondary"

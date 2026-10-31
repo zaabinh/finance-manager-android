@@ -104,6 +104,36 @@
         <activity
             android:name=".app.setup.ui.SetupCompleteActivity"
             android:exported="false" />
+
+        <!-- Wallet Screens -->
+        <activity
+            android:name=".app.wallet.ui.WalletListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletAddActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletEditActivity"
+            android:exported="false" />
+
+        <!-- Category Screens -->
+        <activity
+            android:name=".app.category.ui.CategoryListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.category.ui.CategoryAddActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.category.ui.CategoryEditActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
