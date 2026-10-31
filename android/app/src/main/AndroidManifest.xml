@@ -138,6 +138,11 @@
         <activity
             android:name=".app.ocr.ui.OcrReviewActivity"
             android:exported="false" />
+
+        <!-- Notification Screens -->
+        <activity
+            android:name=".app.notification.ui.NotificationActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

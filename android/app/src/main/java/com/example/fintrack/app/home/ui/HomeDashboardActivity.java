@@ -34,9 +34,17 @@ public class HomeDashboardActivity extends AppCompatActivity {
         navSetting = findViewById(R.id.navSetting);
         ImageView navReport = findViewById(R.id.navReport);
         ImageView navWallet = findViewById(R.id.navWallet);
+        View flNotification = findViewById(R.id.flNotification);
         tvUserName = findViewById(R.id.tvUserName);
         TextView tvSeeMoreWallets = findViewById(R.id.tvSeeMoreWallets);
         TextView tvSeeMoreOverview = findViewById(R.id.tvSeeMoreOverview);
+
+        if (flNotification != null) {
+            flNotification.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.notification.ui.NotificationActivity.class);
+                startActivity(intent);
+            });
+        }
 
         View.OnClickListener openAnalyticsListener = v -> {
             Intent intent = new Intent(HomeDashboardActivity.this, com.example.fintrack.app.analytics.ui.AnalyticsActivity.class);
@@ -81,6 +89,13 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
         // Tải profile khi mở màn hình
         userViewModel.fetchProfile();
+
+        if (navSetting != null) {
+            navSetting.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeDashboardActivity.this, SettingActivity.class);
+                startActivity(intent);
+            });
+        }
 
         View fabAddTransaction = findViewById(R.id.fabAddTransaction);
         com.example.fintrack.app.component.FabSpeedDialHelper fabSpeedDialHelper = new com.example.fintrack.app.component.FabSpeedDialHelper(
