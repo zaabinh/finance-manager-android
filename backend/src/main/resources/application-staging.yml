@@ -13,3 +13,6 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.orm.jdbc.extract: OFF
+app:
+  auth:
+    jwt-secret: ${JWT_SECRET}

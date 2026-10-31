@@ -25,7 +25,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         var fieldErrors = exception.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ApiErrorResponse.FieldError(error.getField(), "Invalid value"))
+                .map(error -> new ApiErrorResponse.FieldError(error.getField(), error.getDefaultMessage()))
                 .toList();
         var response = new ApiErrorResponse(Instant.now(), status.value(), ErrorCode.VALIDATION_ERROR,
                 "Request validation failed", path(request), fieldErrors);
@@ -48,6 +48,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException exception, WebRequest request) {
         return ResponseEntity.badRequest().body(ApiErrorResponse.of(400, ErrorCode.VALIDATION_ERROR,
                 "Request validation failed", path(request)));
+    }
+
+    @ExceptionHandler(AppException.class)
+    ResponseEntity<ApiErrorResponse> handleAppException(AppException exception, WebRequest request) {
+        return ResponseEntity.status(exception.getStatus()).body(ApiErrorResponse.of(
+                exception.getStatus().value(), exception.getErrorCode(), exception.getMessage(), path(request)));
     }
 
     @ExceptionHandler(Exception.class)

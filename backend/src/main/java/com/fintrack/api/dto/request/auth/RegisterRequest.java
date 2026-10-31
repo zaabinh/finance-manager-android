@@ -16,7 +16,10 @@ public record RegisterRequest(
                 max = 64,
                 message = "PASSWORD_LENGTH_INVALID"
         )
+        @jakarta.validation.constraints.Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,64}$",
+                message = "PASSWORD_COMPLEXITY_INVALID"
+        )
         String password
 ) {
-    
 }

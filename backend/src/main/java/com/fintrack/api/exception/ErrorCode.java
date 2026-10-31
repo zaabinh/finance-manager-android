@@ -9,7 +9,8 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED,
     UNSUPPORTED_MEDIA_TYPE,
     REQUEST_ERROR,
-    INTERNAL_ERROR;
+    INTERNAL_ERROR,
+    AUTH_INVALID_CREDENTIALS;
 
     public static ErrorCode forStatus(int status) {
         return switch (status) {
