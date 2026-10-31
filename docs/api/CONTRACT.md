@@ -31,17 +31,11 @@ and development OpenAPI/Swagger. Health returns its native Actuator payload, suc
 The wallet routes and types above reserve the naming for future implementation; they are not implemented APIs.
 Do not add compatibility routes using the previous financial-domain name.
 
-The proposed Authentication contract, token lifecycle, email sender and implementation checklist are documented
-in [AUTHENTICATION_IMPLEMENTATION.md](AUTHENTICATION_IMPLEMENTATION.md). Those endpoints remain unimplemented
-until the corresponding backend code and migration are merged.
+## Response conventions for future business APIs
 
-## Response conventions
-
-Future Wallet and other business APIs return their DTO directly; an empty success uses HTTP 204.
-Authentication is an explicit exception: successful login uses `ApiResponse<LoginResponse>`. Successful register
-returns HTTP 201 with an empty body. Use appropriate HTTP statuses and ISO 8601 UTC timestamps.
-Request/response DTOs remain separate from persistence entities. `UserResponse` is reserved for
-`GET /api/v1/users/me` and must not be embedded in login or register responses.
+Successful requests return their DTO directly; an empty success uses HTTP 204. Android must not assume
+a generic `success/data/code` envelope. Use appropriate HTTP statuses and ISO 8601 UTC timestamps.
+Request/response DTOs must remain separate from persistence entities.
 
 Errors use the implemented `ApiErrorResponse`: `timestamp`, `status`, `errorCode`, `message`, `path`,
 and `fieldErrors` containing `field`/`message` pairs. No stack traces or submitted secrets are returned.
