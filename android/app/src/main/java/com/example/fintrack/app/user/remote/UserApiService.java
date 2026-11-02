@@ -13,5 +13,5 @@ public interface UserApiService {
     Call<ApiResponse<UserProfileResponse>> getProfile();
 
     @PUT("api/v1/user/profile")
-    Call<ApiResponse<UserProfileResponse>> updateProfile(@Body UserProfileResponse request);
+    Call<ApiResponse<UserProfileResponse>> updateProfile(@Body UpdateProfileRequest request);
 }

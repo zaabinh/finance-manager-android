@@ -15,7 +15,7 @@ public final class BudgetListActivity extends FinanceActivity {
     @Override protected int layout() { return R.layout.activity_budget_list; }
     @Override protected void bind(Bundle saved) {
         if (saved != null) month = saved.getString("month", month);
-        FinanceUi.navigation(this, R.id.navTabKhoan);
+        FinanceUi.navigation(this, R.id.navBudget);
         ((MaterialToolbar) findViewById(R.id.toolbarBudgets)).getMenu().add(R.string.transaction_change_month)
                 .setOnMenuItemClickListener(item -> { FinanceUi.month(this, month, value -> { month = value; render(); }); return true; });
         findViewById(R.id.fabAddBudget).setOnClickListener(view -> add());

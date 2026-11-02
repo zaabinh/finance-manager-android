@@ -1,155 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#FFFFFF"
+    android:background="@color/bg_app_canvas"
     android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!-- Header Toolbar -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp">
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
             android:src="@drawable/ic_arrow_back"
-            android:contentDescription="Quay lại"/>
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Thông báo"
-            android:textColor="#26332B"
-            android:textSize="20sp"
+            android:layout_centerInParent="true"
+            android:text="@string/notif_config"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
             android:textStyle="bold" />
-    </LinearLayout>
+    </RelativeLayout>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical"
-        android:background="@drawable/bg_card_white">
-
-        <!-- Daily reminder -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="◷  Nhắc nhở ghi chép hằng ngày"
-                android:textColor="#202A24"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-
-            <Switch
-                android:id="@+id/switchDailyReminder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:thumbTint="#FFFFFF"
-                android:trackTint="#4CAF50" />
-        </LinearLayout>
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:paddingStart="36dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="14dp">
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_16">
 
-            <TextView
-                android:layout_width="0dp"
+            <!-- Card Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thời gian nhắc nhở"
-                android:textColor="#7B827D"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_card_white"
+                android:orientation="vertical"
+                app:layout_constraintWidth_max="440dp">
 
-            <TextView
-                android:id="@+id/tvReminderTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_input_field"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
-                android:text="20:00"
-                android:textColor="#216B45"
-                android:textStyle="bold" />
+                <!-- Daily Reminder Toggle -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_bell"
+                        app:tint="@color/color_primary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/daily_record_reminder"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchDailyReminder"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <!-- Time Picker Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="@dimen/spacing_16"
+                    android:paddingBottom="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/notif_time_label"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_body_secondary" />
+
+                    <TextView
+                        android:id="@+id/tvReminderTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_in_budget"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:paddingVertical="@dimen/spacing_8"
+                        android:text="20:00"
+                        android:textColor="@color/color_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divider_light" />
+
+                <!-- Limit Warning Alert -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_target"
+                        app:tint="@color/status_warning" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/near_limit_alert"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchLimitWarning"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divider_light" />
+
+                <!-- Over Budget Alert -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_info"
+                        app:tint="@color/status_error" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_12"
+                        android:layout_weight="1"
+                        android:text="@string/over_budget_alert"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchBudgetWarning"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E8ECE9" />
-
-        <!-- Limit warning -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="⚠  Cảnh báo sắp chạm hạn mức"
-                android:textColor="#202A24"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-
-            <Switch
-                android:id="@+id/switchLimitWarning"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:thumbTint="#FFFFFF"
-                android:trackTint="#4CAF50" />
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E8ECE9" />
-
-        <!-- Budget warning -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ⓘ  Cảnh báo vượt quá ngân sách"
-                android:textColor="#202A24"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-
-            <Switch
-                android:id="@+id/switchBudgetWarning"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:thumbTint="#FFFFFF"
-                android:trackTint="#4CAF50" />
-        </LinearLayout>
-
-    </LinearLayout>
-</LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

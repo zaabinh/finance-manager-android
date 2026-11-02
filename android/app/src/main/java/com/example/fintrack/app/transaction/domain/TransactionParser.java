@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Conservative suggestions: ambiguous totals stay blank and always require human confirmation. */
-public final class ReceiptParser {
+public final class TransactionParser {
     public static final class Draft {
         public final long amount;
         public final String payee;
@@ -38,5 +38,5 @@ public final class ReceiptParser {
         }
         return new Draft(candidates.size() == 1 ? candidates.iterator().next() : 0, payee);
     }
-    private ReceiptParser() { }
+    private TransactionParser() { }
 }

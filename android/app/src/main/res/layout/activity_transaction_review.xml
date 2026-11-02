@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Figma 05_TransactionReview — v2 658:6660 (shown), 658:6770 unreadable, 658:6788 multi-item.
-     Binding code sets amount label receipt_amount_label (view_amount_input default is "Số tiền").
-     Uncertain fields use Widget.App.FieldSelector.Uncertain + Label.Uncertain; switch to the normal
-     style once the user edits them.
-     Multi-item: feedbackReview Info tone (backgroundTint bg_surface_secondary, ic_info, receipt_review_multi_item).
-     Unreadable: feedbackReview + groupReviewFields + btnConfirmReceipt + btnAddReceipt + btnRescan GONE;
-     stateUnreadable VISIBLE (ic_cloud_off, receipt_unreadable_*, btnStatePrimary "Chụp lại"); btnManualEntry VISIBLE. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -30,9 +23,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="@dimen/spacing_16"
+            android:paddingHorizontal="@dimen/spacing_16"
             android:paddingTop="@dimen/spacing_8"
-            android:paddingEnd="@dimen/spacing_16"
             android:paddingBottom="@dimen/spacing_16">
 
             <LinearLayout

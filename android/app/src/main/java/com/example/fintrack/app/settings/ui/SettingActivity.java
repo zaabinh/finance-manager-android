@@ -24,87 +24,110 @@ public class SettingActivity extends AppCompatActivity {
 
     // Khai báo các thành phần giao diện
     private LinearLayout layoutProfile;
+    private TextView tvAvatarInitials;
     private TextView tvProfileName;
     private TextView tvProfileEmail;
     private ImageButton btnEditProfile;
+
+    private View rowCurrency;
+    private TextView tvCurrencyValue;
+    private View rowTimezone;
+    private TextView tvTimezoneValue;
 
     private TextView rowNotification;
     private TextView rowWallets;
     private TextView rowCategories;
     private TextView rowSecurity;
+    private View rowAboutApp;
 
     // Thanh điều hướng dưới đáy
     private ImageView navHome;
     private SessionManager sessionManager;
     private UserViewModel userViewModel;
 
+    private String currentCurrency = "VND (₫)";
+    private String currentTimezone = "Hanoi GMT+7";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting); // Gắn file XML tương ứng
+        setContentView(R.layout.activity_setting);
 
         sessionManager = SessionManager.getInstance(getApplicationContext());
         userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
-        initViews();       // Ánh xạ ID từ XML
-        loadUserData();    // Load dữ liệu ban đầu
-        setupObservers();  // Quan sát ViewModel
-        setupListeners();  // Gán sự kiện click cho các nút
+        initViews();
+        loadUserData();
+        setupObservers();
+        setupListeners();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadUserData();    // Cập nhật lại thông tin user mỗi khi quay lại màn hình Setting
+        loadUserData();
         if (userViewModel != null) {
             userViewModel.fetchProfile();
         }
     }
 
-    // Ánh xạ các thành phần giao diện
     private void initViews() {
         layoutProfile = findViewById(R.id.layoutProfile);
+        tvAvatarInitials = findViewById(R.id.tvAvatarInitials);
         tvProfileName = findViewById(R.id.tvProfileName);
         tvProfileEmail = findViewById(R.id.tvProfileEmail);
         btnEditProfile = findViewById(R.id.btnEditProfile);
+
+        rowCurrency = findViewById(R.id.rowCurrency);
+        tvCurrencyValue = findViewById(R.id.tvCurrencyValue);
+        rowTimezone = findViewById(R.id.rowTimezone);
+        tvTimezoneValue = findViewById(R.id.tvTimezoneValue);
 
         rowNotification = findViewById(R.id.rowNotification);
         rowWallets = findViewById(R.id.rowWallets);
         rowCategories = findViewById(R.id.rowCategories);
         rowSecurity = findViewById(R.id.rowSecurity);
+        rowAboutApp = findViewById(R.id.rowAboutApp);
 
         navHome = findViewById(R.id.navHome);
     }
 
-    // Tải thông tin người dùng từ SessionManager lên giao diện
     private void loadUserData() {
         String name = sessionManager.getUserName();
         String email = sessionManager.getUserEmail();
 
         if (name != null && !name.isEmpty()) {
             tvProfileName.setText(name);
+            tvAvatarInitials.setText(getInitials(name));
         }
         if (email != null && !email.isEmpty()) {
             tvProfileEmail.setText(email);
         }
     }
 
-    // Quan sát UserViewModel để cập nhật profile từ server/mock
+    private String getInitials(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) return "MA";
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
+    }
+
     private void setupObservers() {
         userViewModel.getProfileResult().observe(this, resource -> {
             if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 String name = resource.getData().getName();
                 String email = resource.getData().getEmail();
-                if (name != null) tvProfileName.setText(name);
+                if (name != null) {
+                    tvProfileName.setText(name);
+                    tvAvatarInitials.setText(getInitials(name));
+                }
                 if (email != null) tvProfileEmail.setText(email);
                 sessionManager.saveUserProfile(resource.getData().getUserId(), email, name);
             }
         });
     }
 
-    // Thiết lập sự kiện tương tác
     private void setupListeners() {
-        // 1. Nhấn vào thẻ hồ sơ hoặc nút chỉnh sửa -> Mở màn hình SettingUserActivity
         View.OnClickListener openProfileListener = v -> {
             Intent intent = new Intent(SettingActivity.this, SettingUserActivity.class);
             startActivity(intent);
@@ -113,66 +136,72 @@ public class SettingActivity extends AppCompatActivity {
         layoutProfile.setOnClickListener(openProfileListener);
         btnEditProfile.setOnClickListener(openProfileListener);
 
-        // 2. Cấu hình thông báo -> Mở SettingNotificationActivity
+        // Đơn vị tiền tệ
+        if (rowCurrency != null) {
+            rowCurrency.setOnClickListener(v -> {
+                String[] currencies = {"VND (₫)", "USD ($)", "EUR (€)"};
+                new AlertDialog.Builder(this)
+                        .setTitle("Chọn đơn vị tiền tệ")
+                        .setItems(currencies, (dialog, which) -> {
+                            currentCurrency = currencies[which];
+                            tvCurrencyValue.setText(currentCurrency + "  ›");
+                            Toast.makeText(this, "Đã đổi đơn vị tiền tệ: " + currentCurrency, Toast.LENGTH_SHORT).show();
+                        })
+                        .show();
+            });
+        }
+
+        // Múi giờ
+        if (rowTimezone != null) {
+            rowTimezone.setOnClickListener(v -> {
+                String[] timezones = {"Hanoi GMT+7", "Tokyo GMT+9", "London GMT+0", "New York GMT-5"};
+                new AlertDialog.Builder(this)
+                        .setTitle("Chọn múi giờ")
+                        .setItems(timezones, (dialog, which) -> {
+                            currentTimezone = timezones[which];
+                            tvTimezoneValue.setText(currentTimezone + "  ›");
+                            Toast.makeText(this, "Đã đổi múi giờ: " + currentTimezone, Toast.LENGTH_SHORT).show();
+                        })
+                        .show();
+            });
+        }
+
+        // Cấu hình thông báo
         rowNotification.setOnClickListener(v -> {
             Intent intent = new Intent(SettingActivity.this, SettingNotificationActivity.class);
             startActivity(intent);
         });
 
-        // 3. Quản lý Ví -> Mở WalletListActivity
+        // Quản lý Ví
         rowWallets.setOnClickListener(v -> {
             Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.wallet.ui.WalletListActivity.class);
             startActivity(intent);
         });
 
-        // 4. Quản lý Danh mục -> Mở CategoryListActivity
+        // Quản lý Danh mục
         rowCategories.setOnClickListener(v -> {
             Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.category.ui.CategoryListActivity.class);
             startActivity(intent);
         });
 
-        // 5. Bảo mật & Tài khoản -> Mở SettingSecurityActivity
+        // Bảo mật & Tài khoản
         rowSecurity.setOnClickListener(v -> {
             Intent intent = new Intent(SettingActivity.this, SettingSecurityActivity.class);
             startActivity(intent);
         });
 
-        // 6. Chuyển về màn hình Trang chủ khi bấm icon Home trên thanh điều hướng dưới
-        if (navHome != null) {
-            navHome.setOnClickListener(v -> {
-                Intent intent = new Intent(SettingActivity.this, HomeDashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
+        // Thông tin ứng dụng
+        if (rowAboutApp != null) {
+            rowAboutApp.setOnClickListener(v -> {
+                new AlertDialog.Builder(this)
+                        .setTitle("Đồng - Quản lý tài chính")
+                        .setMessage("Phiên bản: v1.0.0\n\nNgười bạn đồng hành tài chính cá nhân của bạn. Giúp bạn theo dõi số dư, ghi chép giao dịch, đặt ngân sách và phân tích tài chính hiệu quả.")
+                        .setPositiveButton("Đóng", (dialog, which) -> dialog.dismiss())
+                        .show();
             });
         }
 
-        ImageView navReport = findViewById(R.id.navReport);
-        if (navReport != null) {
-            navReport.setOnClickListener(v -> {
-                Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.analytics.ui.AnalyticsActivity.class);
-                startActivity(intent);
-            });
-        }
-
-        View fabAddTransaction = findViewById(R.id.fabAddTransaction);
-        com.example.fintrack.app.component.FabSpeedDialHelper fabSpeedDialHelper = new com.example.fintrack.app.component.FabSpeedDialHelper(
-                getWindow().getDecorView().getRootView(),
-                new com.example.fintrack.app.component.FabSpeedDialHelper.OnSpeedDialActionListener() {
-                    @Override
-                    public void onManualInputClick() {
-                        Toast.makeText(SettingActivity.this, "Mở màn hình nhập thủ công", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onOcrScanClick() {
-                        Intent intent = new Intent(SettingActivity.this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class);
-                        startActivity(intent);
-                    }
-                }
-        );
-
-        if (fabAddTransaction != null) {
-            fabAddTransaction.setOnClickListener(v -> fabSpeedDialHelper.showSpeedDial());
-        }
+        // Bottom Navigation & Speed Dial FAB
+        com.example.fintrack.app.finance.ui.FinanceUi.navigation(this, R.id.navSetting);
     }
 }

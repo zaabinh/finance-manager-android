@@ -68,12 +68,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
                 android:layout_marginTop="@dimen/spacing_8"
+                android:autofillHints="name"
                 android:background="@drawable/bg_currency_box"
                 android:hint="@string/category_name_hint"
                 android:inputType="textCapWords"
                 android:paddingHorizontal="@dimen/spacing_16"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_disabled"
+                android:textColorHint="@color/text_hint"
                 android:textSize="@dimen/text_size_body_primary" />
 
             <!-- Field 2: Loại danh mục -->
@@ -147,12 +148,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
                 android:layout_marginTop="@dimen/spacing_8"
+                android:autofillHints="none"
                 android:background="@drawable/bg_currency_box"
                 android:hint="Không bắt buộc"
                 android:inputType="text"
                 android:paddingHorizontal="@dimen/spacing_16"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_disabled"
+                android:textColorHint="@color/text_hint"
                 android:textSize="@dimen/text_size_body_primary" />
 
             <!-- Field 5: Trạng thái -->

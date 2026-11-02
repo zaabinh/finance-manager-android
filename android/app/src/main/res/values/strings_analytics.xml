@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Analytics Feature -->
+    <string name="analytics_title">Phân tích</string>
+    <string name="category_breakdown">Phân tích theo danh mục</string>
+    <string name="financial_analytics">Phân tích tài chính</string>
+</resources>

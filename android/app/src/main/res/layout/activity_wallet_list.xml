@@ -63,4 +63,42 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rlHeader" />
 
+    <!-- Empty Wallet State -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyWallets"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_32"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_wallet"
+            app:tint="@color/text_disabled" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_16"
+            android:text="Chưa có ví nào"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="Bấm 'Thêm' ở góc trên bên phải để tạo ví tiền mới."
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_body_secondary" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

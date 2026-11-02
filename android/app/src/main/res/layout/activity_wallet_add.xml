@@ -68,12 +68,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
                 android:layout_marginTop="@dimen/spacing_8"
+                android:autofillHints="name"
                 android:background="@drawable/bg_currency_box"
                 android:hint="@string/wallet_name_hint"
                 android:inputType="textCapWords"
                 android:paddingHorizontal="@dimen/spacing_16"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_disabled"
+                android:textColorHint="@color/text_hint"
                 android:textSize="@dimen/text_size_body_primary" />
 
             <!-- Field 2: Loại ví -->
@@ -194,6 +195,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_20"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
                 <!-- Balance Input -->
@@ -305,12 +307,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
                 android:layout_marginTop="@dimen/spacing_8"
+                android:autofillHints="none"
                 android:background="@drawable/bg_currency_box"
                 android:hint="@string/wallet_note_hint"
                 android:inputType="text"
                 android:paddingHorizontal="@dimen/spacing_16"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_disabled"
+                android:textColorHint="@color/text_hint"
                 android:textSize="@dimen/text_size_body_primary" />
 
             <!-- Bottom Action Buttons: Create & Cancel -->

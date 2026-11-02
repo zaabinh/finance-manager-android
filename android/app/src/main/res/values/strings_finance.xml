@@ -22,6 +22,7 @@
     <string name="finance_wallet_type">Loại ví</string>
     <string name="finance_wallet_empty">Chưa có ví. Thêm ví khi ghi giao dịch.</string>
     <string name="finance_category_name">Tên danh mục</string>
+    <string name="finance_category_empty">Chưa có danh mục nào.</string>
     <string name="finance_filters">Lọc ví / danh mục</string>
     <string name="finance_no_results">Không có giao dịch phù hợp. Thử đổi tháng hoặc xóa bộ lọc.</string>
     <string name="finance_budget_empty">Chưa có ngân sách tháng này</string>

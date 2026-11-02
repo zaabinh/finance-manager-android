@@ -15,6 +15,7 @@ public class UserViewModel extends AndroidViewModel {
 
     private final UserRepository userRepository;
     private final MutableLiveData<Resource<UserProfileResponse>> profileResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<UserProfileResponse>> updateProfileResult = new MutableLiveData<>();
 
     public UserViewModel(@NonNull Application application) {
         super(application);
@@ -25,8 +26,17 @@ public class UserViewModel extends AndroidViewModel {
         return profileResult;
     }
 
+    public LiveData<Resource<UserProfileResponse>> getUpdateProfileResult() {
+        return updateProfileResult;
+    }
+
     public void fetchProfile() {
         profileResult.setValue(Resource.loading(null));
         userRepository.getProfile(profileResult);
+    }
+
+    public void updateProfile(String name, String phone) {
+        updateProfileResult.setValue(Resource.loading(null));
+        userRepository.updateProfile(name, phone, updateProfileResult);
     }
 }

@@ -1,177 +1,233 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:fillViewport="true"
+    android:background="@color/bg_app_canvas"
     android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!-- Header Toolbar -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/security_account"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/spacing_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:gravity="center_vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_16">
 
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Quay lại" />
-
+            <!-- Password Change Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Bảo mật &amp; Tài khoản"
-                android:textColor="#26332B"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/bg_card_white">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Đổi mật khẩu"
-                android:textColor="#202A24"
-                android:textSize="16sp"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:layout_marginBottom="@dimen/spacing_8"
+                android:text="@string/section_change_password"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Mật khẩu hiện tại"
-                android:textColor="#202A24" />
+                android:background="@drawable/bg_card_white"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_16">
 
-            <EditText
-                android:id="@+id/etCurrentPassword"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_input_field"
-                android:paddingHorizontal="12dp"
-                android:hint="Nhập mật khẩu hiện tại"
-                android:singleLine="true"
-                android:inputType="textPassword" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/current_password"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_caption"
+                    android:textStyle="bold" />
 
+                <EditText
+                    android:id="@+id/etCurrentPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="@drawable/bg_currency_box"
+                    android:hint="Nhập mật khẩu hiện tại"
+                    android:inputType="textPassword"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:text="@string/new_password"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_caption"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etNewPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="@drawable/bg_currency_box"
+                    android:hint="Ít nhất 8 ký tự"
+                    android:inputType="textPassword"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:text="@string/confirm_password"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_caption"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="@drawable/bg_currency_box"
+                    android:hint="Nhập lại mật khẩu mới"
+                    android:inputType="textPassword"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnChangePassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="@dimen/spacing_20"
+                    android:background="@drawable/bg_button_primary"
+                    android:text="@string/btn_change_password"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Danger Zone Section -->
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Mật khẩu mới"
-                android:textColor="#202A24" />
-
-            <EditText
-                android:id="@+id/etNewPassword"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_input_field"
-                android:paddingHorizontal="12dp"
-                android:hint="Ít nhất 8 ký tự"
-                android:singleLine="true"
-                android:inputType="textPassword" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Xác nhận mật khẩu"
-                android:textColor="#202A24" />
-
-            <EditText
-                android:id="@+id/etConfirmPassword"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_input_field"
-                android:paddingHorizontal="12dp"
-                android:hint="Nhập lại mật khẩu mới"
-                android:singleLine="true"
-                android:inputType="textPassword" />
-
-            <Button
-                android:id="@+id/btnChangePassword"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_button_primary"
-                android:text="Đổi mật khẩu"
-                android:textColor="#FFFFFF"
-                android:textAllCaps="false"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:layout_marginBottom="@dimen/spacing_8"
+                android:text="@string/section_account_actions"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_white"
+                android:orientation="vertical">
+
+                <!-- Logout This Device -->
+                <TextView
+                    android:id="@+id/btnLogoutThisDevice"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:clickable="true"
+                    android:drawablePadding="@dimen/spacing_12"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:text="@string/logout_this_device"
+                    android:textColor="@color/status_error"
+                    android:textSize="@dimen/text_size_body_primary"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_exit_red" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divider_light" />
+
+                <!-- Logout All Devices -->
+                <TextView
+                    android:id="@+id/btnLogoutAllDevices"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:clickable="true"
+                    android:drawablePadding="@dimen/spacing_12"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:text="@string/logout_all_devices"
+                    android:textColor="@color/status_error"
+                    android:textSize="@dimen/text_size_body_primary"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_exit_red" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divider_light" />
+
+                <!-- Delete Account -->
+                <TextView
+                    android:id="@+id/btnDeleteAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:clickable="true"
+                    android:drawablePadding="@dimen/spacing_12"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:text="@string/delete_account"
+                    android:textColor="@color/status_error"
+                    android:textSize="@dimen/text_size_body_primary"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_trash_red" />
+
+            </LinearLayout>
+
         </LinearLayout>
-
-        <!-- Account actions -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card_white">
-
-            <!-- Đăng xuất khỏi thiết bị này -->
-            <TextView
-                android:id="@+id/btnLogoutThisDevice"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:drawableStart="@drawable/ic_exit_red"
-                android:drawablePadding="12dp"
-                android:text="Đăng xuất khỏi thiết bị này"
-                android:textColor="#F44336" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E8ECE9" />
-
-            <!-- Đăng xuất tất cả thiết bị -->
-            <TextView
-                android:id="@+id/btnLogoutAllDevices"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:drawableStart="@drawable/ic_exit_red"
-                android:drawablePadding="12dp"
-                android:text="Đăng xuất tất cả thiết bị"
-                android:textColor="#F44336" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E8ECE9" />
-
-            <!-- Xóa vĩnh viễn tài khoản -->
-            <TextView
-                android:id="@+id/btnDeleteAccount"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:drawableStart="@drawable/ic_trash_red"
-                android:drawablePadding="12dp"
-                android:text="Xóa vĩnh viễn tài khoản"
-                android:textColor="#F44336" />
-
-        </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

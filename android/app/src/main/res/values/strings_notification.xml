@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification Feature -->
+    <string name="notification_title">Thông báo</string>
+    <string name="mark_all_read">Đánh dấu đã đọc</string>
+    <string name="no_notifications_title">Không có thông báo</string>
+    <string name="no_notifications_desc">Bạn đã xem tất cả thông báo</string>
+</resources>

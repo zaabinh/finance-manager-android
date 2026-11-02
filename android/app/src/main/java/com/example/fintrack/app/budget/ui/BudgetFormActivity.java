@@ -38,11 +38,15 @@ public final class BudgetFormActivity extends FinanceActivity {
             }
             initialized = true;
         }
-        text(R.id.tvBudgetCatValue, book.category(category) == null ? "" : book.category(category).name);
-        text(R.id.tvBudgetPeriodValue, getString(R.string.transaction_month_format, FinanceUi.monthLabel(month)));
+        text(R.id.tvBudgetCatValue, book.category(category) == null ? getString(R.string.transaction_category_placeholder) : book.category(category).name);
+        text(R.id.tvBudgetPeriodValue, FinanceUi.monthLabel(month));
     }
     private void save() {
         if (book == null || model.busy()) return;
+        if (category == null || category.trim().isEmpty()) {
+            Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();
+            return;
+        }
         long limit;
         try { limit = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
         catch (FinanceBook.Failure error) {

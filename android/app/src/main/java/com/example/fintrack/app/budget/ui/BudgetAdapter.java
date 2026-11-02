@@ -25,7 +25,7 @@ final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Holder> {
         FinanceBook.Budget budget = budgets.get(position);
         FinanceBook.BudgetUsage usage = book.usage(budget);
         holder.text(R.id.tvBudgetCategoryName, book.category(budget.categoryId).name);
-        holder.text(R.id.tvBudgetPeriod, holder.itemView.getContext().getString(R.string.transaction_month_format, FinanceUi.monthLabel(budget.month)));
+        holder.text(R.id.tvBudgetPeriod, FinanceUi.monthLabel(budget.month).toString());
         holder.text(R.id.tvBudgetPercentage, usage.percentage + "%");
         holder.text(R.id.tvBudgetSpent, FinanceUi.money(usage.spent)); holder.text(R.id.tvBudgetLimit, "/ " + FinanceUi.money(budget.limit));
         holder.text(R.id.tvBudgetStatus, holder.itemView.getContext().getString(usage.exceeded ? R.string.finance_budget_exceeded

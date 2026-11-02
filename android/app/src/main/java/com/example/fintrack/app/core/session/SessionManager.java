@@ -144,8 +144,17 @@ public class SessionManager {
         return pref.getString(KEY_USER_NAME, null);
     }
 
-    /** Xóa toàn bộ dữ liệu phiên làm việc (Dùng khi người dùng bấm Đăng xuất / Logout) */
+    /** Xóa dữ liệu phiên làm việc khi Đăng xuất (giữ lại trạng thái đã hoàn tất Setup) */
     public void clearSession() {
-        pref.edit().clear().apply();
+        boolean wasSetupCompleted = isSetupCompleted();
+        pref.edit()
+                .remove(KEY_IS_LOGGED_IN)
+                .remove(KEY_ACCESS_TOKEN)
+                .remove(KEY_REFRESH_TOKEN)
+                .remove(KEY_USER_ID)
+                .remove(KEY_USER_EMAIL)
+                .remove(KEY_USER_NAME)
+                .putBoolean(KEY_IS_SETUP_COMPLETED, wasSetupCompleted)
+                .apply();
     }
 }

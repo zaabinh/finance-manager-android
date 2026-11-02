@@ -8,17 +8,17 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.finance.data.FinanceRepository;
-import com.example.fintrack.app.transaction.domain.ReceiptParser;
+import com.example.fintrack.app.transaction.domain.TransactionParser;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
-public final class ReceiptViewModel extends AndroidViewModel {
+public final class TransactionReceiptViewModel extends AndroidViewModel {
     private final TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-    private final MutableLiveData<Resource<ReceiptParser.Draft>> draft = new MutableLiveData<>();
-    public ReceiptViewModel(@NonNull Application application) { super(application); }
-    LiveData<Resource<ReceiptParser.Draft>> draft() { return draft; }
+    private final MutableLiveData<Resource<TransactionParser.Draft>> draft = new MutableLiveData<>();
+    public TransactionReceiptViewModel(@NonNull Application application) { super(application); }
+    LiveData<Resource<TransactionParser.Draft>> draft() { return draft; }
     void read(Uri image) {
         if (draft.getValue() != null) return;
         draft.setValue(Resource.loading(null));
@@ -27,7 +27,7 @@ public final class ReceiptViewModel extends AndroidViewModel {
                 InputImage input = InputImage.fromFilePath(getApplication(), image);
                 recognizer.process(input).addOnSuccessListener(text -> {
                     if (text.getText().trim().isEmpty()) draft.setValue(Resource.error("unreadable", null));
-                    else draft.setValue(Resource.success(ReceiptParser.parse(text.getText())));
+                    else draft.setValue(Resource.success(TransactionParser.parse(text.getText())));
                 }).addOnFailureListener(error -> draft.setValue(Resource.error("unreadable", null)));
             } catch (Exception error) { draft.postValue(Resource.error("unreadable", null)); }
         });
