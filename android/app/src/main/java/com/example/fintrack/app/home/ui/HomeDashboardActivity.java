@@ -15,14 +15,12 @@ import com.example.fintrack.app.analytics.ui.AnalyticsActivity;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.budget.ui.BudgetFormActivity;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
-import com.example.fintrack.app.component.FabSpeedDialHelper;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.notification.ui.NotificationActivity;
-import com.example.fintrack.app.settings.ui.SettingActivity;
 import com.example.fintrack.app.transaction.ui.TransactionImportActivity;
 import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
@@ -44,17 +42,11 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private View btnActionScan;
     private View btnActionReport;
 
-    private TextView tvBudgetMonthTitle;
     private TextView tvBudgetStatusBadge;
     private TextView tvBudgetUsage;
     private ProgressBar pbBudgetProgress;
     private TextView tvBudgetRemaining;
     private View homeBudgetLink;
-
-    private ImageView navHome;
-    private ImageView navReport;
-    private ImageView navBudget;
-    private ImageView navSetting;
 
     // Khai báo quản lý phiên đăng nhập và các ViewModel xử lý dữ liệu
     private SessionManager sessionManager;
@@ -100,17 +92,11 @@ public class HomeDashboardActivity extends AppCompatActivity {
         btnActionScan = findViewById(R.id.btnActionScan);
         btnActionReport = findViewById(R.id.btnActionReport);
 
-        tvBudgetMonthTitle = findViewById(R.id.tvBudgetMonthTitle);
         tvBudgetStatusBadge = findViewById(R.id.tvBudgetStatusBadge);
         tvBudgetUsage = findViewById(R.id.tvBudgetUsage);
         pbBudgetProgress = findViewById(R.id.pbBudgetProgress);
         tvBudgetRemaining = findViewById(R.id.tvBudgetRemaining);
         homeBudgetLink = findViewById(R.id.homeBudgetLink);
-
-        navHome = findViewById(R.id.navHome);
-        navReport = findViewById(R.id.navReport);
-        navBudget = findViewById(R.id.navBudget);
-        navSetting = findViewById(R.id.navSetting);
     }
 
     // Lắng nghe dữ liệu thay đổi từ ViewModel (LiveData)

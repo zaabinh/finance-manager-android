@@ -15,6 +15,8 @@
     <string name="status_disabled">Đã vô hiệu hóa</string>
     <string name="btn_create_category">Tạo danh mục</string>
     <string name="btn_delete_category">Xóa danh mục</string>
+    <string name="select_category_type_placeholder">Chọn loại danh mục</string>
+    <string name="optional_hint">Không bắt buộc</string>
 
     <!-- Default Category Items -->
     <string name="cat_food">Ăn uống</string>

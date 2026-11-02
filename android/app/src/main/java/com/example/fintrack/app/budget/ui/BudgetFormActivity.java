@@ -44,8 +44,14 @@ public final class BudgetFormActivity extends FinanceActivity {
     private void save() {
         if (book == null || model.busy()) return;
         if (category == null || category.trim().isEmpty()) {
-            Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_required_category, Toast.LENGTH_SHORT).show();
             return;
+        }
+        for (FinanceBook.Budget item : book.state().budgets) {
+            if ((!editing || !item.id.equals(id)) && item.categoryId.equals(category) && item.month.equals(month)) {
+                Toast.makeText(this, R.string.error_duplicate_budget, Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
         long limit;
         try { limit = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }

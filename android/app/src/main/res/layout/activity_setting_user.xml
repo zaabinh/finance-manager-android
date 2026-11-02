@@ -7,7 +7,7 @@
     android:fitsSystemWindows="true">
 
     <!-- Header Toolbar -->
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,56 +20,69 @@
             android:id="@+id/btnBack"
             android:layout_width="@dimen/icon_back_size"
             android:layout_height="@dimen/icon_back_size"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@null"
             android:padding="4dp"
             android:src="@drawable/ic_arrow_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/text_primary" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Hồ sơ người dùng"
+            android:layout_marginHorizontal="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="@string/user_profile_title"
             android:textColor="@color/text_primary"
             android:textSize="@dimen/text_size_title_section"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnEdit"
+            app:layout_constraintStart_toEndOf="@id/btnBack"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/btnEdit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackground"
             android:padding="@dimen/spacing_4"
-            android:text="Chỉnh sửa"
+            android:text="@string/action_edit"
             android:textColor="@color/color_primary"
             android:textSize="@dimen/text_size_body_primary"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
         android:paddingBottom="@dimen/spacing_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rlHeader">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
             android:paddingHorizontal="@dimen/spacing_16">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/llFormContainer"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="440dp">
 
                 <!-- Profile Hero Card -->
@@ -130,7 +143,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_20"
                     android:layout_marginBottom="@dimen/spacing_8"
-                    android:text="THÔNG TIN CÁ NHÂN"
+                    android:text="@string/section_personal_info"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -146,7 +159,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Họ và tên"
+                        android:text="@string/label_full_name"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
@@ -171,7 +184,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_16"
-                        android:text="Email"
+                        android:text="@string/label_email"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
@@ -196,7 +209,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_16"
-                        android:text="Số điện thoại"
+                        android:text="@string/label_phone_number"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
@@ -209,7 +222,7 @@
                         android:autofillHints="phone"
                         android:background="@drawable/bg_currency_box"
                         android:enabled="false"
-                        android:hint="Nhập số điện thoại"
+                        android:hint="@string/hint_enter_phone"
                         android:inputType="phone"
                         android:paddingHorizontal="@dimen/spacing_16"
                         android:singleLine="true"
@@ -246,6 +259,8 @@
 
             </LinearLayout>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

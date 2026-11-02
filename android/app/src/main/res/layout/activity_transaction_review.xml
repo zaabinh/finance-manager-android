@@ -38,6 +38,7 @@
                 <ImageView
                     android:id="@+id/ivReviewFeedbackIcon"
                     style="@style/Widget.App.FeedbackInline.Icon"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_triangle_alert" />
 
                 <TextView

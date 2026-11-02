@@ -44,4 +44,10 @@
     <string name="notif_reminder_on">Đã bật nhắc nhở hằng ngày</string>
     <string name="notif_reminder_off">Đã tắt nhắc nhở hằng ngày</string>
     <string name="profile_updated_success">Cập nhật thông tin thành công!</string>
+    <string name="user_profile_title">Hồ sơ người dùng</string>
+    <string name="action_edit">Chỉnh sửa</string>
+    <string name="section_personal_info">THÔNG TIN CÁ NHÂN</string>
+    <string name="label_full_name">Họ và tên</string>
+    <string name="label_phone_number">Số điện thoại</string>
+    <string name="hint_enter_phone">Nhập số điện thoại</string>
 </resources>

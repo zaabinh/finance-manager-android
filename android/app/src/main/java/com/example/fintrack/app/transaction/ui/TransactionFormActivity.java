@@ -88,6 +88,18 @@ public final class TransactionFormActivity extends FinanceActivity {
     }
     private void save() {
         if (book == null || model.busy()) return;
+        if (type != FinanceBook.Type.TRANSFER && (category == null || category.isEmpty())) {
+            Toast.makeText(this, R.string.error_required_category, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (wallet == null || wallet.isEmpty()) {
+            Toast.makeText(this, R.string.error_required_wallet, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (type == FinanceBook.Type.TRANSFER && wallet != null && wallet.equals(destination)) {
+            Toast.makeText(this, R.string.error_same_wallet_transfer, Toast.LENGTH_SHORT).show();
+            return;
+        }
         long amount;
         try { amount = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
         catch (FinanceBook.Failure error) {

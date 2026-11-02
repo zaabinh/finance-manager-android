@@ -29,6 +29,9 @@
     <string name="transaction_clear_filters">Xoá bộ lọc</string>
     <string name="state_error_title">Không tải được dữ liệu</string>
     <string name="state_error_body">Kiểm tra kết nối mạng rồi thử lại.</string>
+    <string name="error_required_category">Vui lòng chọn danh mục</string>
+    <string name="error_required_wallet">Vui lòng chọn ví tài chính</string>
+    <string name="error_same_wallet_transfer">Ví đích phải khác ví nguồn</string>
     <string name="action_retry">Thử lại</string>
     <string name="transaction_saved_toast">Đã lưu giao dịch %1$s</string>
     <string name="transaction_save_failed_toast">Không lưu được. Nội dung bạn nhập vẫn được giữ.</string>

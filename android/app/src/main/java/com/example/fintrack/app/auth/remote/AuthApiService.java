@@ -35,4 +35,16 @@ public interface AuthApiService {
     /** API Đặt lại mật khẩu mới bằng mã OTP */
     @POST("api/v1/auth/reset-password")
     Call<ApiResponse<Void>> resetPassword(@Body ResetPasswordRequest request);
+
+    /** API Làm mới Token tự động bằng RefreshToken */
+    @POST("api/v1/auth/refresh-token")
+    Call<ApiResponse<LoginResponse>> refreshToken(@Body RefreshTokenRequest request);
+
+    /** API Đăng xuất thiết bị hiện tại */
+    @POST("api/v1/auth/logout")
+    Call<ApiResponse<Void>> logout();
+
+    /** API Đăng xuất tất cả thiết bị */
+    @POST("api/v1/auth/logout-all")
+    Call<ApiResponse<Void>> logoutAll();
 }

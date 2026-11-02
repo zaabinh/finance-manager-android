@@ -13,11 +13,16 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
 import com.example.fintrack.app.analytics.model.AnalyticsCategoryItem;
 import com.example.fintrack.app.analytics.model.AnalyticsData;
 import com.example.fintrack.app.analytics.provider.AnalyticsDataProvider;
+import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.finance.ui.FinanceViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,23 +84,26 @@ public class AnalyticsActivity extends AppCompatActivity {
     private Button btnNextStep;
 
     // Biến trạng thái
-    private int currentStep = 1; // Bước hiện tại (từ 1 đến 5)
-    private AnalyticsData analyticsData; // Dữ liệu phân tích
-    private String currentMonth = "Tháng 10"; // Tháng mặc định
-    private AnalyticsCategoryItem selectedCategory; // Danh mục đang được chọn ở slide 2
+    private int currentStep = 1;
+    private AnalyticsData analyticsData;
+    private String currentMonth = "Tháng 10";
+    private AnalyticsCategoryItem selectedCategory;
+    private FinanceViewModel financeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_analytics);
 
-        initViews();                  // Ánh xạ các View từ XML vào Java
-        loadAnalyticsData(currentMonth); // Tải dữ liệu phân tích cho tháng hiện tại
-        setupListeners();             // Cài đặt các sự kiện bấm nút (Click listeners)
-        updateStepUI();               // Cập nhật giao diện tương ứng với bước hiện tại
+        financeViewModel = new ViewModelProvider(this).get(FinanceViewModel.class);
+
+        initViews();
+        setupObservers();
+        loadAnalyticsData(currentMonth);
+        setupListeners();
+        updateStepUI();
     }
 
-    // Ánh xạ ID từ file XML sang các biến trong Java
     private void initViews() {
         btnBack = findViewById(R.id.btnBack);
         btnSelectMonth = findViewById(R.id.btnSelectMonth);
@@ -143,38 +151,50 @@ public class AnalyticsActivity extends AppCompatActivity {
         btnNextStep = findViewById(R.id.btnNextStep);
     }
 
-    // Tải dữ liệu phân tích tương ứng với tháng được chọn và đổ lên các Slide
+    private void setupObservers() {
+        financeViewModel.state().observe(this, resource -> {
+            if (resource == null) return;
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                FinanceBook book = resource.getData();
+                String formattedMonth = FinanceBook.month(System.currentTimeMillis());
+                long income = book.total(FinanceBook.Type.INCOME, formattedMonth);
+                long expense = book.total(FinanceBook.Type.EXPENSE, formattedMonth);
+                long diff = Math.subtractExact(income, expense);
+
+                if (income > 0 || expense > 0) {
+                    tvSlide1Income.setText(FinanceUi.money(income));
+                    tvSlide1Expense.setText(FinanceUi.money(expense));
+                    tvSlide1NetDiff.setText((diff >= 0 ? "+" : "") + FinanceUi.money(diff));
+                }
+            }
+        });
+    }
+
     private void loadAnalyticsData(String month) {
         currentMonth = month;
         tvSelectedMonth.setText(month);
         analyticsData = AnalyticsDataProvider.getAnalyticsDataForMonth(month);
 
-        // Slide 1: Đổ dữ liệu tổng quan thu chi
         tvSlide1NetDiff.setText(analyticsData.getNetDifference());
         tvSlide1Income.setText(analyticsData.getTotalIncome());
         tvSlide1Expense.setText(analyticsData.getTotalExpense());
         tvSlide1Note.setText(analyticsData.getOverviewNote());
 
-        // Slide 2: Khởi tạo danh sách các nút danh mục (pills)
         setupSlide2CategoryPills();
 
-        // Slide 3: Đổ dữ liệu tuần chi tiêu cao nhất
         tvSlide3PeakHeader.setText("Tuần " + analyticsData.getPeakWeekNumber() + " chi tiêu cao nhất");
         tvSlide3PeakSub.setText(analyticsData.getPeakWeekAmount() + " · chiếm " + analyticsData.getPeakWeekSharePercentage() + "% chi tiêu tháng.");
 
-        // Slide 4: Đổ dữ liệu cảnh báo ngân sách
         tvSlide4CategoryName.setText("Khoản " + analyticsData.getBudgetCategoryName());
         tvSlide4BudgetPercent.setText(analyticsData.getBudgetUsedPercentage() + "% ngân sách");
         tvSlide4Spent.setText("Đã chi " + analyticsData.getBudgetSpentFormatted());
         tvSlide4Remaining.setText("Còn " + analyticsData.getBudgetRemainingFormatted());
         tvSlide4AlertNote.setText(analyticsData.getBudgetNote());
 
-        // Slide 5: Đổ dữ liệu lời khuyên tài chính
         tvSlide5TipMessage.setText(analyticsData.getTipMessage());
         tvSlide5SuggestionAction.setText("Gợi ý: " + analyticsData.getTipSuggestionAction());
     }
 
-    // Tạo các nút danh mục dạng "pill" động cho Slide 2
     private void setupSlide2CategoryPills() {
         containerSlide2Pills.removeAllViews();
         List<AnalyticsCategoryItem> categories = analyticsData.getCategoryBreakdown();
@@ -198,7 +218,6 @@ public class AnalyticsActivity extends AppCompatActivity {
             lp.setMargins(0, 0, 16, 0);
             pill.setLayoutParams(lp);
 
-            // Đổi màu nền tùy theo trạng thái được chọn hay chưa
             if (item.getId().equals(selectedCategory.getId())) {
                 pill.setBackgroundResource(R.drawable.bg_story_pill_selected);
                 pill.setTextColor(getColor(R.color.text_primary));
@@ -207,11 +226,9 @@ public class AnalyticsActivity extends AppCompatActivity {
                 pill.setTextColor(getColor(R.color.white));
             }
 
-            // Sự kiện khi bấm vào một danh mục cụ thể
             pill.setOnClickListener(v -> {
                 selectedCategory = item;
                 updateSlide2SelectedCategoryUI(item);
-                // Cập nhật lại giao diện các nút pill (chọn/bỏ chọn)
                 for (int i = 0; i < categories.size(); i++) {
                     TextView p = pillViews.get(i);
                     if (categories.get(i).getId().equals(item.getId())) {
@@ -229,7 +246,6 @@ public class AnalyticsActivity extends AppCompatActivity {
         }
     }
 
-    // Cập nhật thông tin chi tiết của danh mục đang chọn trên Slide 2
     private void updateSlide2SelectedCategoryUI(AnalyticsCategoryItem item) {
         if (item == null) return;
         if (item.getIconResId() != 0) {
@@ -240,11 +256,9 @@ public class AnalyticsActivity extends AppCompatActivity {
         pbSlide2Progress.setProgress(item.getPercentage());
     }
 
-    // Cập nhật giao diện theo bước hiện tại (thanh tiến trình, hiển thị slide tương ứng, trạng thái nút)
     private void updateStepUI() {
         tvStoryStepCounter.setText("PHÂN TÍCH " + currentStep + " / 5 · MINH HỌA");
 
-        // Cập nhật màu các thanh progress segment ở đầu màn hình
         View[] segs = {progressSeg1, progressSeg2, progressSeg3, progressSeg4, progressSeg5};
         for (int i = 0; i < segs.length; i++) {
             if (i < currentStep) {
@@ -254,44 +268,37 @@ public class AnalyticsActivity extends AppCompatActivity {
             }
         }
 
-        // Chỉ hiển thị Layout của Slide tương ứng với bước hiện tại, ẩn các slide khác
         layoutSlide1.setVisibility(currentStep == 1 ? View.VISIBLE : View.GONE);
         layoutSlide2.setVisibility(currentStep == 2 ? View.VISIBLE : View.GONE);
         layoutSlide3.setVisibility(currentStep == 3 ? View.VISIBLE : View.GONE);
         layoutSlide4.setVisibility(currentStep == 4 ? View.VISIBLE : View.GONE);
         layoutSlide5.setVisibility(currentStep == 5 ? View.VISIBLE : View.GONE);
 
-        // Kích hoạt/Vô hiệu hóa nút Quay lại (Prev)
         btnPrevStep.setEnabled(currentStep > 1);
         btnPrevStep.setAlpha(currentStep > 1 ? 1.0f : 0.4f);
 
-        // Đổi tên chữ trên nút Tiếp theo (Next) nếu đang ở bước cuối
         if (currentStep == 5) {
-            btnNextStep.setText("Xem lại →");
+            btnNextStep.setText(R.string.btn_review);
         } else {
-            btnNextStep.setText("Tiếp tục →");
+            btnNextStep.setText(R.string.btn_next);
         }
     }
 
-    // Đăng ký các sự kiện tương tác của người dùng
     private void setupListeners() {
-        // Nút quay lại màn hình trước
         btnBack.setOnClickListener(v -> finish());
 
-        // Hiển thị hộp thoại (Dialog) chọn tháng báo cáo
         btnSelectMonth.setOnClickListener(v -> {
             String[] months = {"Tháng 10", "Tháng 9", "Tháng 8", "Tháng 7"};
             new AlertDialog.Builder(this)
-                    .setTitle("Chọn tháng báo cáo")
+                    .setTitle(R.string.select_report_month)
                     .setItems(months, (dialog, which) -> {
                         loadAnalyticsData(months[which]);
-                        currentStep = 1; // Reset về bước 1 khi đổi tháng
+                        currentStep = 1;
                         updateStepUI();
                     })
                     .show();
         });
 
-        // Bấm nút lùi lại bước trước đó
         btnPrevStep.setOnClickListener(v -> {
             if (currentStep > 1) {
                 currentStep--;
@@ -299,7 +306,6 @@ public class AnalyticsActivity extends AppCompatActivity {
             }
         });
 
-        // Bấm nút chuyển sang bước tiếp theo (hoặc quay lại từ đầu nếu ở bước 5)
         btnNextStep.setOnClickListener(v -> {
             if (currentStep < 5) {
                 currentStep++;
@@ -310,9 +316,16 @@ public class AnalyticsActivity extends AppCompatActivity {
             }
         });
 
-        // Sự kiện bấm vào phần gợi ý ở Slide 5
         btnSlide5Suggestion.setOnClickListener(v -> {
             Toast.makeText(this, "Chuyển đến chi tiết Khoản " + analyticsData.getBudgetCategoryName(), Toast.LENGTH_SHORT).show();
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (financeViewModel != null) {
+            financeViewModel.refresh();
+        }
     }
 }

@@ -33,6 +33,7 @@ public class SessionManager {
      * Khởi tạo bộ lưu trữ mã hóa (EncryptedSharedPreferences).
      * Nếu xảy ra lỗi khởi tạo, nó sẽ thử xóa file cũ bị hỏng một lần rồi tạo lại.
      */
+    @SuppressWarnings("deprecation")
     private SessionManager(Context context) {
         Context appContext = context.getApplicationContext();
         SharedPreferences tempPref;

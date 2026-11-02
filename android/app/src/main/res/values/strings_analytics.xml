@@ -3,5 +3,9 @@
     <!-- Analytics Feature -->
     <string name="analytics_title">Phân tích</string>
     <string name="category_breakdown">Phân tích theo danh mục</string>
-    <string name="financial_analytics">Phân tích tài chính</string>
+    <string name="analytics_report_title">Phân tích báo cáo</string>
+    <string name="btn_prev">← Trước</string>
+    <string name="btn_next">Tiếp tục →</string>
+    <string name="btn_review">Xem lại →</string>
+    <string name="select_report_month">Chọn tháng báo cáo</string>
 </resources>
