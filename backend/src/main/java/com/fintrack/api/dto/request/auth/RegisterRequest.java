@@ -6,20 +6,19 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
         @NotBlank(message = "USERNAME_REQUIRED")
+        @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9._-]{3,50}", message = "USERNAME_INVALID")
         String username,
         @Email(message = "EMAIL_INVALID")
         @NotBlank(message = "EMAIL_REQUIRED")
+        @Size(max = 254)
         String email,
         @NotBlank(message = "PASSWORD_REQUIRED")
-        @Size(
-                min = 8,
-                max = 64,
-                message = "PASSWORD_LENGTH_INVALID"
-        )
-        @jakarta.validation.constraints.Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,64}$",
-                message = "PASSWORD_COMPLEXITY_INVALID"
-        )
+        @ValidPassword
         String password
 ) {
+    @Override public String toString() { return "RegisterRequest[REDACTED]"; }
+    public RegisterRequest {
+        username = username == null ? null : username.trim();
+        email = email == null ? null : email.trim();
+    }
 }

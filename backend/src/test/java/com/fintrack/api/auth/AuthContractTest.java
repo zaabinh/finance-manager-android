@@ -13,6 +13,15 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Authentication DTO and component contracts")
 class AuthContractTest {
+    @Test
+    void authObjectsRedactSecretsFromDebugRendering() {
+        assertThat(new com.fintrack.api.dto.request.auth.LoginRequest("user", "secret").toString()).doesNotContain("secret");
+        assertThat(new com.fintrack.api.dto.request.auth.RegisterRequest("user", "user@example.com", "secret").toString()).doesNotContain("secret");
+        assertThat(new com.fintrack.api.dto.request.auth.VerifyEmailRequest("user@example.com", "123456").toString()).doesNotContain("123456");
+        assertThat(new com.fintrack.api.dto.request.auth.ResetPasswordRequest("user@example.com", "123456", "secret").toString()).doesNotContain("123456", "secret");
+        assertThat(new com.fintrack.api.dto.request.auth.RefreshTokenRequest("refresh-secret").toString()).doesNotContain("refresh-secret");
+        assertThat(new com.fintrack.api.dto.response.auth.TokenResponse("access-secret", "refresh-secret", "Bearer", 900).toString()).doesNotContain("access-secret", "refresh-secret");
+    }
 
     private static final String REGISTER_REQUEST = "com.fintrack.api.dto.request.auth.RegisterRequest";
     private static final String LOGIN_REQUEST = "com.fintrack.api.dto.request.auth.LoginRequest";
@@ -78,8 +87,8 @@ class AuthContractTest {
     void requiredAuthenticationComponentsExistAtTheirLayerBoundaries() {
         assertThat(loadableClasses(
                 "com.fintrack.api.controller.AuthController",
-                "com.fintrack.api.service.AuthService",
-                "com.fintrack.api.service.TokenService",
+                "com.fintrack.api.service.auth.AuthService",
+                "com.fintrack.api.service.auth.TokenService",
                 "com.fintrack.api.repository.UserRepository",
                 "com.fintrack.api.repository.RefreshSessionRepository"))
                 .as("controller, service, token and persistence boundaries")

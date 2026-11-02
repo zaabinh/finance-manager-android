@@ -1,15 +1,6 @@
 ALTER TABLE fintrack.users
-    ADD COLUMN email_verified_at TIMESTAMPTZ,
-    ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0,
-    ADD COLUMN locked_until TIMESTAMPTZ,
-    ADD COLUMN password_changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT false,
     ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT false;
-
-CREATE UNIQUE INDEX IF NOT EXISTS
-ux_users_email ON users(email);
-
-CREATE UNIQUE INDEX IF NOT EXISTS
-ux_users_username ON users(username);
 
 CREATE TABLE fintrack.verification_challenges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

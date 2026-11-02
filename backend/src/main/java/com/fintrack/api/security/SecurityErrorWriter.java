@@ -20,9 +20,14 @@ public class SecurityErrorWriter {
 
     public void write(HttpServletRequest request, HttpServletResponse response, int status, String message)
             throws IOException {
+        write(request, response, status, ErrorCode.forStatus(status), message);
+    }
+
+    public void write(HttpServletRequest request, HttpServletResponse response, int status, ErrorCode code, String message)
+            throws IOException {
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), ApiErrorResponse.of(
-                status, ErrorCode.forStatus(status), message, request.getRequestURI()));
+                status, code, message, request.getRequestURI()));
     }
 }

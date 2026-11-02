@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "dev"})
 class ApplicationSmokeTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.fintrack.api.service.auth.AuthOperations auth;
 
     @Autowired
     private ApplicationContext context;

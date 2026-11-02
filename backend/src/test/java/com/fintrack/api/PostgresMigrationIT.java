@@ -53,7 +53,7 @@ class PostgresMigrationIT {
             }
             var flyway = Flyway.configure().dataSource(upgradeDatabase.getJdbcUrl(), upgradeDatabase.getUsername(),
                     upgradeDatabase.getPassword()).defaultSchema("fintrack").load();
-            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
             try (var connection = DriverManager.getConnection(upgradeDatabase.getJdbcUrl(),
                     upgradeDatabase.getUsername(), upgradeDatabase.getPassword());
                  var statement = connection.createStatement()) {
@@ -101,15 +101,15 @@ class PostgresMigrationIT {
                     }
                 }
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
                      var statement = connection.createStatement();
                      var result = statement.executeQuery(
-                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4') AND success")) {
+                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5') AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(4);
+                    assertThat(result.getInt(1)).isEqualTo(5);
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());

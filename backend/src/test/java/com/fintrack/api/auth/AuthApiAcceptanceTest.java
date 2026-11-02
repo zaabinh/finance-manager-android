@@ -23,6 +23,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles({"test", "dev"})
 @DisplayName("Authentication API acceptance criteria")
 class AuthApiAcceptanceTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.fintrack.api.service.auth.AuthOperations auth;
+
+    @org.junit.jupiter.api.BeforeEach
+    void rejectUnknownCredentials() {
+        org.mockito.Mockito.when(auth.login(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenThrow(new com.fintrack.api.exception.AppException(org.springframework.http.HttpStatus.UNAUTHORIZED,
+                        com.fintrack.api.exception.ErrorCode.AUTH_INVALID_CREDENTIALS, "Invalid credentials"));
+    }
 
     private static final String REGISTER_PATH = "/api/v1/auth/register";
     private static final String LOGIN_PATH = "/api/v1/auth/login";

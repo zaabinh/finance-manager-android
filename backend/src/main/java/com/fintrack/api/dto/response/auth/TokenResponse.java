@@ -6,4 +6,5 @@ public record TokenResponse(
         String tokenType,
         long expiresIn
 ) {
+    @Override public String toString() { return "TokenResponse[REDACTED]"; }
 }

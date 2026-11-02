@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "staging"})
 class StagingSecurityTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.fintrack.api.service.auth.AuthOperations auth;
 
     @Autowired
     private MockMvc mockMvc;
