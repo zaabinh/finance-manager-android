@@ -1,7 +1,11 @@
 # Finance Manager Backend
 
-Infrastructure for the FinTrack REST API. Core database tables are defined in Flyway;
-business APIs and authentication are not implemented yet.
+FinTrack REST API with Spring Security authentication, email verification through Resend,
+RS256 access JWTs and rotating refresh tokens. Core database tables are defined in Flyway;
+financial business APIs are the next modules.
+
+See [authentication implementation and configuration](../docs/api/AUTHENTICATION_IMPLEMENTATION.md)
+for endpoints, password policy, rate limits, RSA key files, Resend secrets and integration tests.
 
 ## Stack and prerequisites
 
@@ -141,17 +145,18 @@ Application startup automatically runs `src/main/resources/db/migration/` before
 `V1__init_schema.sql` initializes `fintrack`; Flyway may create the schema before V1 to store its history.
 V2 initializes the core tables; V3 standardizes the financial domain as **Wallet / Ví** while preserving data.
 The resulting tables are `users`, `user_preferences`, `refresh_sessions`, `wallets`, `categories`,
-`transactions`, `transaction_entries`, and `budgets`, plus indexes, foreign keys, deferred posting-validation
+`transactions`, `transaction_entries`, `budgets`, and V4's `verification_challenges`, plus indexes, foreign keys, deferred posting-validation
 triggers and the `wallet_balances` view. Use `wallet_id` / `wallet_type` in SQL and `walletId` / `walletType`
 in API contracts. Monetary amounts use integer VND. See [the API contract](../docs/api/CONTRACT.md).
 V1/V2 are applied migration history and must not be edited; the old financial-domain names occur only
-in immutable migrations and explicit upgrade tests. Both new and existing databases run V3.
+in immutable migrations and explicit upgrade tests. Both new and existing databases run through V4,
+which adds email verification state, challenges and refresh rotation metadata.
 `citext` and `btree_gist` extensions are installed in `public`; application tables live in `fintrack`.
 The migration role needs permission to install these trusted extensions (or have an administrator provision them).
 Flyway and Hibernate share the default application schema.
 The root `/database/` directory is untracked and ignored, and is never used by Compose, Maven or tests.
 No Maven Flyway plugin or separate credentials are needed. Never edit an applied migration;
-add `V2__...sql` for later changes. Flyway clean is disabled.
+add the next versioned migration for later changes. Flyway clean is disabled.
 
 After startup, verify in `psql`:
 
@@ -161,7 +166,7 @@ FROM fintrack.flyway_schema_history
 ORDER BY installed_rank;
 ```
 
-Expect one successful row for each of versions `1`, `2` and `3` (a schema creation history row may also exist).
+Expect one successful row for each of versions `1`, `2`, `3` and `4` (a schema creation history row may also exist).
 Stop and restart, then repeat the query: each version must still appear exactly once.
 Startup logs should report the schema is up to date. Do not automatically baseline or repair shared databases.
 
@@ -183,11 +188,16 @@ To additionally verify actual migrations on isolated PostgreSQL:
 ```
 
 `PostgresMigrationIT` uses Testcontainers PostgreSQL 17.7. It starts the complete application, checks health,
-readiness, Swagger and OpenAPI over HTTP, verifies V1/V2/V3 history and all eight core tables, runs
+readiness, Swagger and OpenAPI over HTTP, verifies V1/V2/V3/V4 history and all nine tables, runs
 `src/test/resources/db/core-schema-smoke.sql` to check postings and derived balances with rollback,
 verifies a second migration executes zero migrations, and restarts against the same database.
 A separate populated V2 database verifies that V3 preserves wallet IDs, ledger references and balances,
 and renames the corresponding constraints without dropping data.
+
+`AuthenticationIT` covers register/verify/login/refresh/logout/reset with actual JDBC transactions,
+concurrent refresh, persisted OTP failures, profile access, and a populated V3 → V4 upgrade.
+The email sender is mocked, so tests do not deliver real emails. See the authentication document
+for running these tests on a separate local PostgreSQL server when Docker is unavailable.
 Docker must be running and accessible, with permission
 to pull `postgres:17.7` and Testcontainers support images. It fails instead of silently skipping when Docker
 is unavailable. No local DB credentials are used; container data is temporary.
@@ -226,7 +236,7 @@ Reports: `target/surefire-reports/` and `target/failsafe-reports/`.
 
 Only Actuator health is exposed; component details are hidden. Liveness does not depend on the DB.
 Security is stateless; form login, HTTP Basic and generated users are disabled. All other routes require
-authentication; until authentication is implemented, anonymous calls receive JSON 401.
+authentication, except the documented POST authentication endpoints. Anonymous protected calls receive JSON 401.
 CORS allows only configured exact origins, never wildcard origins or credentialed requests.
 CSRF is disabled for this stateless foundation; reassess if cookie authentication is introduced.
 
@@ -242,9 +252,10 @@ not returned. Unexpected failures are logged server-side; protect/redact operati
 - Use a least-privilege application role and a separate migration role when needed.
 - Restrict DB/management networks; never expose all Actuator endpoints or public health details.
 - Set connection limits, backups, trusted proxy settings and log retention for the deployment.
-- Implement/test authentication and authorization before enabling business APIs.
+- Configure persistent RSA key files, RESEND_API_KEY and MAIL_FROM; replace the process-local rate limiter
+  with a shared store before running multiple backend instances. Implement ownership checks for business APIs.
 
 ## Next modules
 
-Implement Authentication and token lifecycle, then User, Wallet, Transaction and Budget.
+Extend User, Wallet, Transaction and Budget; authentication and `/api/v1/users/me` are implemented.
 Add versioned migrations and service ownership checks as each module is designed.

@@ -1,226 +1,91 @@
-# Hướng dẫn hoàn thiện Authentication
+# Authentication backend
 
-Tài liệu này là kế hoạch triển khai Authentication end-to-end cho Finance Manager, bao gồm đăng ký,
-xác thực email, đăng nhập, access token, refresh token, đăng xuất và quên mật khẩu. Phạm vi không bao gồm
-phân quyền nghiệp vụ chi tiết, social login, MFA hoặc quản trị người dùng.
+Backend đã triển khai register, xác thực email, gửi lại OTP, login, refresh token rotation,
+logout, quên/đặt lại mật khẩu và `GET /api/v1/users/me`. Android integration là công việc riêng;
+đợt triển khai này chỉ cập nhật backend và tài liệu.
 
-## 1. Trạng thái hiện tại
+## Kiến trúc và quyết định
 
-Backend hiện mới có hạ tầng Spring Security stateless, CORS, error response và hai bảng liên quan:
-`fintrack.users`, `fintrack.refresh_sessions`. Chưa có controller/service/repository Authentication.
+- `AuthController` validate JSON, áp dụng rate limit theo IP/email và trả HTTP response.
+- `AuthService` quản lý business rules, transaction, password policy và challenge.
+- Spring Security `AuthenticationManager` → `DaoAuthenticationProvider` → `CustomUserDetailsService`
+  kiểm tra username/email và BCrypt password; không tự so sánh password để thay thế authentication provider.
+- `AuthenticatedUser` là application principal có UUID, có thể được OAuth provider tái sử dụng sau này.
+  OAuth login chưa được bật và cần identity linking riêng khi bổ sung.
+- `TokenService` dùng Spring Security Nimbus JOSE để ký/verify RS256, quản lý opaque refresh tokens.
+- Persistence dùng JDBC repositories theo cấu trúc backend hiện có; JPA entity mapping khớp schema PostgreSQL.
+- `EmailSenderService` có implementation `ResendEmailSenderService`, gọi REST API qua Spring `RestClient`.
+- `RateLimitingService` dùng bộ nhớ trong một process, fixed windows và `Clock` được inject.
+  Map được đồng bộ hóa để cập nhật bộ đếm và kiểm tra dung lượng atomically; tối đa 10.000 key,
+  dọn key hết hạn, từ chối key mới khi đầy. Không dùng database để lưu failed login/locked-until.
 
-Android đã có màn hình và DTO tạm cho:
+## Database: V4
 
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/verify-email`
-- `POST /api/v1/auth/resend-otp`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/forgot-password`
-- `POST /api/v1/auth/reset-password`
+V4 chưa áp dụng tại thời điểm triển khai, nên được hoàn thiện trực tiếp. Không sửa V1–V3.
+Sau khi V4 đã được áp dụng, mọi thay đổi schema tiếp theo phải dùng migration mới.
 
-Login dùng `ApiResponse<LoginResponse>` thống nhất giữa backend và Android. Register thành công chỉ dùng HTTP
-`201 Created` với body rỗng. Lỗi vẫn dùng `ApiErrorResponse`; `UserResponse` chỉ dành cho `GET /api/v1/users/me`.
-
-## 2. Kiến trúc đề xuất
-
-```text
-AuthController
-    -> AuthService
-        -> UserRepository
-        -> RefreshSessionRepository
-        -> VerificationChallengeRepository
-        -> PasswordEncoder
-        -> TokenService
-        -> EmailService
-```
-
-Package backend đề xuất:
-
-```text
-controller/AuthController.java
-service/AuthService.java
-service/TokenService.java
-service/EmailService.java
-repository/UserRepository.java
-repository/RefreshSessionRepository.java
-repository/VerificationChallengeRepository.java
-entity/User.java
-entity/RefreshSession.java
-entity/VerificationChallenge.java
-dto/request/auth/
-dto/response/auth/
-security/JwtAuthenticationFilter.java
-security/AuthenticatedUser.java
-config/AuthProperties.java
-config/MailProperties.java
-exception/ErrorCode.java
-```
-
-Giữ controller mỏng, transaction và business rules trong service, token logic trong `TokenService`, gửi email
-qua interface riêng để test không cần SMTP thật.
-
-## 3. Quyết định bảo mật
-
-### Password
-
-- Hash bằng `PasswordEncoder`; ưu tiên BCrypt strength 12 hoặc Argon2 nếu runtime đã có provider phù hợp.
-- Không lưu, log hoặc trả password/OTP/token trong response lỗi.
-- Quy tắc MVP đồng bộ Android: tối thiểu 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
-- Backend luôn là nơi enforce cuối cùng; validation phía Android chỉ cải thiện UX.
-- Khi reset password thành công, revoke toàn bộ refresh session của user.
-
-### Access token
-
-- Dùng JWT ký bất đối xứng RS256/ES256; private key chỉ ở backend, public key dùng để verify.
-- Thời hạn đề xuất: 15 phút.
-- Claims tối thiểu: `iss`, `sub` = user UUID, `iat`, `exp`, `jti`, `role`.
-- Không đưa email, password state hoặc dữ liệu cá nhân không cần thiết vào JWT.
-- API nhận `Authorization: Bearer <accessToken>`.
-- Access token không lưu trong database và không dùng làm refresh token.
-
-### Refresh token
-
-- Dùng chuỗi opaque ngẫu nhiên ít nhất 256 bit, không dùng JWT.
-- Thời hạn đề xuất: 30 ngày; có thể cấu hình theo môi trường.
-- Chỉ lưu SHA-256 hash trong `refresh_sessions.token_hash`; raw token chỉ trả cho client một lần.
-- Rotate token mỗi lần refresh: revoke session cũ và tạo session mới trong cùng transaction.
-- Refresh token đã revoke/hết hạn/tái sử dụng trả `401 AUTH_REFRESH_TOKEN_INVALID`.
-- Android lưu access/refresh token trong `EncryptedSharedPreferences`, không log token và không backup token.
-
-### OTP/challenge
-
-- OTP 6 chữ số, thời hạn 10 phút, dùng một lần.
-- Chỉ lưu hash OTP; không lưu plain OTP.
-- Phân biệt purpose: `EMAIL_VERIFICATION`, `PASSWORD_RESET`.
-- Tối đa 5 lần nhập sai cho mỗi challenge.
-- Resend có cooldown 60 giây và giới hạn theo email + IP.
-- Response forgot-password/resend không tiết lộ email có tồn tại hay không.
-
-## 4. Database migration tiếp theo
-
-Không sửa V1/V2/V3 đã áp dụng. Tạo migration mới, ví dụ
-`V4__add_authentication_support.sql`.
-
-Thay đổi đề xuất:
+`fintrack.users` bổ sung:
 
 ```sql
-ALTER TABLE fintrack.users
-    ADD COLUMN email_verified_at TIMESTAMPTZ,
-    ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0,
-    ADD COLUMN locked_until TIMESTAMPTZ,
-    ADD COLUMN password_changed_at TIMESTAMPTZ NOT NULL DEFAULT now();
-
-CREATE TABLE fintrack.verification_challenges (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES fintrack.users(id) ON DELETE CASCADE,
-    email public.CITEXT NOT NULL,
-    purpose TEXT NOT NULL CHECK (purpose IN ('EMAIL_VERIFICATION', 'PASSWORD_RESET')),
-    code_hash CHAR(64) NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    consumed_at TIMESTAMPTZ,
-    attempt_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (expires_at > created_at),
-    CHECK (attempt_count BETWEEN 0 AND 5)
-);
-
-CREATE INDEX ix_verification_challenges_lookup
-    ON fintrack.verification_challenges(email, purpose, expires_at)
-    WHERE consumed_at IS NULL;
+email_verified BOOLEAN NOT NULL DEFAULT false,
+onboarding_completed BOOLEAN NOT NULL DEFAULT false
 ```
 
-Có thể bổ sung vào `refresh_sessions`:
+Không có `email_verified_at`, `failed_login_attempts`, `locked_until`, `password_changed_at`.
+`status` ACTIVE/LOCKED/DISABLED hiện có được giữ cho trạng thái tài khoản quản trị,
+không dùng làm cơ chế khóa tạm do đăng nhập sai. User cũ mặc định chưa verify và cần xác thực email.
+Unique email/username dùng CITEXT và constraints đã có từ V2, không tạo index trùng.
 
-```sql
-ALTER TABLE fintrack.refresh_sessions
-    ADD COLUMN replaced_by_session_id UUID REFERENCES fintrack.refresh_sessions(id),
-    ADD COLUMN user_agent VARCHAR(300),
-    ADD COLUMN ip_address INET;
-```
+`verification_challenges` lưu user/email, purpose (`EMAIL_VERIFICATION` hoặc `PASSWORD_RESET`),
+BCrypt `code_hash`, expiry, consumed time và attempt count 0–5. BCrypt có salt bảo vệ OTP 6 chữ số
+trước việc dò toàn bộ không gian OTP chỉ bằng SHA-256 khi database bị lộ. Không lưu OTP thô.
 
-Không lưu OTP/password reset token trong `users`. Job dọn challenge/session hết hạn có thể bổ sung sau; truy vấn
-runtime vẫn phải luôn kiểm tra `expires_at`, `consumed_at`, `revoked_at`.
+`refresh_sessions` bổ sung `replaced_by_session_id`, `user_agent` (300 ký tự), `ip_address` (INET).
+Refresh token chỉ được lưu dưới dạng SHA-256; không có raw access/refresh token trong database.
 
-## 5. API contract
+## Password policy
 
-Base path: `/api/v1/auth`. Request/response dùng JSON camelCase. Thời gian dùng ISO 8601 UTC.
+`PasswordPolicy` là nguồn kiểm tra dùng chung cho register và reset, kể cả khi gọi service trực tiếp.
+DTO dùng `@ValidPassword` và `PasswordPolicyValidator` để trả field error cho password không hợp lệ.
 
-### 5.1 Đăng ký
+- 8–64 ký tự; tối đa 72 UTF-8 bytes để tránh giới hạn/truncation của BCrypt.
+- Có chữ thường ASCII, chữ hoa ASCII, chữ số ASCII và ký tự đặc biệt không phải whitespace.
+- Không chấp nhận control characters. Không trim/normalize password.
+- BCrypt strength 12. OTP cũng dùng PasswordEncoder, có salt ngẫu nhiên.
+- Username được trim, dài 3–50 ký tự, chỉ gồm chữ/số ASCII, dấu chấm, gạch dưới và gạch ngang.
+  Không cho username chứa `@` để tránh nhập nhằng username/email. Email trim/lowercase ở service.
 
-`POST /api/v1/auth/register`
+## API contract
 
-```json
-{
-  "username": "an.nguyen",
-  "email": "an@example.com",
-  "password": "Strong@123"
-}
-```
+Base `/api/v1/auth`, JSON camelCase. Lỗi dùng `ApiErrorResponse` hiện có, không trả secret/stack trace.
+Các endpoint bên dưới là public cho phương thức POST; API nghiệp vụ vẫn yêu cầu bearer access token.
 
-Response `201 Created`, body rỗng. Android giữ email từ form đăng ký để chuyển sang màn hình xác thực; backend
-không trả `UserResponse` hoặc DTO đăng ký riêng. `confirmPassword` chỉ được kiểm tra ở frontend và không gửi lên API.
+| Endpoint | Request | Thành công |
+| --- | --- | --- |
+| `/register` | `username`, `email`, `password` | 201, body rỗng |
+| `/verify-email` | `email`, `otp` (6 chữ số) | 204 |
+| `/resend-verification` | `email` | 202, body rỗng |
+| `/login` | `usernameOrEmail`, `password` | 200, ApiResponse<LoginResponse> |
+| `/refresh` | `refreshToken` | 200, ApiResponse<TokenResponse> |
+| `/logout` | `refreshToken` | 204, kể cả token không tồn tại/đã revoke |
+| `/forgot-password` | `email` | 202, body rỗng |
+| `/reset-password` | `email`, `otp`, `newPassword` | 204 |
 
-Xử lý:
+`confirmPassword` chỉ là validation phía client. Không dùng endpoint tạm `/resend-otp`.
+Resend/forgot có cùng response cho email tồn tại và không tồn tại. Rate limit được áp dụng cho cả hai,
+trả 429 khi vượt giới hạn mà không phụ thuộc vào email có trong database hay không.
 
-1. Normalize email/username bằng `trim`; tính unique dựa trên CITEXT.
-2. Validate password, hash password và tạo user chưa verify.
-3. Tạo challenge `EMAIL_VERIFICATION` và gửi OTP sau khi transaction commit.
-4. Nếu gửi mail thất bại, không trả OTP; user dùng resend sau.
-
-Lỗi chính: `409 AUTH_EMAIL_ALREADY_EXISTS`, `409 AUTH_USERNAME_ALREADY_EXISTS`,
-`400 VALIDATION_ERROR`.
-
-### 5.2 Xác thực email
-
-`POST /api/v1/auth/verify-email`
-
-```json
-{
-  "email": "an@example.com",
-  "otp": "482913"
-}
-```
-
-Response `204 No Content`. Đánh dấu challenge consumed và set `users.email_verified_at` trong cùng transaction.
-Request lặp lại cho user đã verify có thể trả `204` để idempotent.
-
-Lỗi chính: `400 AUTH_OTP_INVALID`, `410 AUTH_OTP_EXPIRED`, `429 AUTH_OTP_ATTEMPTS_EXCEEDED`.
-
-### 5.3 Gửi lại OTP xác thực email
-
-`POST /api/v1/auth/resend-verification`
-
-```json
-{
-  "email": "an@example.com"
-}
-```
-
-Response luôn `202 Accepted` với email có hoặc không tồn tại. Nếu hợp lệ, invalidate challenge xác thực cũ,
-tạo challenge mới và gửi email. Dùng endpoint rõ purpose thay cho tên tạm Android `/resend-otp`.
-
-### 5.4 Đăng nhập
-
-`POST /api/v1/auth/login`
-
-```json
-{
-  "usernameOrEmail": "an@example.com",
-  "password": "Strong@123"
-}
-```
-
-Response `200 OK`:
+Login thành công khi user ACTIVE, email đã verify và password hợp lệ:
 
 ```json
 {
   "success": true,
   "message": "Login successful",
   "data": {
-    "displayName": "An Nguyen",
+    "displayName": "an.nguyen",
     "onboardingCompleted": false,
     "token": {
-      "accessToken": "<jwt>",
+      "accessToken": "<RS256-JWT>",
       "refreshToken": "<opaque-token>",
       "tokenType": "Bearer",
       "expiresIn": 900
@@ -230,248 +95,120 @@ Response `200 OK`:
 }
 ```
 
-`displayName` lấy từ `user_preferences.display_name`; nếu null hoặc blank, backend fallback về `users.username`.
-Không đưa `UserResponse`, user ID hoặc email vào login response. `expiresIn` là số giây access token còn hiệu lực.
+`displayName` lấy từ user_preferences, fallback username khi null/blank. Không có user profile trong login.
+Refresh trả token fields trực tiếp trong `data`. `GET /api/v1/users/me` trả `ApiResponse<UserResponse>`
+với id, username, displayName, email và yêu cầu access token hợp lệ.
 
-Login chỉ thành công khi user `ACTIVE` và email đã verify. Sai username/email/password trả cùng một lỗi
-`401 AUTH_INVALID_CREDENTIALS`. User chưa verify trả `403 AUTH_EMAIL_NOT_VERIFIED`; locked/disabled trả mã
-403 riêng nhưng không tiết lộ thông tin nhạy cảm.
+| Error code | HTTP |
+| --- | ---: |
+| AUTH_INVALID_CREDENTIALS / AUTH_ACCESS_TOKEN_INVALID / AUTH_REFRESH_TOKEN_INVALID | 401 |
+| AUTH_EMAIL_NOT_VERIFIED / AUTH_USER_LOCKED / AUTH_USER_DISABLED | 403 |
+| AUTH_EMAIL_ALREADY_EXISTS / AUTH_USERNAME_ALREADY_EXISTS | 409 |
+| AUTH_OTP_INVALID | 400 |
+| AUTH_OTP_EXPIRED | 410 |
+| AUTH_OTP_ATTEMPTS_EXCEEDED / AUTH_RATE_LIMITED | 429 |
+| VALIDATION_ERROR | 400 |
 
-### 5.5 Refresh token
+## OTP, reset và transaction
 
-`POST /api/v1/auth/refresh`
+OTP gồm 6 chữ số từ SecureRandom, mặc định hết hạn sau 10 phút. Mỗi purpose chỉ có một challenge chưa consume
+hiện hành; resend làm challenge cũ mất hiệu lực. Kiểm tra/consume challenge khóa user rồi khóa challenge.
+Nhập sai tăng attempt_count; lần sai thứ 5 và các lần sau trả 429. `ChallengeRejectedException` được cấu hình
+`noRollbackFor` để lần thử sai được commit; lỗi database và lỗi ngoài dự kiến vẫn rollback.
+Email đã verify có thể xác thực lặp lại và nhận 204.
 
-```json
-{
-  "refreshToken": "<opaque-token>"
-}
+Reset chỉ dùng challenge PASSWORD_RESET, consume đúng một lần, đổi password và revoke toàn bộ refresh session
+trong cùng transaction. Reset không tự đánh dấu email_verified. Access JWT đã cấp còn hiệu lực tối đa đến expiry;
+không có denylist JWT hoặc password_changed_at. Logout cũng chỉ revoke refresh session được chỉ định.
+
+## Access JWT và refresh rotation
+
+- Access JWT mặc định 15 phút, RS256, claims `iss`, `sub` (UUID), `iat`, `exp`, `jti`, `role`.
+- Verify signature/issuer/expiry/subject và đọc trạng thái user hiện tại; disabled/locked/unverified bị từ chối.
+- Refresh token là 32 random bytes (256 bit), base64url, mặc định 30 ngày.
+- Mỗi refresh khóa user và session, kiểm tra expiry/revoked/user, tạo replacement, revoke token cũ,
+  gán replaced_by_session_id và last_used_at trong cùng transaction.
+- Hai request cùng refresh token: đúng một request thành công; request còn lại nhận 401.
+- Token cũ bị replay bị từ chối; không revoke replacement chỉ vì một request đồng thời dùng token cũ.
+- Login/reset/refresh đều khóa user trước session, tránh cấp session dựa trên password cũ trong lúc reset.
+- Không có HTTP session, form login hay HTTP Basic. JWT filter chỉ đăng ký trong Spring Security chain.
+  Auth endpoints không đọc bearer token để client có thể refresh/logout dù access token đã hết hạn.
+
+## Rate limits mặc định
+
+| Hành động | Key / giới hạn |
+| --- | --- |
+| Login thất bại | identifier chuẩn hóa + IP: 5/15 phút; IP: 50/15 phút |
+| Login requests | IP: 100/15 phút, bao gồm login hợp lệ và tài khoản chưa verify |
+| Register | IP: 10/giờ |
+| Refresh | IP: 20/phút |
+| Logout | IP: 60/phút |
+| Resend verification / forgot password | Mỗi purpose: IP 20/giờ; email 3/giờ; cooldown email 60 giây |
+| Verify / reset | Mỗi purpose: IP 60/15 phút; email 20/15 phút; thêm tối đa 5 lần sai/challenge |
+
+Đăng nhập thành công xóa failure counter của identifier + IP, giữ counter IP tổng.
+Key identifier/email được SHA-256, không log raw identity. Dùng remote address từ servlet,
+không tin `X-Forwarded-For` do client gửi; cần cấu hình trusted proxy rõ ràng nếu deploy sau reverse proxy.
+Rate limit mất khi restart, không chia sẻ giữa instance. Cần Redis/shared store trước khi scale nhiều instance.
+
+## Resend REST API và cấu hình
+
+Sender gọi `POST https://api.resend.com/emails`, `Authorization: Bearer <RESEND_API_KEY>`, JSON
+`from`, `to`, `subject`, `text`, kèm `Idempotency-Key` theo delivery UUID.
+Timeout connect 5 giây, đọc 10 giây. Email phân biệt verification/reset, có OTP, expiry UTC và hướng dẫn bỏ qua.
+Không dùng Spring Mail/SMTP. Tham khảo [Resend Send Email](https://resend.com/docs/api-reference/emails/send-email).
+
+Email được publish trong transaction và gửi đồng bộ sau commit qua `@TransactionalEventListener`.
+Lỗi provider không rollback account/challenge và không rò nội dung exception; chỉ log delivery UUID.
+Đây là best-effort delivery, chưa có durable outbox/automatic retry; user có thể resend nếu gửi thất bại
+hoặc process dừng giữa commit và send. Test thay sender bằng fake/mock, không gửi email thật.
+
+```dotenv
+AUTH_JWT_ISSUER=fintrack-api
+AUTH_ACCESS_TOKEN_TTL=15m
+AUTH_REFRESH_TOKEN_TTL=30d
+AUTH_OTP_TTL=10m
+AUTH_JWT_PRIVATE_KEY=file:/run/secrets/auth-private.pem
+AUTH_JWT_PUBLIC_KEY=file:/run/secrets/auth-public.pem
+RESEND_API_KEY=<secret>
+MAIL_FROM=FinTrack <auth@your-verified-domain.example>
 ```
 
-Response `200 OK` có cùng token fields như login nhưng có thể bỏ `user`. Backend hash token, lock row/session,
-kiểm tra trạng thái user, rotate token atomically và cập nhật `last_used_at`.
+Private key dùng PKCS#8 PEM, public key dùng X.509 PEM, RSA tối thiểu 2048 bit và phải cùng cặp.
+Staging/prod fail startup nếu thiếu key hoặc Resend configuration. Không commit secret/key.
+Dev cho phép thiếu key và sinh RSA key mới mỗi startup; access JWT cũ sẽ mất hiệu lực sau restart.
+Đặt key files cố định nếu muốn giữ JWT qua restart. Dev thiếu Resend configuration vẫn tạo account/challenge
+nhưng gửi mail thất bại, không log OTP; cấu hình Resend trước khi kiểm tra email thật.
 
-Không gửi refresh token trong header Authorization. Không tự refresh endpoint refresh để tránh loop.
+Spring Security integration dựa trên
+[DaoAuthenticationProvider](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/dao-authentication-provider.html)
+và [Nimbus JWT support](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
 
-### 5.6 Đăng xuất
+## Kiểm thử
 
-`POST /api/v1/auth/logout`
+Java 21, từ thư mục backend:
 
-```json
-{
-  "refreshToken": "<opaque-token>"
-}
+```powershell
+./mvnw.cmd test
+./mvnw.cmd -Ppostgres-it verify
 ```
 
-Response `204 No Content` kể cả token đã revoke. Revoke đúng refresh session; Android luôn xóa local session
-dù request logout lỗi mạng.
+Unit/API tests không cần database: policy/UTF-8 limit, Spring authentication, OTP expiry/attempts,
+reset revoke sessions, JWT signature/issuer/expiry, rotation/replay/logout, concurrent rate limits,
+Resend HTTP payload và lỗi delivery. MVC contract tests mock AuthOperations; không thay thế integration tests.
 
-Tùy chọn sau MVP: `POST /api/v1/auth/logout-all` để revoke toàn bộ session của user hiện tại.
+`AuthenticationIT` chạy flow thật qua Spring/JDBC/PostgreSQL với sender mock, kiểm tra OTP sai được commit,
+one-time reset, old password/session invalidation, refresh đồng thời và migration idempotence.
+Mặc định dùng PostgreSQL Testcontainers; `PostgresMigrationIT` kiểm tra fresh/restart và upgrade schema cũ.
+Có thể chạy AuthenticationIT trên PostgreSQL **test riêng có thể bỏ đi**, không dùng database ứng dụng:
 
-### 5.7 Quên mật khẩu
-
-`POST /api/v1/auth/forgot-password`
-
-```json
-{
-  "email": "an@example.com"
-}
+```powershell
+./mvnw.cmd '-Dtest=AuthenticationIT' '-Dauth.it.jdbc-url=jdbc:postgresql://127.0.0.1:55489/postgres' '-Dauth.it.username=postgres' test
 ```
 
-Response luôn `202 Accepted`. Nếu email thuộc user hợp lệ, invalidate challenge reset cũ, tạo challenge
-`PASSWORD_RESET` và gửi OTP. Không cho client biết email có tồn tại.
+## Android cần tích hợp riêng
 
-### 5.8 Đặt lại mật khẩu
-
-`POST /api/v1/auth/reset-password`
-
-```json
-{
-  "email": "an@example.com",
-  "otp": "482913",
-  "newPassword": "NewStrong@456"
-}
-```
-
-Response `204 No Content`. Trong cùng transaction:
-
-1. Validate challenge reset chưa dùng và chưa hết hạn.
-2. Hash và cập nhật password, `password_changed_at`.
-3. Consume challenge.
-4. Revoke toàn bộ refresh sessions của user.
-
-## 6. Error response
-
-Mọi lỗi dùng `ApiErrorResponse` hiện có:
-
-```json
-{
-  "timestamp": "2026-10-27T06:00:00Z",
-  "status": 401,
-  "errorCode": "AUTH_INVALID_CREDENTIALS",
-  "message": "Invalid credentials",
-  "path": "/api/v1/auth/login",
-  "fieldErrors": []
-}
-```
-
-Mã lỗi Authentication tối thiểu:
-
-| Error code | HTTP | Ý nghĩa |
-| --- | ---: | --- |
-| `AUTH_INVALID_CREDENTIALS` | 401 | Username/email hoặc password không đúng |
-| `AUTH_ACCESS_TOKEN_INVALID` | 401 | Access token sai/hết hạn |
-| `AUTH_REFRESH_TOKEN_INVALID` | 401 | Refresh token sai/hết hạn/revoked |
-| `AUTH_EMAIL_NOT_VERIFIED` | 403 | Email chưa xác thực |
-| `AUTH_USER_LOCKED` | 403 | User đang bị khóa |
-| `AUTH_USER_DISABLED` | 403 | User bị vô hiệu hóa |
-| `AUTH_EMAIL_ALREADY_EXISTS` | 409 | Email đã đăng ký |
-| `AUTH_USERNAME_ALREADY_EXISTS` | 409 | Username đã tồn tại |
-| `AUTH_OTP_INVALID` | 400 | OTP không đúng |
-| `AUTH_OTP_EXPIRED` | 410 | OTP hết hạn |
-| `AUTH_OTP_ATTEMPTS_EXCEEDED` | 429 | Quá số lần thử |
-| `AUTH_RATE_LIMITED` | 429 | Quá giới hạn request |
-
-Security entry point phải trả JSON này thay vì response mặc định của Spring Security.
-
-## 7. Email verification sender
-
-Tạo interface:
-
-```java
-public interface EmailService {
-    void sendVerificationCode(String recipient, String code, Instant expiresAt);
-    void sendPasswordResetCode(String recipient, String code, Instant expiresAt);
-}
-```
-
-Production implementation dùng Spring Mail/SMTP provider. Test dùng fake implementation ghi nhận message trong
-memory; không gửi email thật.
-
-Environment variables đề xuất:
-
-```text
-MAIL_HOST
-MAIL_PORT
-MAIL_USERNAME
-MAIL_PASSWORD
-MAIL_FROM
-MAIL_SMTP_AUTH
-MAIL_SMTP_STARTTLS_ENABLE
-AUTH_OTP_TTL
-AUTH_ACCESS_TOKEN_TTL
-AUTH_REFRESH_TOKEN_TTL
-AUTH_JWT_ISSUER
-AUTH_JWT_PRIVATE_KEY
-AUTH_JWT_PUBLIC_KEY
-```
-
-Không commit key hoặc SMTP credentials. Với multiline PEM, ưu tiên secret file mount hoặc secret manager thay vì
-đặt trực tiếp trong `.env`. Dev có thể dùng Mailpit/MailHog; staging dùng mailbox/provider riêng và verified sender.
-
-Email template phải có purpose rõ ràng, thời gian hết hạn, cảnh báo bỏ qua nếu không yêu cầu và không chứa
-password/token. Không nhúng raw exception của provider vào API response.
-
-## 8. Spring Security integration
-
-- Cho phép anonymous cho các endpoint trong `/api/v1/auth/**` được liệt kê ở trên.
-- Giữ mọi endpoint nghiệp vụ authenticated mặc định.
-- JWT filter chỉ xử lý access token; refresh token không đi qua filter.
-- Validate signature, issuer, expiry, subject và trạng thái user phù hợp.
-- Không tạo session HTTP; giữ `SessionCreationPolicy.STATELESS`.
-- Không bật form login, HTTP Basic hoặc generated password.
-- Có thể dùng Spring Security OAuth2 Resource Server/Jose theo dependency management của Spring Boot để verify JWT;
-  không tự viết thuật toán ký/verify.
-
-## 9. Android integration
-
-Các thay đổi cần thực hiện sau khi backend contract được merge:
-
-1. Login dùng `Call<ApiResponse<LoginResponse>>`; register dùng `Call<Void>` và chỉ thành công khi HTTP 201.
-2. Thêm `refresh`, `logout`; đổi `/resend-otp` thành `/resend-verification`.
-3. Đọc token từ `loginResponse.token`, cache `displayName`, và route bằng `onboardingCompleted`.
-4. Thêm `Authenticator` hoặc refresh coordinator đồng bộ để chỉ một request refresh token tại một thời điểm.
-5. Khi nhận 401 từ business API: refresh một lần, retry request một lần; thất bại thì clear session và về login.
-6. Không refresh cho login/register/verify/forgot/reset/refresh requests.
-7. Lưu token bằng `EncryptedSharedPreferences`; không dùng plaintext fallback và không backup.
-8. Clear token khi reset password thành công, logout hoặc refresh bị từ chối.
-9. Lấy user ID/email/profile đầy đủ qua `GET /api/v1/users/me`, không từ login/register.
-10. Redact `Authorization`, password, OTP và token khỏi logging; release build không log body auth.
-
-Không dùng boolean `is_logged_in` làm nguồn sự thật duy nhất. Session hợp lệ cần refresh token tồn tại; access token
-có thể đã hết hạn và được refresh khi cần.
-
-## 10. Rate limiting và chống abuse
-
-Tối thiểu cần giới hạn:
-
-- Login theo IP và identifier.
-- Register theo IP.
-- Forgot password/resend theo IP và email hash.
-- Verify/reset theo challenge và IP.
-
-Rate-limit store nên dùng Redis khi chạy nhiều instance. MVP một instance có thể dùng in-memory limiter nhưng phải
-ghi rõ không phù hợp cho horizontal scaling. Không log raw email làm key; dùng normalized hash nếu log/metric cần.
-
-## 11. Test matrix
-
-### Unit tests
-
-- Password validation và password hashing.
-- JWT issue/verify/expired/wrong issuer/wrong signature.
-- Refresh token hash, rotation, revoked và expired cases.
-- OTP create/hash/expiry/attempt/consume logic.
-- Register duplicate email/username.
-- Login unverified/locked/disabled/invalid credentials.
-- Forgot-password không phân biệt email tồn tại.
-- Reset password revoke toàn bộ refresh sessions.
-
-### Integration tests với PostgreSQL Testcontainers
-
-- Migration V4 chạy trên database mới và database V1-V3.
-- Toàn bộ flow register -> verify -> login -> refresh -> logout.
-- Refresh đồng thời: chỉ một rotation thành công.
-- OTP chỉ dùng được một lần.
-- Reset password làm password cũ và refresh token cũ mất hiệu lực.
-- Restart app không phá JWT verification hoặc Flyway history.
-
-### API/security tests
-
-- Auth public endpoints truy cập anonymous; business endpoint vẫn 401.
-- Error JSON đúng contract, không có stack trace/token/password/OTP.
-- CORS chỉ cho configured origins.
-- Health/Swagger behavior theo dev/staging/prod không thay đổi.
-
-### Email tests
-
-- Unit test fake sender.
-- Integration dev với Mailpit/MailHog kiểm tra recipient, subject, OTP và expiry.
-- Không phụ thuộc SMTP thật trong CI cơ bản.
-
-## 12. Thứ tự triển khai
-
-1. Chốt API contract và error codes.
-2. Thêm dependency JWT/Jose và mail, cấu hình typed properties.
-3. Viết Flyway V4 và migration integration test.
-4. Implement entities/repositories và password/token/challenge services.
-5. Implement register + verification email + resend.
-6. Implement login + access/refresh token rotation + logout.
-7. Implement forgot/reset password.
-8. Tích hợp Security filter/entry point và authorization tests.
-9. Cập nhật Android DTO/Retrofit/session refresh flow.
-10. Chạy Testcontainers, Mailpit integration, backend CI và Android CI.
-
-## 13. Definition of Done
-
-- [ ] V4 migration chạy thành công và restart không chạy lại migration.
-- [ ] Password/OTP/refresh token chỉ lưu dạng hash phù hợp.
-- [ ] Register, verify, resend, login, refresh, logout, forgot và reset đúng contract.
-- [ ] Access JWT ngắn hạn; refresh opaque rotation hoạt động atomically.
-- [ ] Reset password revoke mọi session cũ.
-- [ ] Enumeration và brute-force được hạn chế.
-- [ ] Email sender cấu hình bằng environment/secret manager, không có secret trong Git.
-- [ ] Android tự refresh một lần an toàn và logout khi refresh thất bại.
-- [ ] Backend unit/security/integration tests pass.
-- [ ] Android unit/build CI pass.
-- [ ] Swagger mô tả đầy đủ endpoint và response lỗi trong development.
-- [ ] Staging kiểm tra email thật, login, refresh, reset và logout end-to-end.
-
+Dùng login envelope trên, đổi resend endpoint, thêm refresh/logout và lưu token an toàn.
+Serialize refresh request để chỉ có một request refresh tại một thời điểm; retry business API tối đa một lần.
+Không refresh tự động cho auth endpoints. Xóa local session khi logout/reset/refresh thất bại.
+Không log password/OTP/token hoặc Authorization; lấy profile qua `/users/me`.
