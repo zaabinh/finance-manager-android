@@ -1,45 +1,56 @@
 package com.fintrack.api;
 
 import com.fintrack.api.exception.AppException;
+import com.fintrack.api.exception.ErrorCode;
 import com.fintrack.api.service.auth.ClientMetadata;
 import com.fintrack.api.service.auth.RateLimitingService;
-import java.time.*;
-import java.util.concurrent.*;
+import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class RateLimitingServiceTest {
-    @Test void loginWindowExpiresAndSuccessClearsOnlyTheIdentifier() {
-        Clock clock = org.mockito.Mockito.mock(Clock.class);
-        Instant now = Instant.parse("2026-11-02T00:00:00Z");
-        org.mockito.Mockito.when(clock.instant()).thenReturn(now);
-        var limiter = new RateLimitingService(clock);
-        var client = new ClientMetadata("127.0.0.1", null);
-        for (int i = 0; i < 5; i++) limiter.recordLoginFailure(" User ", client);
-        assertThatThrownBy(() -> limiter.checkLoginAllowed("user", client)).isInstanceOf(AppException.class);
-        limiter.clearLoginFailures("USER", client);
-        assertThatCode(() -> limiter.checkLoginAllowed("user", client)).doesNotThrowAnyException();
-        for (int i = 0; i < 5; i++) limiter.recordLoginFailure("user", client);
-        org.mockito.Mockito.when(clock.instant()).thenReturn(now.plusSeconds(900));
-        assertThatCode(() -> limiter.checkLoginAllowed("user", client)).doesNotThrowAnyException();
+    private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
+    private final RateLimitingService limiter = new RateLimitingService(redis, "test:");
+    private final ClientMetadata client = new ClientMetadata("127.0.0.1", null);
+
+    @Test void admitsOnlyWhenRedisGrantsQuota() {
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(1L);
+        assertThatCode(() -> limiter.checkAndRecord("refresh", "ip", 20, Duration.ofMinutes(1))).doesNotThrowAnyException();
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(0L);
+        assertThatThrownBy(() -> limiter.checkAndRecord("refresh", "ip", 20, Duration.ofMinutes(1)))
+                .isInstanceOfSatisfying(AppException.class, ex -> {
+                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_RATE_LIMITED);
+                    assertThat(ex.getStatus().value()).isEqualTo(429);
+                });
     }
-    @Test void concurrentRequestsCannotExceedTheWindowLimit() throws Exception {
-        var limiter = new RateLimitingService(Clock.systemUTC());
-        try (var pool = Executors.newFixedThreadPool(8)) {
-            var results = new java.util.ArrayList<Future<Boolean>>();
-            for (int i = 0; i < 100; i++) results.add(pool.submit(() -> {
-                try { limiter.checkAndRecord("refresh", "127.0.0.1", 20, Duration.ofMinutes(1)); return true; }
-                catch (AppException exception) { return false; }
-            }));
-            int successes = 0;
-            for (var result : results) if (result.get()) successes++;
-            assertThat(successes).isEqualTo(20);
-        }
+    @Test void redisFailureOrMissingResultFailsClosedWith503() {
+        assertUnavailable(() -> limiter.checkAndRecord("refresh", "ip", 20, Duration.ofMinutes(1)));
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString()))
+                .thenThrow(new RedisConnectionFailureException("unavailable"));
+        assertUnavailable(() -> limiter.checkLoginAllowed("user", client));
+        when(redis.delete(anyString())).thenThrow(new RedisConnectionFailureException("unavailable"));
+        assertUnavailable(() -> limiter.clearLoginFailures("user", client));
     }
-    @Test void capacityRejectsNewKeysInsteadOfEvictingActiveLimits() {
-        var limiter = new RateLimitingService(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
-        for (int i = 0; i < 10_000; i++) limiter.checkAndRecord("test", "key" + i, 1, Duration.ofMinutes(1));
-        assertThatThrownBy(() -> limiter.checkAndRecord("test", "new", 1, Duration.ofMinutes(1))).isInstanceOf(AppException.class);
-        assertThatThrownBy(() -> limiter.checkAndRecord("test", "key0", 1, Duration.ofMinutes(1))).isInstanceOf(AppException.class);
+    @Test void successfulLoginDeletesOnlyItsNormalizedIdentifierKey() {
+        limiter.clearLoginFailures(" USER ", client);
+        verify(redis).delete("test:login:" + com.fintrack.api.service.auth.TokenHash.sha256("user:127.0.0.1"));
+        verifyNoMoreInteractions(redis);
+    }
+    @Test void invalidQuotaNeverCallsRedis() {
+        assertThatThrownBy(() -> limiter.checkAndRecord("refresh", "ip", 0, Duration.ofMinutes(1))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> limiter.checkAndRecord("refresh", "ip", 20, Duration.ZERO)).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(redis);
+    }
+    private void assertUnavailable(org.assertj.core.api.ThrowableAssert.ThrowingCallable action) {
+        assertThatThrownBy(action).isInstanceOfSatisfying(AppException.class, ex -> {
+            assertThat(ex.getStatus().value()).isEqualTo(503);
+            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_RATE_LIMIT_UNAVAILABLE);
+        });
     }
 }

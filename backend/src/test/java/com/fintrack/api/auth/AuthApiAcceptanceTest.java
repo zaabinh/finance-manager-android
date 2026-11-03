@@ -24,6 +24,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("Authentication API acceptance criteria")
 class AuthApiAcceptanceTest {
     @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.fintrack.api.service.auth.RateLimitingService limits;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
     private com.fintrack.api.service.auth.AuthOperations auth;
 
     @org.junit.jupiter.api.BeforeEach

@@ -28,7 +28,7 @@ class AuthServiceTest {
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
     private final Clock clock = Clock.fixed(Instant.parse("2026-11-02T00:00:00Z"), ZoneOffset.UTC);
-    private final RateLimitingService limits = new RateLimitingService(clock);
+    private final RateLimitingService limits = mock(RateLimitingService.class);
     private final UUID id = UUID.randomUUID();
     private final ClientMetadata client = new ClientMetadata("127.0.0.1", null);
     private AuthService service;
@@ -58,18 +58,27 @@ class AuthServiceTest {
         assertThat(event.getValue().code()).matches("[0-9]{6}");
         assertThat(encoder.matches(event.getValue().code(), otpHash.getValue())).isTrue();
     }
-    @Test void springSecurityUsesGenericErrorForUnknownOrWrongCredentialsAndLimitsFailures() {
+    @Test void springSecurityUsesGenericErrorAndRecordsUnknownCredentials() {
         when(users.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        for (int i = 0; i < 5; i++) assertThatThrownBy(() -> service.login(new LoginRequest("missing", "Strong@123"), client))
+        assertThatThrownBy(() -> service.login(new LoginRequest("missing", "Strong@123"), client))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_INVALID_CREDENTIALS));
+        verify(limits).checkLoginAllowed("missing", client);
+        verify(limits).recordLoginFailure("missing", client);
+        verify(limits, never()).clearLoginFailures(anyString(), any());
+    }
+    @Test void rateLimitedLoginNeverReachesAuthenticationOrIssuesTokens() {
+        doThrow(new AppException(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, ErrorCode.AUTH_RATE_LIMITED, "Too many requests"))
+                .when(limits).checkLoginAllowed("missing", client);
         assertThatThrownBy(() -> service.login(new LoginRequest("missing", "Strong@123"), client))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_RATE_LIMITED));
+        verifyNoInteractions(users, refreshTokens);
     }
     @Test void verifiedLoginUsesPrincipalFromSpringSecurity() {
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(user));
         when(users.lockById(id)).thenReturn(Optional.of(user));
         assertThat(service.login(new LoginRequest("an.nguyen", "Strong@123"), client).displayName()).isEqualTo("an.nguyen");
         verify(refreshTokens).generateTokenPair(id, "USER", null, client);
+        verify(limits).clearLoginFailures("an.nguyen", client);
     }
     @Test void unverifiedUserCannotLogin() {
         var unverified = new UserRepository.UserRecord(id, user.username(), user.email(), user.passwordHash(), "ACTIVE", "USER", null, false, false);

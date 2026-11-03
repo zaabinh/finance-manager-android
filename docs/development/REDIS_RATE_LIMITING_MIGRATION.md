@@ -1,6 +1,6 @@
 # Hướng dẫn chuyển RateLimitingService từ in-memory sang Redis
 
-Tài liệu này hướng dẫn thay đổi backend hiện tại; **chưa áp dụng thay đổi vào code**.
+Migration này đã được áp dụng vào backend. Các bước dưới đây mô tả implementation và cách cấu hình/kiểm thử.
 Mục tiêu là các backend instance dùng chung bộ đếm, giữ nguyên API và giới hạn authentication.
 Không thay đổi schema PostgreSQL, password policy, OTP challenge hoặc refresh token rotation.
 
@@ -374,12 +374,13 @@ connection variables và hạn chế durability; bỏ mô tả Map 10.000 key v�
 
 ## 9. Điều kiện hoàn tất
 
-- [ ] Không còn Map hoặc Clock dependency trong RateLimitingService; các consumer giữ nguyên API.
-- [ ] Tất cả counter ghi mới đều có TTL; quota không bị reset khi backend restart.
-- [ ] Nhiều instance chia sẻ quota, concurrency test không vượt giới hạn `consume`.
-- [ ] Redis lỗi trả 503; vượt quota trả 429; không fallback in-memory.
-- [ ] Unit/MVC tests không cần Redis; integration tests chạy với Redis thật.
-- [ ] Compose/env/readiness và tài liệu vận hành đã cập nhật.
+- [x] Không còn Map hoặc Clock dependency trong RateLimitingService; các consumer giữ nguyên API.
+- [x] Tất cả counter ghi mới đều có TTL; quota không bị reset khi backend restart.
+- [x] Nhiều instance chia sẻ quota, concurrency test không vượt giới hạn `consume`.
+- [x] Redis lỗi trả 503; vượt quota trả 429; không fallback in-memory.
+- [x] Unit/MVC tests không cần Redis; integration tests chạy với Redis thật.
+- [x] Compose/env/readiness và tài liệu vận hành đã cập nhật.
 
-Các code block là mẫu triển khai cho repository hiện tại. Chưa compile/chạy test các thay đổi Redis
-trong lượt viết tài liệu này; cần thực hiện các bước kiểm thử trên sau khi áp dụng.
+Implementation thực tế nằm trong RateLimitingService. Unit/MVC tests mock Redis hoặc limiter;
+RedisRateLimitingIT, AuthenticationIT và PostgresMigrationIT dùng Redis test riêng qua Testcontainers.
+Ngay cả khi AuthenticationIT dùng tùy chọn PostgreSQL local, Redis test vẫn yêu cầu Docker.

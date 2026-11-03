@@ -22,6 +22,7 @@ public enum ErrorCode {
     AUTH_OTP_INVALID,
     AUTH_OTP_EXPIRED,
     AUTH_OTP_ATTEMPTS_EXCEEDED,
+    AUTH_RATE_LIMIT_UNAVAILABLE,
     AUTH_RATE_LIMITED;
 
     public static ErrorCode forStatus(int status) {

@@ -30,7 +30,8 @@ import org.springframework.web.util.WebUtils;
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Unverified, locked or disabled account"),
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email or username already exists"),
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "Expired OTP"),
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "Rate limit or OTP attempts exceeded")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "Rate limit or OTP attempts exceeded"),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "Authentication rate limiting is temporarily unavailable")
 })
 public class AuthController {
     // __Secure- prefix: browsers reject the cookie unless it is Secure. Path limits it to auth endpoints.

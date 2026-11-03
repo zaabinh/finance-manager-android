@@ -19,6 +19,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 class PostgresMigrationIT {
+    @Container
+    private static final org.testcontainers.containers.GenericContainer<?> REDIS =
+            new org.testcontainers.containers.GenericContainer<>("redis:7.4-alpine").withExposedPorts(6379);
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17.7");
@@ -87,6 +90,13 @@ class PostgresMigrationIT {
         for (int attempt = 0; attempt < 2; attempt++) {
             try (var context = new SpringApplicationBuilder(FinanceManagerApplication.class).run(
                     "--spring.profiles.active=dev",
+                    "--spring.config.import=",
+                    "--spring.data.redis.host=" + REDIS.getHost(),
+                    "--spring.data.redis.port=" + REDIS.getMappedPort(6379),
+                    "--spring.data.redis.username=",
+                    "--spring.data.redis.password=",
+                    "--spring.data.redis.ssl.enabled=false",
+                    "--app.auth.rate-limit-key-prefix=it-migration:",
                     "--server.port=0",
                     "--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
                     "--spring.datasource.username=" + POSTGRES.getUsername(),

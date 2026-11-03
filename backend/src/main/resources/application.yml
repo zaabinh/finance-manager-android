@@ -15,6 +15,16 @@ spring:
       hibernate:
         default_schema: fintrack
     show-sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      connect-timeout: 2s
+      timeout: 2s
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -41,7 +51,7 @@ management:
         enabled: true
       group:
         readiness:
-          include: readinessState,db
+          include: readinessState,db,redis
 springdoc:
   api-docs:
     enabled: false
@@ -59,6 +69,7 @@ app:
     refresh-cookie: ${AUTH_REFRESH_COOKIE:false}
     private-key: ${AUTH_JWT_PRIVATE_KEY:}
     public-key: ${AUTH_JWT_PUBLIC_KEY:}
+    rate-limit-key-prefix: ${AUTH_RATE_LIMIT_KEY_PREFIX:fintrack:dev:auth:rate-limit:}
   mail:
     resend-api-key: ${RESEND_API_KEY:}
     from: ${MAIL_FROM:}

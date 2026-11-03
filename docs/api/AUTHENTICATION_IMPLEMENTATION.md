@@ -15,9 +15,8 @@ logout, quên/đặt lại mật khẩu và `GET /api/v1/users/me`. Android inte
 - `TokenService` dùng Spring Security Nimbus JOSE để ký/verify RS256, quản lý opaque refresh tokens.
 - Persistence dùng JDBC repositories theo cấu trúc backend hiện có; JPA entity mapping khớp schema PostgreSQL.
 - `EmailSenderService` có implementation `ResendEmailSenderService`, gọi REST API qua Spring `RestClient`.
-- `RateLimitingService` dùng bộ nhớ trong một process, fixed windows và `Clock` được inject.
-  Map được đồng bộ hóa để cập nhật bộ đếm và kiểm tra dung lượng atomically; tối đa 10.000 key,
-  dọn key hết hạn, từ chối key mới khi đầy. Không dùng database để lưu failed login/locked-until.
+- `RateLimitingService` dùng Redis với fixed windows, Lua script kiểm tra/tăng counter nguyên tử trên từng key
+  và TTL tự hết hạn. Các instance dùng chung Redis/prefix chia sẻ quota. Không dùng database để lưu failed login/locked-until.
 
 ## Database: V4
 
@@ -108,6 +107,7 @@ với id, username, displayName, email và yêu cầu access token hợp lệ.
 | AUTH_OTP_INVALID | 400 |
 | AUTH_OTP_EXPIRED | 410 |
 | AUTH_OTP_ATTEMPTS_EXCEEDED / AUTH_RATE_LIMITED | 429 |
+| AUTH_RATE_LIMIT_UNAVAILABLE | 503 |
 | VALIDATION_ERROR | 400 |
 
 ## OTP, reset và transaction
@@ -155,7 +155,14 @@ Nếu transaction thất bại, việc hủy OTP cũng rollback. Password sai ho
 Đăng nhập thành công xóa failure counter của identifier + IP, giữ counter IP tổng.
 Key identifier/email được SHA-256, không log raw identity. Dùng remote address từ servlet,
 không tin `X-Forwarded-For` do client gửi; cần cấu hình trusted proxy rõ ràng nếu deploy sau reverse proxy.
-Rate limit mất khi restart, không chia sẻ giữa instance. Cần Redis/shared store trước khi scale nhiều instance.
+Rate limit không mất khi backend restart và được chia sẻ giữa instance. Redis lỗi trả 503, vượt quota trả 429;
+không fallback in-memory. Lua nguyên tử trên từng key; nhiều quota của một endpoint vẫn áp dụng lần lượt.
+Redis restart/crash có thể làm mất lần ghi mới nhất tùy persistence; Compose local bật AOF/volume và noeviction.
+
+Cấu hình `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`, `REDIS_SSL_ENABLED` và
+`AUTH_RATE_LIMIT_KEY_PREFIX`. Chạy native dùng localhost; Compose dùng service `redis`. Mọi instance cùng
+môi trường dùng cùng prefix, staging/prod dùng prefix riêng. Readiness kiểm tra cả PostgreSQL và Redis;
+liveness không phụ thuộc chúng. Xem [hướng dẫn Redis](../development/REDIS_RATE_LIMITING_MIGRATION.md).
 
 ## Resend REST API và cấu hình
 
@@ -205,8 +212,10 @@ Resend HTTP payload và lỗi delivery. MVC contract tests mock AuthOperations; 
 
 `AuthenticationIT` chạy flow thật qua Spring/JDBC/PostgreSQL với sender mock, kiểm tra OTP sai được commit,
 one-time reset, old password/session invalidation, refresh đồng thời và migration idempotence.
-Mặc định dùng PostgreSQL Testcontainers; `PostgresMigrationIT` kiểm tra fresh/restart và upgrade schema cũ.
-Có thể chạy AuthenticationIT trên PostgreSQL **test riêng có thể bỏ đi**, không dùng database ứng dụng:
+Mặc định dùng PostgreSQL và Redis Testcontainers; `PostgresMigrationIT` kiểm tra fresh/restart và upgrade schema cũ.
+`RedisRateLimitingIT` kiểm tra quota chia sẻ, TTL, xóa đúng key, concurrent requests và fail closed khi Redis từ chối ghi.
+Có thể chạy AuthenticationIT trên PostgreSQL **test riêng có thể bỏ đi**, không dùng database ứng dụng.
+Redis test vẫn chạy bằng Docker/Testcontainers:
 
 ```powershell
 ./mvnw.cmd '-Dtest=AuthenticationIT' '-Dauth.it.jdbc-url=jdbc:postgresql://127.0.0.1:55489/postgres' '-Dauth.it.username=postgres' test

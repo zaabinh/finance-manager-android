@@ -252,8 +252,10 @@ not returned. Unexpected failures are logged server-side; protect/redact operati
 - Use a least-privilege application role and a separate migration role when needed.
 - Restrict DB/management networks; never expose all Actuator endpoints or public health details.
 - Set connection limits, backups, trusted proxy settings and log retention for the deployment.
-- Configure persistent RSA key files, RESEND_API_KEY and MAIL_FROM; replace the process-local rate limiter
-  with a shared store before running multiple backend instances. Implement ownership checks for business APIs.
+- Configure persistent RSA key files, RESEND_API_KEY and MAIL_FROM. Redis provides shared rate-limit quotas;
+  configure REDIS_HOST/PORT, optional credentials/TLS and a common AUTH_RATE_LIMIT_KEY_PREFIX for each environment.
+  Redis failures reject auth requests with 503; readiness checks both Redis and PostgreSQL.
+  Implement ownership checks for business APIs.
 
 ## Next modules
 

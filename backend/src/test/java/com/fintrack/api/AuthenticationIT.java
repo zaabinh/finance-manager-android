@@ -31,10 +31,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {"logging.level.root=WARN", "logging.level.com.fintrack.api=WARN", "spring.config.import="})
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
+@org.springframework.test.annotation.DirtiesContext
+@org.testcontainers.junit.jupiter.Testcontainers
 class AuthenticationIT {
+    @org.testcontainers.junit.jupiter.Container
+    private static final org.testcontainers.containers.GenericContainer<?> REDIS =
+            new org.testcontainers.containers.GenericContainer<>("redis:7.4-alpine").withExposedPorts(6379);
+    private static final String REDIS_PREFIX = "it-auth:" + UUID.randomUUID() + ':';
     private static PostgreSQLContainer<?> postgres;
     @org.junit.jupiter.api.AfterAll static void stopContainer() { if (postgres != null) postgres.stop(); }
     @DynamicPropertySource static void database(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.redis.host", REDIS::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
+        registry.add("spring.data.redis.username", () -> "");
+        registry.add("spring.data.redis.password", () -> "");
+        registry.add("spring.data.redis.ssl.enabled", () -> false);
+        registry.add("app.auth.rate-limit-key-prefix", () -> REDIS_PREFIX);
         String url = System.getProperty("auth.it.jdbc-url");
         if (url == null) {
             postgres = new PostgreSQLContainer<>("postgres:17.7");
