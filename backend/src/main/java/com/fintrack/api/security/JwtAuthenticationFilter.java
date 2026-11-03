@@ -42,6 +42,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/api/v1/auth/");
+        // Refresh/logout must work with expired access tokens; protected auth routes still need JWT authentication.
+        return "POST".equals(request.getMethod()) && java.util.Set.of(
+                "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/verify-email",
+                "/api/v1/auth/resend-verification", "/api/v1/auth/forgot-password",
+                "/api/v1/auth/reset-password", "/api/v1/auth/refresh", "/api/v1/auth/logout")
+                .contains(request.getServletPath());
     }
 }

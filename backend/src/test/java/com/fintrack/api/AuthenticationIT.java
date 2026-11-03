@@ -154,6 +154,10 @@ class AuthenticationIT {
         assertThat(auth.refresh(fresh, client).refreshToken()).isNotBlank();
         mvc.perform(post("/api/v1/auth/change-password").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"currentPassword\":\"NewStrong@456\",\"newPassword\":\"Other@789\"}")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/auth/change-password").header("Authorization", "Bearer invalid")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"currentPassword\":\"NewStrong@456\",\"newPassword\":\"Other@789\"}"))
+                .andExpect(status().isUnauthorized());
     }
     @Test void replayOfRotatedTokenRevokesWholeFamilyButNotOtherDevices() {
         String email = registeredVerified();

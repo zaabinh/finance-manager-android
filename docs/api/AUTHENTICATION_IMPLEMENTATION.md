@@ -137,7 +137,8 @@ Nếu transaction thất bại, việc hủy OTP cũng rollback. Password sai ho
 - Token cũ bị replay bị từ chối; không revoke replacement chỉ vì một request đồng thời dùng token cũ.
 - Login/reset/refresh đều khóa user trước session, tránh cấp session dựa trên password cũ trong lúc reset.
 - Không có HTTP session, form login hay HTTP Basic. JWT filter chỉ đăng ký trong Spring Security chain.
-  Auth endpoints không đọc bearer token để client có thể refresh/logout dù access token đã hết hạn.
+  Chỉ các POST auth public bỏ qua JWT filter để refresh/logout hoạt động dù access token đã hết hạn.
+  `/change-password` vẫn được JWT filter xác thực và từ chối token thiếu/sai/hết hạn.
 
 ## Rate limits mặc định
 
