@@ -117,6 +117,7 @@ class AuthServiceTest {
         order.verify(users).updatePassword(eq(id), argThat(hash -> encoder.matches("NewStrong@456", hash)));
         order.verify(refreshTokens).revokeAllUserSessions(id, RefreshSessionRepository.RevokeReason.PASSWORD_CHANGED);
         order.verify(refreshTokens).generateTokenPair(id, "USER", null, client);
+        verify(challenges).invalidate(id, Purpose.PASSWORD_RESET, clock.instant());
     }
     @Test void changePasswordRejectsWrongCurrentOrUnchangedPasswordWithoutTouchingSessions() {
         when(users.lockById(id)).thenReturn(Optional.of(user));
@@ -126,6 +127,7 @@ class AuthServiceTest {
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_ERROR));
         verify(users, never()).updatePassword(any(), any());
         verifyNoInteractions(refreshTokens);
+        verify(challenges, never()).invalidate(any(), any(), any());
     }
     private void stubChallenge(int attempts, Instant expiry) {
         when(users.findByEmail(user.email())).thenReturn(Optional.of(user));

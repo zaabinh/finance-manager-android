@@ -136,12 +136,19 @@ class AuthenticationIT {
         String email = registeredVerified();
         var phone = auth.login(new LoginRequest(email, "Strong@123"), client).token();
         var tablet = auth.login(new LoginRequest(email, "Strong@123"), client).token();
+        auth.forgotPassword(new ResendOtpRequest(email));
+        String pendingReset = codes.get(email + ":PASSWORD_RESET");
+        assertThat(pendingReset).matches("[0-9]{6}");
         String body = mvc.perform(post("/api/v1/auth/change-password").header("Authorization", "Bearer " + phone.accessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"Strong@123\",\"newPassword\":\"NewStrong@456\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
                 .andReturn().getResponse().getContentAsString();
         String fresh = com.jayway.jsonpath.JsonPath.read(body, "$.data.refreshToken");
+        assertThatThrownBy(() -> auth.resetPassword(new ResetPasswordRequest(email, pendingReset, "Attacker@789")))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(com.fintrack.api.exception.ErrorCode.AUTH_OTP_INVALID));
+        assertThat(auth.login(new LoginRequest(email, "NewStrong@456"), client).token()).isNotNull();
         assertThatThrownBy(() -> auth.refresh(phone.refreshToken(), client)).isInstanceOf(AppException.class);
         assertThatThrownBy(() -> auth.refresh(tablet.refreshToken(), client)).isInstanceOf(AppException.class);
         assertThat(auth.refresh(fresh, client).refreshToken()).isNotBlank();

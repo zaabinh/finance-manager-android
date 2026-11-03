@@ -70,6 +70,7 @@ Các endpoint bên dưới là public cho phương thức POST; API nghiệp v�
 | `/logout` | `refreshToken` | 204, kể cả token không tồn tại/đã revoke |
 | `/forgot-password` | `email` | 202, body rỗng |
 | `/reset-password` | `email`, `otp`, `newPassword` | 204 |
+| `/change-password` (cần Bearer token) | `currentPassword`, `newPassword` | 200, ApiResponse<TokenResponse> |
 
 `confirmPassword` chỉ là validation phía client. Không dùng endpoint tạm `/resend-otp`.
 Resend/forgot có cùng response cho email tồn tại và không tồn tại. Rate limit được áp dụng cho cả hai,
@@ -120,6 +121,10 @@ Email đã verify có thể xác thực lặp lại và nhận 204.
 Reset chỉ dùng challenge PASSWORD_RESET, consume đúng một lần, đổi password và revoke toàn bộ refresh session
 trong cùng transaction. Reset không tự đánh dấu email_verified. Access JWT đã cấp còn hiệu lực tối đa đến expiry;
 không có denylist JWT hoặc password_changed_at. Logout cũng chỉ revoke refresh session được chỉ định.
+
+Đổi mật khẩu yêu cầu Bearer token và currentPassword hợp lệ. Trong cùng transaction, backend hủy mọi OTP
+PASSWORD_RESET đang chờ, cập nhật password, revoke refresh sessions và cấp token family mới cho thiết bị hiện tại.
+Nếu transaction thất bại, việc hủy OTP cũng rollback. Password sai hoặc password mới không hợp lệ không hủy OTP.
 
 ## Access JWT và refresh rotation
 

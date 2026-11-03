@@ -195,6 +195,7 @@ public class AuthService implements AuthOperations {
         if (encoder.matches(request.newPassword(), user.passwordHash()))
             throw new AppException(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, "New password must differ from the current password");
         limiter.clearLoginFailures(limiterKey, client);
+        verification.invalidatePasswordReset(user.id());
         users.updatePassword(user.id(), encoder.encode(request.newPassword()));
         refreshTokens.revokeAllUserSessions(user.id(), RevokeReason.PASSWORD_CHANGED);
         // Every device is signed out; only the device that changed the password gets a fresh family.

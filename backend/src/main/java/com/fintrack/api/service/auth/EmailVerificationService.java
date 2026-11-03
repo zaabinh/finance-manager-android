@@ -66,6 +66,12 @@ public class EmailVerificationService {
         challenges.consume(challenge.id(), clock.instant());
     }
 
+    /** Caller holds the user lock; password changes invalidate outstanding recovery codes in the same transaction. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void invalidatePasswordReset(UUID userId) {
+        challenges.invalidate(userId, Purpose.PASSWORD_RESET, clock.instant());
+    }
+
     @TransactionalEventListener
     public void deliver(CodeEmail email) {
         boolean reset = email.purpose() == Purpose.PASSWORD_RESET;
