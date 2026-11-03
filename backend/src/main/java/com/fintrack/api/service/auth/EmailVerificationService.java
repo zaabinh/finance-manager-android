@@ -40,12 +40,12 @@ public class EmailVerificationService {
 
     /** Replaces any open code for this purpose; the email is sent only after the caller's transaction commits. */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void issue(UUID userId, String email, Purpose purpose) {
+    public void issue(UUID userId, String email, Purpose purpose, String username) {
         var now = clock.instant();
         String code = String.format(Locale.ROOT, "%06d", random.nextInt(1_000_000));
         challenges.invalidate(userId, purpose, now);
         challenges.create(userId, email, purpose, encoder.encode(code), now, now.plus(properties.otpTtl()));
-        events.publishEvent(new CodeEmail(email, code, purpose, UUID.randomUUID()));
+        events.publishEvent(new CodeEmail(email, code, purpose, UUID.randomUUID(), username));
     }
 
     /** Consumes the latest open code or throws; a wrong code still commits the failed-attempt count. */
@@ -76,7 +76,8 @@ public class EmailVerificationService {
                     "title", subject,
                     "preheader", "Mã của bạn có hiệu lực trong " + minutes + " phút.",
                     "code", email.code(),
-                    "ttlMinutes", minutes));
+                    "ttlMinutes", minutes,
+                    "username", email.username() == null ? "" : email.username()));
             sender.send(email.recipient(), subject, html, email.deliveryId());
         } catch (RuntimeException exception) {
             // Provider exceptions may contain request bodies, addresses or credentials.
@@ -89,7 +90,7 @@ public class EmailVerificationService {
         return new ChallengeRejectedException(status, code, message);
     }
 
-    public record CodeEmail(String recipient, String code, Purpose purpose, UUID deliveryId) {
+    public record CodeEmail(String recipient, String code, Purpose purpose, UUID deliveryId, String username) {
         @Override public String toString() { return "CodeEmail[deliveryId=" + deliveryId + "]"; }
     }
 }

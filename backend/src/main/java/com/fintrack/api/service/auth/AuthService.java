@@ -64,7 +64,7 @@ public class AuthService implements AuthOperations {
                     ? ErrorCode.AUTH_USERNAME_ALREADY_EXISTS : ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
         }
         // Send verification email
-        verification.issue(id, email, Purpose.EMAIL_VERIFICATION);
+        verification.issue(id, email, Purpose.EMAIL_VERIFICATION, username);
     }
     @Override @Transactional
     public LoginResponse login(LoginRequest request, ClientMetadata client) {
@@ -165,7 +165,8 @@ public class AuthService implements AuthOperations {
             if (!"ACTIVE".equals(user.status())) return;
             if (purpose == Purpose.EMAIL_VERIFICATION && user.emailVerified()) return;
             if (purpose == Purpose.PASSWORD_RESET && !user.emailVerified()) return;
-            verification.issue(user.id(), user.email(), purpose);
+            String name = user.displayName() == null || user.displayName().isBlank() ? user.username() : user.displayName();
+            verification.issue(user.id(), user.email(), purpose, name);
         });
     }
     @Override @Transactional(noRollbackFor = ChallengeRejectedException.class)

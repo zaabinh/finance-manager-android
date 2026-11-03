@@ -21,4 +21,38 @@ class EmailTemplateRendererTest {
         assertThatThrownBy(() -> renderer.render("otp-verification", Map.of("title", "t", "preheader", "p")))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("code");
     }
+
+    @Test void verificationGreetsTheNamedRecipientAndEscapesHtml() {
+        String html = renderer.render("otp-verification", Map.of("title", "Xác minh", "preheader", "",
+                "code", "123456", "ttlMinutes", "10", "username", "  Nguyễn <A>  "));
+        assertThat(html).contains("Chào <strong>Nguyễn &lt;A&gt;</strong>,")
+                .contains("Cảm ơn bạn đã đăng ký tài khoản <strong>Đồng</strong>.")
+                .doesNotContain("Nguyễn <A>", "{{username}}");
+    }
+
+    @Test void verificationFallsBackForMissingNullOrBlankUsername() {
+        var values = new java.util.HashMap<>(Map.of("title", "Xác minh", "preheader", "",
+                "code", "123456", "ttlMinutes", "10"));
+        assertThat(renderer.render("otp-verification", values)).contains("Chào <strong>bạn</strong>,");
+        values.put("username", null);
+        assertThat(renderer.render("otp-verification", values)).contains("Chào <strong>bạn</strong>,");
+        values.put("username", "   ");
+        assertThat(renderer.render("otp-verification", values)).contains("Chào <strong>bạn</strong>,");
+    }
+
+    @Test void passwordResetGreetsTheRecipientWithTheSameEscapingAndFallback() {
+        var values = new java.util.HashMap<>(Map.of("title", "Đặt lại mật khẩu", "preheader", "",
+                "code", "123456", "ttlMinutes", "10"));
+        values.put("username", "  Nguyễn <A>  ");
+        assertThat(renderer.render("forgot-password", values))
+                .contains("Chào <strong>Nguyễn &lt;A&gt;</strong>,")
+                .contains("Vui lòng nhập mã bên dưới vào ứng dụng để thiết lập mật khẩu mới.")
+                .doesNotContain("Nguyễn <A>", "{{username}}");
+        values.remove("username");
+        assertThat(renderer.render("forgot-password", values)).contains("Chào <strong>bạn</strong>,");
+        values.put("username", null);
+        assertThat(renderer.render("forgot-password", values)).contains("Chào <strong>bạn</strong>,");
+        values.put("username", "   ");
+        assertThat(renderer.render("forgot-password", values)).contains("Chào <strong>bạn</strong>,");
+    }
 }

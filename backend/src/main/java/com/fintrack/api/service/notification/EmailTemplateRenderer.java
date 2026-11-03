@@ -29,7 +29,11 @@ public class EmailTemplateRenderer {
 
     public String render(String template, Map<String, String> values) {
         var vars = new HashMap<String, String>();
-        values.forEach((key, value) -> vars.put(key, escape(value)));
+        values.forEach((key, value) -> {
+            if (!"username".equals(key)) vars.put(key, escape(value));
+        });
+        String username = values.get("username");
+        vars.put("username", escape(username == null || username.isBlank() ? "bạn" : username.strip()));
         vars.put("logoUrl", escape(logoUrl));
         vars.put("content", fill(load(template), vars));
         return fill(layout, vars);

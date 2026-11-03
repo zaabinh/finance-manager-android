@@ -52,6 +52,7 @@ class AuthServiceTest {
         assertThat(encoder.matches("Strong@123", hash.getValue())).isTrue();
         var event = org.mockito.ArgumentCaptor.forClass(CodeEmail.class);
         verify(events).publishEvent(event.capture());
+        assertThat(event.getValue().username()).isEqualTo("an.nguyen");
         var otpHash = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(challenges).create(eq(id), eq("an@example.com"), eq(Purpose.EMAIL_VERIFICATION), otpHash.capture(), any(), any());
         assertThat(event.getValue().code()).matches("[0-9]{6}");

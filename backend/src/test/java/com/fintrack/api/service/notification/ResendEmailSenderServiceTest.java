@@ -45,7 +45,7 @@ class ResendEmailSenderServiceTest {
         var service = new EmailVerificationService(mock(VerificationChallengeRepository.class), new BCryptPasswordEncoder(4),
                 mock(ApplicationEventPublisher.class), properties, Clock.systemUTC(), sender,
                 new EmailTemplateRenderer("https://cdn.example.test/logo.png"));
-        var email = new EmailVerificationService.CodeEmail("user@example.test", "123456", Purpose.PASSWORD_RESET, UUID.randomUUID());
+        var email = new EmailVerificationService.CodeEmail("user@example.test", "123456", Purpose.PASSWORD_RESET, UUID.randomUUID(), null);
         service.deliver(email);
         verify(sender).send(eq("user@example.test"), contains("mật khẩu"),
                 argThat(html -> html.contains(">123456<") && html.contains("10 phút")), eq(email.deliveryId()));
