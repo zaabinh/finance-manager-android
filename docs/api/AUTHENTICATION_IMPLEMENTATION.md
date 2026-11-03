@@ -133,8 +133,8 @@ Nếu transaction thất bại, việc hủy OTP cũng rollback. Password sai ho
 - Refresh token là 32 random bytes (256 bit), base64url, mặc định 30 ngày.
 - Mỗi refresh khóa user và session, kiểm tra expiry/revoked/user, tạo replacement, revoke token cũ,
   gán replaced_by_session_id và last_used_at trong cùng transaction.
-- Hai request cùng refresh token: đúng một request thành công; request còn lại nhận 401.
-- Token cũ bị replay bị từ chối; không revoke replacement chỉ vì một request đồng thời dùng token cũ.
+- Hai request cùng refresh token chỉ tạo một successor. Trong grace period (mặc định 20 giây), khi successor
+  chưa dùng, request lặp lại nhận cùng refresh successor; ngoài điều kiện đó, replay revoke toàn bộ family.
 - Login/reset/refresh đều khóa user trước session, tránh cấp session dựa trên password cũ trong lúc reset.
 - Không có HTTP session, form login hay HTTP Basic. JWT filter chỉ đăng ký trong Spring Security chain.
   Chỉ các POST auth public bỏ qua JWT filter để refresh/logout hoạt động dù access token đã hết hạn.
