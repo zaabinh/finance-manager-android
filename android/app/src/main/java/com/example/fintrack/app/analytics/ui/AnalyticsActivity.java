@@ -1,5 +1,6 @@
 package com.example.fintrack.app.analytics.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -9,20 +10,15 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
 import com.example.fintrack.app.analytics.model.AnalyticsCategoryItem;
 import com.example.fintrack.app.analytics.model.AnalyticsData;
 import com.example.fintrack.app.analytics.provider.AnalyticsDataProvider;
-import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.finance.domain.FinanceBook;
-import com.example.fintrack.app.finance.ui.FinanceUi;
-import com.example.fintrack.app.finance.ui.FinanceViewModel;
+import com.example.fintrack.app.budget.ui.BudgetListActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,17 +84,13 @@ public class AnalyticsActivity extends AppCompatActivity {
     private AnalyticsData analyticsData;
     private String currentMonth = "Tháng 10";
     private AnalyticsCategoryItem selectedCategory;
-    private FinanceViewModel financeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_analytics);
 
-        financeViewModel = new ViewModelProvider(this).get(FinanceViewModel.class);
-
         initViews();
-        setupObservers();
         loadAnalyticsData(currentMonth);
         setupListeners();
         updateStepUI();
@@ -149,25 +141,6 @@ public class AnalyticsActivity extends AppCompatActivity {
 
         btnPrevStep = findViewById(R.id.btnPrevStep);
         btnNextStep = findViewById(R.id.btnNextStep);
-    }
-
-    private void setupObservers() {
-        financeViewModel.state().observe(this, resource -> {
-            if (resource == null) return;
-            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                FinanceBook book = resource.getData();
-                String formattedMonth = FinanceBook.month(System.currentTimeMillis());
-                long income = book.total(FinanceBook.Type.INCOME, formattedMonth);
-                long expense = book.total(FinanceBook.Type.EXPENSE, formattedMonth);
-                long diff = Math.subtractExact(income, expense);
-
-                if (income > 0 || expense > 0) {
-                    tvSlide1Income.setText(FinanceUi.money(income));
-                    tvSlide1Expense.setText(FinanceUi.money(expense));
-                    tvSlide1NetDiff.setText((diff >= 0 ? "+" : "") + FinanceUi.money(diff));
-                }
-            }
-        });
     }
 
     private void loadAnalyticsData(String month) {
@@ -316,16 +289,11 @@ public class AnalyticsActivity extends AppCompatActivity {
             }
         });
 
+        // Điều hướng trực tiếp đến Màn hình danh sách Ngân sách
         btnSlide5Suggestion.setOnClickListener(v -> {
-            Toast.makeText(this, "Chuyển đến chi tiết Khoản " + analyticsData.getBudgetCategoryName(), Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, BudgetListActivity.class);
+            intent.putExtra("month", currentMonth);
+            startActivity(intent);
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (financeViewModel != null) {
-            financeViewModel.refresh();
-        }
     }
 }

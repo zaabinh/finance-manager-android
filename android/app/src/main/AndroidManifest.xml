@@ -147,10 +147,6 @@
             android:name=".app.ocr.ui.OcrCameraActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".app.ocr.ui.OcrReviewActivity"
-            android:exported="false" />
-
         <!-- Notification Screens -->
         <activity
             android:name=".app.notification.ui.NotificationActivity"

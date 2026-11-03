@@ -1,6 +1,8 @@
 package com.example.fintrack.app.notification.ui;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -23,6 +25,9 @@ import java.util.List;
 
 public class NotificationActivity extends AppCompatActivity {
 
+    private static final String PREF_NOTIF = "fintrack_notif_prefs";
+    private static final String KEY_ALL_READ = "all_notifications_read";
+
     private ImageView btnBack;
     private TextView btnMarkAllRead;
     private ScrollView layoutPopulatedState;
@@ -33,6 +38,9 @@ public class NotificationActivity extends AppCompatActivity {
 
     private NotificationAdapter todayAdapter;
     private NotificationAdapter yesterdayAdapter;
+
+    private List<NotificationItem> todayList = new ArrayList<>();
+    private List<NotificationItem> yesterdayList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,31 +64,40 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerViews() {
-        todayAdapter = new NotificationAdapter(item ->
-                Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show()
-        );
+        todayAdapter = new NotificationAdapter(item -> {
+            item.setRead(true);
+            todayAdapter.notifyDataSetChanged();
+            Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show();
+        });
         rvTodayNotifs.setLayoutManager(new LinearLayoutManager(this));
         rvTodayNotifs.setAdapter(todayAdapter);
 
-        yesterdayAdapter = new NotificationAdapter(item ->
-                Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show()
-        );
+        yesterdayAdapter = new NotificationAdapter(item -> {
+            item.setRead(true);
+            yesterdayAdapter.notifyDataSetChanged();
+            Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show();
+        });
         rvYesterdayNotifs.setLayoutManager(new LinearLayoutManager(this));
         rvYesterdayNotifs.setAdapter(yesterdayAdapter);
     }
 
     private void loadNotifications() {
-        List<NotificationItem> todayList = new ArrayList<>();
-        todayList.add(new NotificationItem("n1", "Vượt hạn mức Mua sắm", "18:31", "+300.000 đ", "Hôm nay", R.drawable.ic_receipt, false));
-        todayList.add(new NotificationItem("n2", "Hóa đơn & tiện ích đã dùng 88%", "07:31", null, "Hôm nay", R.drawable.ic_receipt, false));
+        SharedPreferences prefs = getSharedPreferences(PREF_NOTIF, Context.MODE_PRIVATE);
+        boolean isAllRead = prefs.getBoolean(KEY_ALL_READ, false);
 
-        List<NotificationItem> yesterdayList = new ArrayList<>();
-        yesterdayList.add(new NotificationItem("n3", "Nhắc ghi chi tiêu hôm nay", "21:00", null, "Hôm qua", R.drawable.ic_transactions, false));
+        todayList.clear();
+        todayList.add(new NotificationItem("n1", "Vượt hạn mức Mua sắm", "18:31", "+300.000 đ", "Hôm nay", R.drawable.ic_receipt, isAllRead));
+        todayList.add(new NotificationItem("n2", "Hóa đơn & tiện ích đã dùng 88%", "07:31", null, "Hôm nay", R.drawable.ic_receipt, isAllRead));
+
+        yesterdayList.clear();
+        yesterdayList.add(new NotificationItem("n3", "Nhắc ghi chi tiêu hôm nay", "21:00", null, "Hôm qua", R.drawable.ic_transactions, isAllRead));
 
         todayAdapter.setNotifications(todayList);
         yesterdayAdapter.setNotifications(yesterdayList);
 
-        showPopulatedState(true);
+        // Màn hình trống chỉ hiển thị khi thực sự không có thông báo nào
+        boolean hasNotifs = !todayList.isEmpty() || !yesterdayList.isEmpty();
+        showPopulatedState(hasNotifs);
     }
 
     private void showPopulatedState(boolean isPopulated) {
@@ -98,11 +115,25 @@ public class NotificationActivity extends AppCompatActivity {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
+        // Đánh dấu đã đọc: giữ nguyên danh sách, chỉ đổi trạng thái đã đọc và lưu local
         btnMarkAllRead.setOnClickListener(v -> {
-            todayAdapter.setNotifications(new ArrayList<>());
-            yesterdayAdapter.setNotifications(new ArrayList<>());
-            showPopulatedState(false);
-            Toast.makeText(this, "Đã đọc hết thông báo", Toast.LENGTH_SHORT).show();
+            for (NotificationItem item : todayList) {
+                item.setRead(true);
+            }
+            for (NotificationItem item : yesterdayList) {
+                item.setRead(true);
+            }
+
+            todayAdapter.notifyDataSetChanged();
+            yesterdayAdapter.notifyDataSetChanged();
+
+            // Lưu trạng thái đã đọc local
+            getSharedPreferences(PREF_NOTIF, Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean(KEY_ALL_READ, true)
+                    .apply();
+
+            Toast.makeText(this, "Đã đánh dấu đọc tất cả thông báo", Toast.LENGTH_SHORT).show();
         });
 
         btnOpenSettings.setOnClickListener(v -> {

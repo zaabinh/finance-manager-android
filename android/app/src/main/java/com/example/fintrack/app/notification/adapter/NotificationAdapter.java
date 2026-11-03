@@ -35,6 +35,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         notifyDataSetChanged();
     }
 
+    public List<NotificationItem> getNotifications() {
+        return list;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -74,6 +78,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             } else {
                 tvNotifAmount.setVisibility(View.GONE);
             }
+
+            // Hiệu ứng mờ nhẹ cho thông báo đã đọc
+            itemView.setAlpha(item.isRead() ? 0.65f : 1.0f);
 
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
