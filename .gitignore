@@ -15,3 +15,4 @@ docs/design/
 skills-lock.json
 /database/
 CLAUDE.md
+*.log
