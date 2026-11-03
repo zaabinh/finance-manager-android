@@ -1,6 +1,6 @@
 # ProGuard / R8 rules for FinTrack App
 
-# Keep model classes & Gson SerializedName fields
+# Keep Gson SerializedName fields and model signatures
 -keepattributes Signature
 -keepattributes *Annotation*
 -keepattributes EnclosingMethod
@@ -10,11 +10,21 @@
     @com.google.gson.annotations.SerializedName <fields>;
 }
 
--keep class com.example.fintrack.app.**.remote.*Request { *; }
--keep class com.example.fintrack.app.**.remote.*Response { *; }
--keep class com.example.fintrack.app.**.remote.*Dto { *; }
+# Keep all DTOs and Data Models across feature packages
+-keep class com.example.fintrack.app.**.remote.** { *; }
+-keep class com.example.fintrack.app.**.model.** { *; }
+-keep class com.example.fintrack.app.finance.domain.** { *; }
+-keep class com.example.fintrack.app.core.network.** { *; }
+-keep class com.example.fintrack.app.core.session.** { *; }
+
+# Keep Retrofit Service Interfaces
+-keep interface com.example.fintrack.app.**.remote.*ApiService { *; }
 
 # OkHttp & Retrofit
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn javax.annotation.**
+
+# ML Kit & CameraX
+-dontwarn com.google.mlkit.**
+-dontwarn androidx.camera.**

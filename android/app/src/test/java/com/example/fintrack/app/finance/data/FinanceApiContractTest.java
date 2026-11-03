@@ -7,7 +7,8 @@ import com.example.fintrack.app.wallet.remote.WalletApiService;
 import com.example.fintrack.app.category.remote.CategoryApiService;
 import com.example.fintrack.app.budget.remote.BudgetApiService;
 import com.example.fintrack.app.transaction.remote.TransactionApiService;
-import com.example.fintrack.app.transaction.remote.TransactionDtos;
+import com.example.fintrack.app.transaction.remote.TransactionResponse;
+import com.example.fintrack.app.transaction.remote.TransactionPageResponse;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.UUID;
@@ -50,7 +51,7 @@ public class FinanceApiContractTest {
         com.google.gson.JsonObject json = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
         assertEquals(999_999_999_999L, json.get("amountMinor").getAsLong());
         assertEquals(value.id, json.get("clientRequestId").getAsString());
-        assertEquals(value.occurredAt, TransactionDtos.parseTimestamp(json.get("occurredAt").getAsString()));
+        assertEquals(value.occurredAt, TransactionResponse.parseTimestamp(json.get("occurredAt").getAsString()));
         action.remote.send(api); assertEquals(value.id, new Gson().fromJson(body(), com.google.gson.JsonObject.class).get("clientRequestId").getAsString());
     }
     @Test public void transferOmitsCategoryAndIncludesBothWallets() throws Exception {
@@ -70,7 +71,7 @@ public class FinanceApiContractTest {
     }
     @Test public void listUsesExplicitPaginationAndDirectDtoBodies() {
         FinanceApiBundle bundle = apiBundle(200, "{\"items\":[],\"page\":2,\"totalPages\":3}");
-        TransactionDtos.TransactionPage page = FinanceAction.required(bundle.transactions.transactions(2, 200));
+        TransactionPageResponse page = FinanceAction.required(bundle.transactions.transactions(2, 200));
         assertEquals(2, page.page); assertTrue(page.items.isEmpty());
         assertEquals("2", captured.url().queryParameter("page")); assertEquals("200", captured.url().queryParameter("size"));
     }
@@ -96,10 +97,10 @@ public class FinanceApiContractTest {
         assertEquals(FinanceBook.Problem.NETWORK, assertThrows(FinanceBook.Failure.class, () -> FinanceAction.required(api.wallets.wallets())).problem);
     }
     @Test public void timestampsAcceptServerPrecisionAndRejectInvalidDates() {
-        assertEquals(TransactionDtos.parseTimestamp("2026-10-31T17:00:00Z"), TransactionDtos.parseTimestamp("2026-10-31T17:00:00.000000Z"));
-        assertEquals("2026-11", FinanceBook.month(TransactionDtos.parseTimestamp("2026-10-31T17:00:00Z")));
-        assertThrows(FinanceBook.Failure.class, () -> TransactionDtos.parseTimestamp("2026-02-30T17:00:00Z"));
-        assertThrows(FinanceBook.Failure.class, () -> TransactionDtos.parseTimestamp("2026-10-31"));
+        assertEquals(TransactionResponse.parseTimestamp("2026-10-31T17:00:00Z"), TransactionResponse.parseTimestamp("2026-10-31T17:00:00.000000Z"));
+        assertEquals("2026-11", FinanceBook.month(TransactionResponse.parseTimestamp("2026-10-31T17:00:00Z")));
+        assertThrows(FinanceBook.Failure.class, () -> TransactionResponse.parseTimestamp("2026-02-30T17:00:00Z"));
+        assertThrows(FinanceBook.Failure.class, () -> TransactionResponse.parseTimestamp("2026-10-31"));
     }
     @Test public void helperRequestsFollowWalletAndCategoryVocabulary() throws Exception {
         FinanceAction.wallet("Tiền mặt", 20_000, FinanceBook.WalletType.CASH).remote.send(apiBundle(201, "{\"walletId\":\"w\"}"));

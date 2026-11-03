@@ -1,4 +1,4 @@
-package com.example.fintrack.app.budget.ui;
+package com.example.fintrack.app.budget.adapter;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
+import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
+import com.example.fintrack.app.budget.ui.BudgetFormActivity;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -17,13 +19,13 @@ import java.util.List;
 /**
  * Adapter quản lý danh sách hiển thị các khoản ngân sách (Budget) trong RecyclerView.
  */
-final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Holder> {
+public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Holder> {
 
     private final FinanceBook book;
     private final List<FinanceBook.Budget> budgets;
 
     // Constructor nhận dữ liệu sổ tài chính và danh sách ngân sách
-    BudgetAdapter(FinanceBook book, List<FinanceBook.Budget> budgets) {
+    public BudgetAdapter(FinanceBook book, List<FinanceBook.Budget> budgets) {
         this.book = book;
         this.budgets = budgets;
     }

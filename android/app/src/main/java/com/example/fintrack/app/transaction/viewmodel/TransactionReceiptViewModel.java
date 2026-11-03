@@ -1,4 +1,4 @@
-package com.example.fintrack.app.transaction.ui;
+package com.example.fintrack.app.transaction.viewmodel;
 
 import android.app.Application;
 import android.net.Uri;
@@ -14,12 +14,22 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+/**
+ * ViewModel quản lý quá trình đọc và trích xuất dữ liệu từ hình ảnh hóa đơn bằng Google ML Kit OCR.
+ */
 public final class TransactionReceiptViewModel extends AndroidViewModel {
     private final TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
     private final MutableLiveData<Resource<TransactionParser.Draft>> draft = new MutableLiveData<>();
-    public TransactionReceiptViewModel(@NonNull Application application) { super(application); }
-    LiveData<Resource<TransactionParser.Draft>> draft() { return draft; }
-    void read(Uri image) {
+
+    public TransactionReceiptViewModel(@NonNull Application application) { 
+        super(application); 
+    }
+
+    public LiveData<Resource<TransactionParser.Draft>> draft() { 
+        return draft; 
+    }
+
+    public void read(Uri image) {
         if (draft.getValue() != null) return;
         draft.setValue(Resource.loading(null));
         FinanceRepository.IO.execute(() -> {
@@ -32,5 +42,9 @@ public final class TransactionReceiptViewModel extends AndroidViewModel {
             } catch (Exception error) { draft.postValue(Resource.error("unreadable", null)); }
         });
     }
-    @Override protected void onCleared() { recognizer.close(); }
+
+    @Override 
+    protected void onCleared() { 
+        recognizer.close(); 
+    }
 }

@@ -2,10 +2,10 @@ package com.example.fintrack.app.finance.data;
 
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.remote.FinanceApiBundle;
-import com.example.fintrack.app.transaction.remote.TransactionDtos;
-import com.example.fintrack.app.budget.remote.BudgetDtos;
-import com.example.fintrack.app.wallet.remote.WalletDtos;
-import com.example.fintrack.app.category.remote.CategoryDtos;
+import com.example.fintrack.app.transaction.remote.TransactionRequest;
+import com.example.fintrack.app.budget.remote.BudgetRequest;
+import com.example.fintrack.app.wallet.remote.WalletRequest;
+import com.example.fintrack.app.category.remote.CategoryRequest;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -20,13 +20,13 @@ public final class FinanceAction {
     private FinanceAction(Consumer<FinanceBook> local, Remote remote) { this.local = local; this.remote = remote; }
     public static FinanceAction transaction(FinanceBook.Transaction value, boolean editing) {
         return new FinanceAction(book -> book.save(value, editing), api -> {
-            TransactionDtos.TransactionRequest request = new TransactionDtos.TransactionRequest(value);
+            TransactionRequest request = new TransactionRequest(value);
             required(editing ? api.transactions.updateTransaction(value.id, request) : api.transactions.addTransaction(request));
         });
     }
     public static FinanceAction budget(FinanceBook.Budget value, boolean editing) {
         return new FinanceAction(book -> book.save(value, editing), api -> {
-            BudgetDtos.BudgetRequest request = new BudgetDtos.BudgetRequest(value);
+            BudgetRequest request = new BudgetRequest(value);
             required(editing ? api.budgets.updateBudget(value.id, request) : api.budgets.addBudget(request));
         });
     }
@@ -37,10 +37,10 @@ public final class FinanceAction {
         return new FinanceAction(book -> book.deleteBudget(id), api -> execute(api.budgets.deleteBudget(id)));
     }
     public static FinanceAction wallet(String name, long opening, FinanceBook.WalletType type) {
-        return new FinanceAction(book -> book.addWallet(name, opening, type), api -> required(api.wallets.addWallet(new WalletDtos.WalletRequest(name, opening, type))));
+        return new FinanceAction(book -> book.addWallet(name, opening, type), api -> required(api.wallets.addWallet(new WalletRequest(name, opening, type))));
     }
     public static FinanceAction category(String name, FinanceBook.Type type) {
-        return new FinanceAction(book -> book.addCategory(name, type), api -> required(api.categories.addCategory(new CategoryDtos.CategoryRequest(name, type))));
+        return new FinanceAction(book -> book.addCategory(name, type), api -> required(api.categories.addCategory(new CategoryRequest(name, type))));
     }
     public static <T> T required(Call<T> call) {
         T body = execute(call);

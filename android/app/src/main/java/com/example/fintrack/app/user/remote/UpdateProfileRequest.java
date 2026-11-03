@@ -2,13 +2,16 @@ package com.example.fintrack.app.user.remote;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Lớp DTO đóng gói dữ liệu gửi lên Server khi người dùng cập nhật thông tin cá nhân.
+ */
 public class UpdateProfileRequest {
 
     @SerializedName("name")
-    private String name;
+    private String name; // Họ và tên mới
 
     @SerializedName("phone")
-    private String phone;
+    private String phone; // Số điện thoại mới
 
     public UpdateProfileRequest(String name, String phone) {
         this.name = name;

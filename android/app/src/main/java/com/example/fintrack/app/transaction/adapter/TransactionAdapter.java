@@ -1,4 +1,4 @@
-package com.example.fintrack.app.transaction.ui;
+package com.example.fintrack.app.transaction.adapter;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -11,16 +11,31 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.transaction.ui.TransactionDetailActivity;
+import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
 import java.util.List;
 
+/**
+ * Adapter quản lý danh sách hiển thị các giao dịch (Transaction) trong RecyclerView.
+ */
 public final class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.Holder> {
+
     private final FinanceBook book;
     private final List<FinanceBook.Transaction> transactions;
-    public TransactionAdapter(FinanceBook book, List<FinanceBook.Transaction> transactions) { this.book = book; this.transactions = transactions; }
-    @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
+
+    public TransactionAdapter(FinanceBook book, List<FinanceBook.Transaction> transactions) {
+        this.book = book;
+        this.transactions = transactions;
+    }
+
+    @NonNull
+    @Override
+    public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
         return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_transaction, parent, false));
     }
-    @Override public void onBindViewHolder(@NonNull Holder holder, int position) {
+
+    @Override
+    public void onBindViewHolder(@NonNull Holder holder, int position) {
         FinanceBook.Transaction item = transactions.get(position);
         FinanceBook.Category category = book.category(item.categoryId);
         FinanceBook.Wallet wallet = book.wallet(item.walletId), destination = book.wallet(item.destinationWalletId);
@@ -39,9 +54,19 @@ public final class TransactionAdapter extends RecyclerView.Adapter<TransactionAd
         holder.itemView.setOnClickListener(view -> view.getContext().startActivity(new Intent(view.getContext(), TransactionDetailActivity.class)
                 .putExtra(TransactionFormActivity.EXTRA_ID, item.id)));
     }
-    @Override public int getItemCount() { return transactions.size(); }
+
+    @Override
+    public int getItemCount() {
+        return transactions.size();
+    }
+
     static final class Holder extends RecyclerView.ViewHolder {
-        Holder(View view) { super(view); }
-        void text(int id, String text) { ((TextView) itemView.findViewById(id)).setText(text); }
+        Holder(View view) {
+            super(view);
+        }
+
+        void text(int id, String text) {
+            ((TextView) itemView.findViewById(id)).setText(text);
+        }
     }
 }

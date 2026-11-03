@@ -6,13 +6,14 @@ import com.example.fintrack.app.core.network.ApiClient;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.remote.FinanceApiBundle;
 import com.example.fintrack.app.wallet.remote.WalletApiService;
-import com.example.fintrack.app.wallet.remote.WalletDtos;
+import com.example.fintrack.app.wallet.remote.WalletResponse;
 import com.example.fintrack.app.category.remote.CategoryApiService;
-import com.example.fintrack.app.category.remote.CategoryDtos;
+import com.example.fintrack.app.category.remote.CategoryResponse;
 import com.example.fintrack.app.budget.remote.BudgetApiService;
-import com.example.fintrack.app.budget.remote.BudgetDtos;
+import com.example.fintrack.app.budget.remote.BudgetResponse;
 import com.example.fintrack.app.transaction.remote.TransactionApiService;
-import com.example.fintrack.app.transaction.remote.TransactionDtos;
+import com.example.fintrack.app.transaction.remote.TransactionResponse;
+import com.example.fintrack.app.transaction.remote.TransactionPageResponse;
 import com.google.gson.Gson;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,15 +46,15 @@ public final class FinanceRepository {
     public FinanceBook read() {
         if (mock != null) return mock.read();
         FinanceBook.State state = new FinanceBook.State();
-        for (WalletDtos.Wallet wallet : FinanceAction.required(api.wallets.wallets())) state.wallets.add(wallet.domain());
-        for (CategoryDtos.Category category : FinanceAction.required(api.categories.categories())) state.categories.add(category.domain());
-        for (BudgetDtos.Budget budget : FinanceAction.required(api.budgets.budgets())) state.budgets.add(budget.domain());
+        for (WalletResponse wallet : FinanceAction.required(api.wallets.wallets())) state.wallets.add(wallet.domain());
+        for (CategoryResponse category : FinanceAction.required(api.categories.categories())) state.categories.add(category.domain());
+        for (BudgetResponse budget : FinanceAction.required(api.budgets.budgets())) state.budgets.add(budget.domain());
         int page = 0;
         while (true) {
-            TransactionDtos.TransactionPage result = FinanceAction.required(api.transactions.transactions(page, 200));
+            TransactionPageResponse result = FinanceAction.required(api.transactions.transactions(page, 200));
             if (result.items == null || result.page != page || result.totalPages < 0 || result.totalPages > 10000)
                 throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
-            for (TransactionDtos.Transaction value : result.items) state.transactions.add(value.domain());
+            for (TransactionResponse value : result.items) state.transactions.add(value.domain());
             if (++page >= result.totalPages) break;
         }
         try { return new FinanceBook(state); }

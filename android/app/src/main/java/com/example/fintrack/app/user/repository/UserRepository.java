@@ -2,6 +2,7 @@ package com.example.fintrack.app.user.repository;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.fintrack.app.core.network.ApiClient;
@@ -16,6 +17,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository chịu trách nhiệm xử lý các cuộc gọi API mạng (lấy và cập nhật thông tin cá nhân)
+ * và chuyển đổi kết quả về dạng LiveData Resource cho ViewModel.
+ */
 public class UserRepository {
 
     private final Context appContext;
@@ -26,10 +31,11 @@ public class UserRepository {
         this.apiService = ApiClient.createService(appContext, UserApiService.class);
     }
 
+    /** Gọi API lấy thông tin chi tiết hồ sơ cá nhân */
     public void getProfile(MutableLiveData<Resource<UserProfileResponse>> result) {
-        apiService.getProfile().enqueue(new Callback<ApiResponse<UserProfileResponse>>() {
+        apiService.getProfile().enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<UserProfileResponse>> call, Response<ApiResponse<UserProfileResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Response<ApiResponse<UserProfileResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<UserProfileResponse> apiResponse = response.body();
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
@@ -44,16 +50,17 @@ public class UserRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<UserProfileResponse>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
     }
 
+    /** Gọi API cập nhật thông tin họ tên và số điện thoại */
     public void updateProfile(String name, String phone, MutableLiveData<Resource<UserProfileResponse>> result) {
-        apiService.updateProfile(new UpdateProfileRequest(name, phone)).enqueue(new Callback<ApiResponse<UserProfileResponse>>() {
+        apiService.updateProfile(new UpdateProfileRequest(name, phone)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<UserProfileResponse>> call, Response<ApiResponse<UserProfileResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Response<ApiResponse<UserProfileResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<UserProfileResponse> apiResponse = response.body();
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
@@ -68,7 +75,7 @@ public class UserRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<UserProfileResponse>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
