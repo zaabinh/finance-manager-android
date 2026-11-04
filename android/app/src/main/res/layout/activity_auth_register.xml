@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_app_canvas"
@@ -7,22 +8,26 @@
     android:overScrollMode="never"
     android:fitsSystemWindows="true">
 
-    <!-- Container chính: Căn giữa form khi xoay ngang / màn hình to -->
-    <LinearLayout
+    <!-- Container chính -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/spacing_24"
-        android:paddingVertical="@dimen/spacing_16">
+        android:paddingStart="@dimen/spacing_24"
+        android:paddingEnd="@dimen/spacing_24"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_16">
 
-        <!-- Form chính: Giới hạn maxWidth để giao diện cân đối khi xoay ngang -->
+        <!-- Form chính -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/llFormContainer"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:maxWidth="440dp"
             android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="440dp">
 
             <!-- Header Logo -->
             <ImageView
@@ -36,6 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_8"
+                android:importantForAccessibility="no"
                 android:text="@string/app_name"
                 android:textAppearance="@style/TextAppearance.App.TitlePage" />
 
@@ -71,10 +77,11 @@
                     android:drawablePadding="@dimen/spacing_12"
                     android:hint="@string/hint_username"
                     android:inputType="textPersonName"
-                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:paddingStart="@dimen/spacing_16"
+                    android:paddingEnd="@dimen/spacing_16"
                     android:singleLine="true"
                     android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_disabled"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="@dimen/text_size_body_primary" />
 
                 <!-- Field 2: Email -->
@@ -96,10 +103,11 @@
                     android:drawablePadding="@dimen/spacing_12"
                     android:hint="@string/hint_email"
                     android:inputType="textEmailAddress"
-                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:paddingStart="@dimen/spacing_16"
+                    android:paddingEnd="@dimen/spacing_16"
                     android:singleLine="true"
                     android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_disabled"
+                    android:textColorHint="@color/text_hint"
                     android:textSize="@dimen/text_size_body_primary" />
 
                 <!-- Field 3: Password -->
@@ -127,10 +135,11 @@
                         android:drawablePadding="@dimen/spacing_12"
                         android:hint="@string/hint_password"
                         android:inputType="textPassword"
-                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:paddingStart="@dimen/spacing_16"
+                        android:paddingEnd="@dimen/spacing_8"
                         android:singleLine="true"
                         android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_disabled"
+                        android:textColorHint="@color/text_hint"
                         android:textSize="@dimen/text_size_body_primary" />
 
                     <ImageView
@@ -170,10 +179,11 @@
                         android:drawablePadding="@dimen/spacing_12"
                         android:hint="@string/hint_password"
                         android:inputType="textPassword"
-                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:paddingStart="@dimen/spacing_16"
+                        android:paddingEnd="@dimen/spacing_8"
                         android:singleLine="true"
                         android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_disabled"
+                        android:textColorHint="@color/text_hint"
                         android:textSize="@dimen/text_size_body_primary" />
 
                     <ImageView
@@ -198,37 +208,46 @@
                     android:text="@string/checkbox_terms_policies"
                     android:textAppearance="@style/TextAppearance.App.BodySecondary" />
 
-                <!-- Register Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnRegister"
+                <!-- Register Button Container -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="@dimen/spacing_16"
-                    android:background="@drawable/bg_button_primary"
-                    android:text="@string/btn_register"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_on_primary"
-                    android:textSize="@dimen/text_size_title_section"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnRegister"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="@string/btn_register"
+                        android:textAllCaps="false"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_max="320dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Flexible Spacer: Đẩy link Đăng nhập xuống đáy nếu màn hình cao -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
         <!-- Bottom Link to Login -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_16"
+            android:layout_marginTop="@dimen/spacing_24"
             android:gravity="center"
             android:orientation="horizontal"
-            android:padding="@dimen/spacing_8">
+            android:padding="@dimen/spacing_8"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/llFormContainer"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -250,5 +269,5 @@
                 android:textAppearance="@style/TextAppearance.App.Button" />
         </LinearLayout>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -45,16 +45,8 @@ public class AuthViewModel extends AndroidViewModel {
         return registeredEmail;
     }
 
-    public void setRegisteredEmail(String registeredEmail) {
-        this.registeredEmail = registeredEmail;
-    }
-
     public String getForgotPasswordEmail() {
         return forgotPasswordEmail;
-    }
-
-    public void setForgotPasswordEmail(String forgotPasswordEmail) {
-        this.forgotPasswordEmail = forgotPasswordEmail;
     }
 
     public String getResetOtp() {

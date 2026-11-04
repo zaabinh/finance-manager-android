@@ -15,7 +15,7 @@ final class PreviewShots {
         return LayoutRenderTest.list(
                 new LayoutRenderTest.Shot("feedback_inline", "view_feedback_inline", false, null).fonts(),
                 new LayoutRenderTest.Shot("transaction_list", "activity_transaction_list", true,
-                        root -> root.findViewById(R.id.navTabHistory).setSelected(true)),
+                        root -> root.findViewById(R.id.navReport).setSelected(true)),
                 new LayoutRenderTest.Shot("transaction_detail", "activity_transaction_detail", true, null),
                 new LayoutRenderTest.Shot("transaction_form", "activity_transaction_form", true, null),
                 new LayoutRenderTest.Shot("transaction_transfer", "activity_transaction_form", true, root -> {

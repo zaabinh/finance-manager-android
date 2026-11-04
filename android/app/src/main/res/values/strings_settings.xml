@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings Feature -->
+    <string name="settings_title">Cài đặt</string>
+    <string name="currency_unit">Đơn vị tiền tệ</string>
+    <string name="time_zone">Múi giờ</string>
+    <string name="notif_config">Cấu hình thông báo</string>
+    <string name="sample_user_initials">MA</string>
+    <string name="sample_user_email">minh.anh@example.com</string>
+    <string name="setting_premium_member">Thành viên Premium</string>
+    <string name="setting_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="setting_currency_val">VND (₫)  ›</string>
+    <string name="setting_timezone_val">Hanoi GMT+7  ›</string>
+    <string name="manage_wallets">Quản lý Ví</string>
+    <string name="manage_categories">Quản lý Danh mục</string>
+    <string name="security_account">Bảo mật &amp; Tài khoản</string>
+    <string name="about_app">Thông tin ứng dụng</string>
+    <string name="app_version_val">v1.0.0  ›</string>
+    <string name="section_general_settings">CÀI ĐẶT CHUNG</string>
+    <string name="section_data_management">QUẢN LÝ DỮ LIỆU</string>
+    <string name="section_account_security">TÀI KHOẢN &amp; BẢO MẬT</string>
+    <string name="section_change_password">ĐỔI MẬT KHẨU</string>
+    <string name="section_account_actions">THAO TÁC TÀI KHOẢN</string>
+
+    <!-- Security & Account -->
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="btn_change_password">Đổi mật khẩu</string>
+    <string name="logout_this_device">Đăng xuất khỏi thiết bị này</string>
+    <string name="logout_all_devices">Đăng xuất tất cả thiết bị</string>
+    <string name="delete_account">Xóa vĩnh viễn tài khoản</string>
+    <string name="daily_record_reminder">Nhắc nhở ghi chép hàng ngày</string>
+    <string name="near_limit_alert">Cảnh báo sắp chạm hạn mức</string>
+    <string name="over_budget_alert">Cảnh báo vượt quá ngân sách</string>
+    <string name="error_name_empty">Tên không được để trống</string>
+    <string name="error_password_empty">Vui lòng nhập đầy đủ thông tin mật khẩu</string>
+    <string name="error_password_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="msg_password_changed">Đổi mật khẩu thành công!</string>
+    <string name="msg_logged_out_device">Đã đăng xuất khỏi thiết bị</string>
+    <string name="msg_logged_out_all">Đã đăng xuất khỏi tất cả thiết bị</string>
+    <string name="msg_account_deleted">Tài khoản đã bị xóa vĩnh viễn</string>
+    <string name="notif_reminder_on">Đã bật nhắc nhở hằng ngày</string>
+    <string name="notif_reminder_off">Đã tắt nhắc nhở hằng ngày</string>
+    <string name="profile_updated_success">Cập nhật thông tin thành công!</string>
+    <string name="user_profile_title">Hồ sơ người dùng</string>
+    <string name="action_edit">Chỉnh sửa</string>
+    <string name="section_personal_info">THÔNG TIN CÁ NHÂN</string>
+    <string name="label_full_name">Họ và tên</string>
+    <string name="label_phone_number">Số điện thoại</string>
+    <string name="hint_enter_phone">Nhập số điện thoại</string>
+</resources>

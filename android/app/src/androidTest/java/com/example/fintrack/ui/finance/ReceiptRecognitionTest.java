@@ -6,7 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import com.example.fintrack.app.transaction.domain.ReceiptParser;
+import com.example.fintrack.app.transaction.domain.TransactionParser;
 import com.google.android.gms.tasks.Tasks;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
@@ -27,7 +27,7 @@ public class ReceiptRecognitionTest {
         TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
         try {
             Text recognized = Tasks.await(recognizer.process(InputImage.fromBitmap(image, 0)), 45, TimeUnit.SECONDS);
-            assertEquals(95_000, ReceiptParser.parse(recognized.getText()).amount);
+            assertEquals(95_000, TransactionParser.parse(recognized.getText()).amount);
         } finally { recognizer.close(); image.recycle(); }
     }
 }

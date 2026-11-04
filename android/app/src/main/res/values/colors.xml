@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ============================================================ -->
-    <!-- 1. PRIMITIVE PALETTE (Màu gốc từ Design System)             -->
+    <!-- 03 · PALETTE — ĐỒNG · PRIMITIVE (Exact brief values with measured WCAG contrast) -->
     <!-- ============================================================ -->
 
     <!-- Green Brand -->
-    <color name="green_brand_700">#246B43</color>
-    <color name="green_brand_800">#1C5636</color>
-    <color name="green_accent_500">#4CAF50</color>
-    <color name="green_light_100">#E8F1EA</color>
+    <color name="green_brand_700">#246B43</color> <!-- white on it 6.44 · as text 6.44 ✓ -->
+    <color name="green_brand_800">#1C5636</color> <!-- white on it 8.63 ✓ - pressed -->
+    <color name="green_accent_500">#4CAF50</color> <!-- 2.78 on white ✗ text — accents/large only -->
+    <color name="green_light_100">#E8F1EA</color> <!-- brand text on it 5.58 ✓ -->
 
     <!-- Neutrals (Nền & Chữ) -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="neutral_canvas">#F6F8F5</color>
-    <color name="neutral_surface">#FFFFFF</color>
-    <color name="neutral_surface_alt">#F0F4F0</color>
-    <color name="neutral_text_900">#1D2922</color>
-    <color name="neutral_text_600">#5D6C62</color>
-    <color name="neutral_text_400">#98A69C</color>
-    <color name="neutral_border">#D6E2D9</color>
-    <color name="neutral_border_strong">#7F8F84</color>
+    <color name="neutral_canvas">#F6F8F5</color> <!-- text-900 on it 14.12 ✓ -->
+    <color name="neutral_surface">#FFFFFF</color> <!-- cards, overlays -->
+    <color name="neutral_surface_alt">#F0F4F0</color> <!-- text-600 on it 4.99 ✓ -->
+    <color name="neutral_text_900">#1D2922</color> <!-- on white 15.08 ✓ -->
+    <color name="neutral_text_600">#5D6C62</color> <!-- on white 5.55 · canvas 5.19 ✓ -->
+    <color name="neutral_text_400">#98A69C</color> <!-- 2.54 — disabled only (exempt) -->
+    <color name="neutral_border">#D6E2D9</color> <!-- 1.33 — dividers only -->
+    <color name="neutral_border_strong">#7F8F84</color> <!-- 3.41 ✓ input outline (≥3:1) -->
 
     <!-- Semantics (Trạng thái) -->
-    <color name="semantic_success">#287B47</color>
-    <color name="semantic_warning">#9B5A0B</color>
-    <color name="semantic_warning_bg">#FFF3DE</color>
-    <color name="semantic_error">#B73E36</color>
-    <color name="semantic_error_bg">#FFF0EE</color>
-    <color name="semantic_info">#2E68B5</color>
+    <color name="semantic_success">#287B47</color> <!-- on white 5.23 ✓ -->
+    <color name="semantic_warning">#9B5A0B</color> <!-- white 5.44 · on warning-bg 4.95 ✓ -->
+    <color name="semantic_warning_bg">#FFF3DE</color> <!-- due-soon surfaces -->
+    <color name="semantic_error">#B73E36</color> <!-- white 5.59 · on error-bg 5.05 ✓ -->
+    <color name="semantic_error_bg">#FFF0EE</color> <!-- error surfaces -->
+    <color name="semantic_info">#2E68B5</color> <!-- on white 5.58 ✓ -->
 
 
     <!-- ============================================================ -->
@@ -44,10 +44,14 @@
     <color name="bg_app_canvas">@color/neutral_canvas</color>
     <color name="bg_card_surface">@color/neutral_surface</color>
     <color name="bg_surface_secondary">@color/neutral_surface_alt</color>
+    <color name="bg_brand_subtle">@color/green_light_100</color>
+    <color name="bg_inverse">@color/neutral_text_900</color>
+    <color name="bg_scrim">#661D2922</color> <!-- text-900 @ 40 % -->
 
     <!-- Text Colors -->
     <color name="text_primary">@color/neutral_text_900</color>
     <color name="text_secondary">@color/neutral_text_600</color>
+    <color name="text_hint">@color/neutral_text_600</color> <!-- Accessible hint color with sufficient contrast ratio -->
     <color name="text_disabled">@color/neutral_text_400</color>
     <color name="text_on_primary">@color/neutral_surface</color> <!-- Trắng -->
 
@@ -57,21 +61,19 @@
 
     <!-- Feedback / Alert Colors -->
     <color name="status_success">@color/semantic_success</color>
+    <color name="status_success_bg">@color/green_light_100</color>
     <color name="status_warning">@color/semantic_warning</color>
     <color name="status_warning_bg">@color/semantic_warning_bg</color>
     <color name="status_error">@color/semantic_error</color>
     <color name="status_error_bg">@color/semantic_error_bg</color>
+    <color name="semantic_error_800">#8F2F29</color>
     <color name="status_info">@color/semantic_info</color>
 
-    <!-- v2 tokens not covered above (Figma Đồng · Primitive/Semantic, docs/design/01-02) -->
-    <color name="semantic_error_800">#8F2F29</color>
-    <color name="bg_brand_subtle">@color/green_light_100</color>
-    <color name="bg_inverse">@color/neutral_text_900</color>
-    <color name="bg_scrim">#661D2922</color> <!-- text-900 @ 40 % -->
-    <color name="status_success_bg">@color/green_light_100</color>
-    <!-- Amounts: expense is neutral, the sign carries meaning -->
+    <!-- Amounts & Financial Intent Colors -->
     <color name="amount_income">@color/semantic_success</color>
     <color name="amount_expense">@color/neutral_text_900</color>
-    <color name="transparent_color">#00000000</color>
     <color name="amount_transfer">@color/neutral_text_600</color>
+
+    <!-- Utilities -->
+    <color name="transparent_color">#00000000</color>
 </resources>

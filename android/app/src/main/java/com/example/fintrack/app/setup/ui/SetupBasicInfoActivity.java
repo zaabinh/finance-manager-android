@@ -48,9 +48,11 @@ public class SetupBasicInfoActivity extends AppCompatActivity {
             // Lấy chuỗi nhập từ ô EditText và cắt bỏ khoảng trắng thừa ở 2 đầu
             String name = etDisplayName.getText().toString().trim();
 
-            // Nếu người dùng không nhập gì, lấy tên mặc định từ file resource (strings.xml)
+            // Kiểm tra validation: Bắt buộc người dùng nhập tên hiển thị
             if (TextUtils.isEmpty(name)) {
-                name = getString(R.string.setup_display_name_default);
+                etDisplayName.setError(getString(R.string.error_name_empty));
+                etDisplayName.requestFocus();
+                return;
             }
 
             // Tạo Intent chuyển hướng sang màn hình thiết lập thông báo (SetupNotificationActivity)

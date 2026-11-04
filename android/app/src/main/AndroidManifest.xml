@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Quyen truy cap internet, thong bao -->
+    <!-- Quyen truy cap internet, thong bao, camera -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -53,8 +55,8 @@
         <activity android:name=".app.transaction.ui.TransactionListActivity" android:exported="false" />
         <activity android:name=".app.transaction.ui.TransactionDetailActivity" android:exported="false" />
         <activity android:name=".app.transaction.ui.TransactionFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".app.transaction.ui.ReceiptImportActivity" android:exported="false" />
-        <activity android:name=".app.transaction.ui.ReceiptReviewActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".app.transaction.ui.TransactionImportActivity" android:exported="false" />
+        <activity android:name=".app.transaction.ui.TransactionReviewActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".app.budget.ui.BudgetListActivity" android:exported="false" />
         <activity android:name=".app.budget.ui.BudgetDetailActivity" android:exported="false" />
         <activity android:name=".app.budget.ui.BudgetFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
@@ -133,6 +135,21 @@
 
         <activity
             android:name=".app.category.ui.CategoryEditActivity"
+            android:exported="false" />
+
+        <!-- Analytics Screens -->
+        <activity
+            android:name=".app.analytics.ui.AnalyticsActivity"
+            android:exported="false" />
+
+        <!-- OCR Screens -->
+        <activity
+            android:name=".app.ocr.ui.OcrCameraActivity"
+            android:exported="false" />
+
+        <!-- Notification Screens -->
+        <activity
+            android:name=".app.notification.ui.NotificationActivity"
             android:exported="false" />
     </application>
 

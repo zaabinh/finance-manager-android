@@ -2,8 +2,6 @@ package com.example.fintrack.app.core.network;
 
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
-
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
@@ -21,7 +19,7 @@ public class MockInterceptor implements Interceptor {
 
     @NonNull
     @Override
-    public Response intercept(@NonNull Chain chain) throws IOException {
+    public Response intercept(@NonNull Chain chain) {
         // Lấy đường dẫn (path) của API đang được gọi (ví dụ: "/login", "/register"...)
         String path = chain.request().url().encodedPath();
 
@@ -51,130 +49,163 @@ public class MockInterceptor implements Interceptor {
      */
     private String getMockJsonResponse(String path) {
         if (path.endsWith("/login")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Đăng nhập thành công\",\n" +
-                    "  \"data\": {\n" +
-                    "    \"accessToken\": \"mock_access_token_123456789\",\n" +
-                    "    \"refreshToken\": \"mock_refresh_token_987654321\",\n" +
-                    "    \"userId\": \"user_demo_001\",\n" +
-                    "    \"email\": \"demo@fintrack.com\",\n" +
-                    "    \"name\": \"Nguyễn Văn Demo\"\n" +
-                    "  },\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Đăng nhập thành công",
+                      "data": {
+                        "accessToken": "mock_access_token_123456789",
+                        "refreshToken": "mock_refresh_token_987654321",
+                        "userId": "user_demo_001",
+                        "email": "demo@fintrack.com",
+                        "name": "Nguyễn Văn Demo"
+                      },
+                      "code": 200
+                    }""";
         } else if (path.endsWith("/register")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Đăng ký thành công. Vui lòng kiểm tra email để nhận mã OTP.\",\n" +
-                    "  \"data\": null,\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Đăng ký thành công. Vui lòng kiểm tra email để nhận mã OTP.",
+                      "data": null,
+                      "code": 200
+                    }""";
         } else if (path.endsWith("/verify-email")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Xác thực email thành công!\",\n" +
-                    "  \"data\": null,\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Xác thực email thành công!",
+                      "data": null,
+                      "code": 200
+                    }""";
         } else if (path.endsWith("/resend-otp")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Mã OTP mới đã được gửi đến email của bạn.\",\n" +
-                    "  \"data\": null,\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Mã OTP mới đã được gửi đến email của bạn.",
+                      "data": null,
+                      "code": 200
+                    }""";
         } else if (path.endsWith("/forgot-password")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra OTP.\",\n" +
-                    "  \"data\": null,\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra OTP.",
+                      "data": null,
+                      "code": 200
+                    }""";
         } else if (path.endsWith("/reset-password")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Đặt lại mật khẩu thành công!\",\n" +
-                    "  \"data\": null,\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Đặt lại mật khẩu thành công!",
+                      "data": null,
+                      "code": 200
+                    }""";
+        } else if (path.endsWith("/refresh-token")) {
+            return """
+                    {
+                      "success": true,
+                      "message": "Làm mới token thành công",
+                      "data": {
+                        "accessToken": "mock_refreshed_access_token_12345",
+                        "refreshToken": "mock_refreshed_refresh_token_67890",
+                        "userId": "user_demo_001",
+                        "email": "demo@fintrack.com",
+                        "name": "Nguyễn Văn Demo"
+                      },
+                      "code": 200
+                    }""";
+        } else if (path.endsWith("/logout") || path.endsWith("/logout-all")) {
+            return """
+                    {
+                      "success": true,
+                      "message": "Đăng xuất thành công",
+                      "data": null,
+                      "code": 200
+                    }""";
         } else if (path.contains("/profile") || path.contains("/user")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Lấy thông tin thành công\",\n" +
-                    "  \"data\": {\n" +
-                    "    \"userId\": \"user_demo_001\",\n" +
-                    "    \"email\": \"demo@fintrack.com\",\n" +
-                    "    \"name\": \"Nguyễn Văn Demo\",\n" +
-                    "    \"phone\": \"0987654321\"\n" +
-                    "  },\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Lấy thông tin thành công",
+                      "data": {
+                        "userId": "user_demo_001",
+                        "email": "demo@fintrack.com",
+                        "name": "Nguyễn Văn Demo",
+                        "phone": "0987654321"
+                      },
+                      "code": 200
+                    }""";
         } else if (path.contains("/wallets")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Lấy danh sách ví thành công\",\n" +
-                    "  \"data\": [\n" +
-                    "    {\n" +
-                    "      \"id\": \"wallet_01\",\n" +
-                    "      \"name\": \"Ví chính\",\n" +
-                    "      \"balance\": 15000000.0,\n" +
-                    "      \"currency\": \"VND\"\n" +
-                    "    },\n" +
-                    "    {\n" +
-                    "      \"id\": \"wallet_02\",\n" +
-                    "      \"name\": \"Tiết kiệm\",\n" +
-                    "      \"balance\": 50000000.0,\n" +
-                    "      \"currency\": \"VND\"\n" +
-                    "    }\n" +
-                    "  ],\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Lấy danh sách ví thành công",
+                      "data": [
+                        {
+                          "id": "wallet_01",
+                          "name": "Ví chính",
+                          "balance": 15000000.0,
+                          "currency": "VND"
+                        },
+                        {
+                          "id": "wallet_02",
+                          "name": "Tiết kiệm",
+                          "balance": 50000000.0,
+                          "currency": "VND"
+                        }
+                      ],
+                      "code": 200
+                    }""";
         } else if (path.contains("/categories")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Lấy danh mục thành công\",\n" +
-                    "  \"data\": [\n" +
-                    "    { \"id\": \"cat_01\", \"name\": \"Ăn uống\", \"type\": \"EXPENSE\", \"icon\": \"ic_food\" },\n" +
-                    "    { \"id\": \"cat_02\", \"name\": \"Lương\", \"type\": \"INCOME\", \"icon\": \"ic_salary\" },\n" +
-                    "    { \"id\": \"cat_03\", \"name\": \"Di chuyển\", \"type\": \"EXPENSE\", \"icon\": \"ic_transport\" }\n" +
-                    "  ],\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Lấy danh mục thành công",
+                      "data": [
+                        { "id": "cat_01", "name": "Ăn uống", "type": "EXPENSE", "icon": "ic_food" },
+                        { "id": "cat_02", "name": "Lương", "type": "INCOME", "icon": "ic_salary" },
+                        { "id": "cat_03", "name": "Di chuyển", "type": "EXPENSE", "icon": "ic_transport" }
+                      ],
+                      "code": 200
+                    }""";
         } else if (path.contains("/transactions")) {
-            return "{\n" +
-                    "  \"success\": true,\n" +
-                    "  \"message\": \"Lấy danh sách giao dịch thành công\",\n" +
-                    "  \"data\": [\n" +
-                    "    {\n" +
-                    "      \"id\": \"txn_01\",\n" +
-                    "      \"title\": \"Ăn trưa\",\n" +
-                    "      \"amount\": 50000.0,\n" +
-                    "      \"type\": \"EXPENSE\",\n" +
-                    "      \"date\": \"2026-10-28\",\n" +
-                    "      \"category\": \"Ăn uống\",\n" +
-                    "      \"wallet\": \"Ví chính\"\n" +
-                    "    },\n" +
-                    "    {\n" +
-                    "      \"id\": \"txn_02\",\n" +
-                    "      \"title\": \"Nhận lương tháng 10\",\n" +
-                    "      \"amount\": 15000000.0,\n" +
-                    "      \"type\": \"INCOME\",\n" +
-                    "      \"date\": \"2026-10-27\",\n" +
-                    "      \"category\": \"Lương\",\n" +
-                    "      \"wallet\": \"Ví chính\"\n" +
-                    "    }\n" +
-                    "  ],\n" +
-                    "  \"code\": 200\n" +
-                    "}";
+            return """
+                    {
+                      "success": true,
+                      "message": "Lấy danh sách giao dịch thành công",
+                      "data": [
+                        {
+                          "id": "txn_01",
+                          "title": "Ăn trưa",
+                          "amount": 50000.0,
+                          "type": "EXPENSE",
+                          "date": "2026-10-28",
+                          "category": "Ăn uống",
+                          "wallet": "Ví chính"
+                        },
+                        {
+                          "id": "txn_02",
+                          "title": "Nhận lương tháng 10",
+                          "amount": 15000000.0,
+                          "type": "INCOME",
+                          "date": "2026-10-27",
+                          "category": "Lương",
+                          "wallet": "Ví chính"
+                        }
+                      ],
+                      "code": 200
+                    }""";
         }
 
         // Phản hồi mẫu mặc định cho các API khác chưa được định nghĩa cụ thể
-        return "{\n" +
-                "  \"success\": true,\n" +
-                "  \"message\": \"Thành công (Mock Mode)\",\n" +
-                "  \"data\": null,\n" +
-                "  \"code\": 200\n" +
-                "}";
+        return """
+                {
+                  "success": true,
+                  "message": "Thành công (Mock Mode)",
+                  "data": null,
+                  "code": 200
+                }""";
     }
 }

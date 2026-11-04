@@ -112,11 +112,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="@dimen/spacing_8"
+            android:autofillHints="none"
             android:background="@null"
             android:hint="@string/search_category_hint"
             android:inputType="text"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_disabled"
+            android:textColorHint="@color/text_hint"
             android:textSize="@dimen/text_size_body_primary" />
     </LinearLayout>
 
@@ -131,5 +132,43 @@
         android:paddingBottom="@dimen/spacing_16"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchContainer" />
+
+    <!-- Empty Category State -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyCategories"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_32"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/searchContainer">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_category"
+            app:tint="@color/text_disabled" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_16"
+            android:text="Không có danh mục nào"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="Bấm 'Thêm' ở góc trên bên phải để tạo danh mục mới."
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_body_secondary" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

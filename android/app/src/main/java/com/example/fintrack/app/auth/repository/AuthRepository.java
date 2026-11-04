@@ -3,6 +3,7 @@ package com.example.fintrack.app.auth.repository;
 import android.content.Context;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.fintrack.R;
@@ -39,9 +40,9 @@ public class AuthRepository {
 
     /** Gọi API Đăng nhập */
     public void login(String usernameOrEmail, String password, MutableLiveData<Resource<LoginResponse>> result) {
-        apiService.login(new LoginRequest(usernameOrEmail, password)).enqueue(new Callback<ApiResponse<LoginResponse>>() {
+        apiService.login(new LoginRequest(usernameOrEmail, password)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<LoginResponse>> call, Response<ApiResponse<LoginResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<LoginResponse>> call, @NonNull Response<ApiResponse<LoginResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<LoginResponse> apiResponse = response.body();
                     // Kiểm tra xem API trả về thành công và có chứa Token hay không
@@ -58,7 +59,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<LoginResponse>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<LoginResponse>> call, @NonNull Throwable t) {
                 // Lỗi kết nối mạng, mất mạng, timeout,...
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
@@ -67,9 +68,9 @@ public class AuthRepository {
 
     /** Gọi API Đăng ký tài khoản */
     public void register(String username, String email, String password, MutableLiveData<Resource<Void>> result) {
-        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Void> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
@@ -84,7 +85,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -92,9 +93,9 @@ public class AuthRepository {
 
     /** Gọi API Xác thực email bằng mã OTP */
     public void verifyEmail(String email, String otp, MutableLiveData<Resource<Void>> result) {
-        apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Void> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
@@ -109,7 +110,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -117,9 +118,9 @@ public class AuthRepository {
 
     /** Gọi API Gửi lại mã OTP */
     public void resendOtp(String email, MutableLiveData<Resource<Void>> result) {
-        apiService.resendOtp(new ResendOtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.resendOtp(new ResendOtpRequest(email)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Void> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
@@ -134,7 +135,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -142,9 +143,9 @@ public class AuthRepository {
 
     /** Gọi API Yêu cầu quên mật khẩu (gửi OTP về email) */
     public void forgotPassword(String email, MutableLiveData<Resource<Void>> result) {
-        apiService.forgotPassword(new ForgotPasswordRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.forgotPassword(new ForgotPasswordRequest(email)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Void> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
@@ -159,7 +160,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -167,9 +168,9 @@ public class AuthRepository {
 
     /** Gọi API Đặt lại mật khẩu mới */
     public void resetPassword(String email, String otp, String newPassword, MutableLiveData<Resource<Void>> result) {
-        apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Void> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
@@ -184,7 +185,7 @@ public class AuthRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });

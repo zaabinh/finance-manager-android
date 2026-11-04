@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Login Screen -->
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_subtitle">Chào mừng bạn quay lại Đồng</string>
+    <string name="login_email_label">Tên đăng nhập hoặc Email</string>
+    <string name="login_email_hint">VD: NguyenVanA</string>
+    <string name="login_password_label">Mật khẩu</string>
+    <string name="login_password_hint">VD: 12345678</string>
+    <string name="login_button">Đăng nhập</string>
+    <string name="login_register_prompt">Chưa có tài khoản? Đăng ký</string>
+
+    <string name="label_username_or_email">Tên đăng nhập hoặc Email</string>
+    <string name="hint_username">VD: NguyenVanA</string>
+    <string name="label_password">Mật khẩu</string>
+    <string name="hint_password">VD: 12345678</string>
+    <string name="forgot_password_link">Quên mật khẩu?</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="prompt_dont_have_account">Chưa có tài khoản? </string>
+    <string name="action_sign_up">Đăng ký</string>
+
+    <!-- Register Screen -->
+    <string name="label_username">Tên đăng nhập</string>
+    <string name="label_email">Email</string>
+    <string name="hint_email">VD: nguyenvana@gmail.com</string>
+    <string name="label_confirm_password">Xác nhận mật khẩu</string>
+    <string name="checkbox_terms_policies">Tôi đồng ý với Điều khoản &amp; Chính sách.</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="prompt_already_have_account">Bạn đã có tài khoản rồi chứ? </string>
+    <string name="action_sign_in">Đăng nhập</string>
+
+    <!-- Verify Email Screen -->
+    <string name="verify_email_title">Xác thực email của bạn</string>
+    <string name="verify_email_subtitle">Một mã OTP đã được gửi đến email của bạn</string>
+    <string name="btn_verify">Xác thực</string>
+    <string name="resend_otp_countdown">Gửi lại OTP sau %1$ds</string>
+    <string name="resend_otp_action">Gửi lại OTP</string>
+
+    <!-- Forgot Password Screen -->
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="btn_send">Gửi</string>
+    <string name="action_back_to_login">Quay lại đăng nhập</string>
+
+    <!-- Change Password Screen -->
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="label_reset_otp">Mã OTP xác thực</string>
+    <string name="hint_reset_otp">Nhập mã OTP</string>
+    <string name="label_enter_new_password">Nhập mật khẩu mới</string>
+    <string name="label_confirm_new_password">Xác nhận mật khẩu</string>
+
+    <!-- Password Validators -->
+    <string name="error_password_min_length">Mật khẩu phải có ít nhất 8 ký tự</string>
+    <string name="error_password_uppercase">Mật khẩu phải chứa ít nhất 1 chữ in hoa</string>
+    <string name="error_password_lowercase">Mật khẩu phải chứa ít nhất 1 chữ in thường</string>
+    <string name="error_password_digit">Mật khẩu phải chứa ít nhất 1 chữ số</string>
+    <string name="error_password_special_char">Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt</string>
+
+    <!-- Auth Toast Feedback -->
+    <string name="login_success">Đăng nhập thành công!</string>
+    <string name="login_failed">Đăng nhập thất bại</string>
+    <string name="login_response_invalid">Dữ liệu đăng nhập không hợp lệ</string>
+    <string name="register_success">Đăng ký thành công! Vui lòng xác minh Email.</string>
+    <string name="register_failed">Đăng ký thất bại</string>
+    <string name="verify_email_success">Xác minh email thành công! Vui lòng đăng nhập.</string>
+    <string name="verify_email_failed">Xác thực email thất bại</string>
+    <string name="resend_otp_success">Mã OTP mới đã được gửi!</string>
+    <string name="resend_otp_failed">Gửi lại mã OTP thất bại</string>
+    <string name="forgot_password_success">Yêu cầu đặt lại mật khẩu đã được gửi!</string>
+    <string name="forgot_password_failed">Gửi yêu cầu đặt lại mật khẩu thất bại</string>
+    <string name="reset_password_success">Đổi mật khẩu thành công! Vui lòng đăng nhập lại.</string>
+    <string name="reset_password_failed">Đổi mật khẩu thất bại</string>
+</resources>

@@ -1,0 +1,53 @@
+package com.example.fintrack.app.transaction.ui;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import com.example.fintrack.R;
+import com.example.fintrack.app.finance.ui.FinanceActivity;
+import java.util.ArrayList;
+
+/**
+ * Màn hình lựa chọn phương thức nhập hóa đơn (Chụp ảnh qua Camera hoặc Chọn ảnh từ Thư viện).
+ */
+public final class TransactionImportActivity extends FinanceActivity {
+    private Uri cameraUri;
+
+    // Bộ khởi chạy chọn ảnh từ thư viện thiết bị
+    private final ActivityResultLauncher<String[]> gallery = registerForActivityResult(new ActivityResultContracts.OpenMultipleDocuments(), images -> {
+        ArrayList<String> batch = new ArrayList<>();
+        for (Uri uri : images) {
+            try { getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION); }
+            catch (SecurityException ignored) { }
+            batch.add(uri.toString());
+        }
+        if (!batch.isEmpty()) review(batch);
+    });
+
+    @Override protected int layout() { return R.layout.activity_transaction_import; }
+
+    @Override protected void bind(Bundle saved) {
+        toolbar(R.id.toolbarTransactionImport);
+        if (saved != null && saved.getString("camera") != null) cameraUri = Uri.parse(saved.getString("camera"));
+
+        // Nút chọn ảnh từ thư viện
+        findViewById(R.id.optionLibrary).setOnClickListener(view -> gallery.launch(new String[]{"image/*"}));
+
+        // Nút mở camera chụp ảnh hóa đơn
+        findViewById(R.id.optionCamera).setOnClickListener(view -> startActivity(new Intent(this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class)));
+    }
+
+    // Chuyển sang màn hình xem lại kết quả quét hóa đơn
+    private void review(ArrayList<String> images) {
+        startActivity(new Intent(this, TransactionReviewActivity.class).putStringArrayListExtra("images", images));
+    }
+
+    @Override protected void render() { }
+
+    @Override protected void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        if (cameraUri != null) out.putString("camera", cameraUri.toString());
+    }
+}

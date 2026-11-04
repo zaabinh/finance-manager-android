@@ -20,6 +20,7 @@ public class WalletListActivity extends AppCompatActivity {
     private ImageView btnBack;
     private TextView btnAddWallet;
     private RecyclerView rvWallets;
+    private android.view.View layoutEmptyWallets;
 
     private WalletViewModel walletViewModel;
     private WalletAdapter walletAdapter;
@@ -41,6 +42,7 @@ public class WalletListActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         btnAddWallet = findViewById(R.id.btnAddWallet);
         rvWallets = findViewById(R.id.rvWallets);
+        layoutEmptyWallets = findViewById(R.id.layoutEmptyWallets);
     }
 
     private void setupRecyclerView() {
@@ -58,6 +60,11 @@ public class WalletListActivity extends AppCompatActivity {
         walletViewModel.getWallets().observe(this, wallets -> {
             if (wallets != null) {
                 walletAdapter.setWallets(wallets);
+                boolean isEmpty = wallets.isEmpty();
+                if (layoutEmptyWallets != null) {
+                    layoutEmptyWallets.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
+                }
+                rvWallets.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
             }
         });
     }

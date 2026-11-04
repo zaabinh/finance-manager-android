@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wallet Module -->
+    <string name="wallet_list_title">Danh sách ví</string>
+    <string name="wallet_add_action">+ Thêm</string>
+    <string name="wallet_detail_title">Chi tiết ví</string>
+    <string name="wallet_edit_action">Sửa</string>
+    <string name="wallet_add_title">Thêm ví</string>
+    <string name="wallet_edit_title">Sửa ví</string>
+    <string name="wallet_name_label">Tên ví</string>
+    <string name="wallet_name_hint">Nhập tên ví</string>
+    <string name="wallet_type_label">Loại ví</string>
+    <string name="wallet_type_cash">Tiền mặt</string>
+    <string name="wallet_type_bank">Ngân hàng</string>
+    <string name="wallet_type_ewallet">Ví điện tử</string>
+    <string name="wallet_type_savings">Tiết kiệm</string>
+    <string name="wallet_provider_label">Ngân hàng / Nhà cung cấp</string>
+    <string name="wallet_provider_hint">Chọn ngân hàng</string>
+    <string name="wallet_balance_label">Số dư hiện tại</string>
+    <string name="wallet_note_label">Ghi chú</string>
+    <string name="wallet_note_hint">Không bắt buộc</string>
+    <string name="btn_create_wallet">Tạo ví</string>
+    <string name="btn_delete_wallet">Xoá ví</string>
+    <string name="recent_transactions">Giao dịch gần đây</string>
+    <string name="this_month_income">THU THÁNG NÀY</string>
+    <string name="this_month_expense">CHI THÁNG NÀY</string>
+    <string name="current_balance_label">Số dư hiện tại</string>
+</resources>

@@ -23,7 +23,7 @@ import com.example.fintrack.app.home.ui.HomeDashboardActivity;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    // UI Elements
+    // Khai báo các thành phần giao diện (UI Elements)
     private EditText etUsernameOrEmail;
     private EditText etPassword;
     private ImageView ivTogglePassword;
@@ -31,40 +31,43 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView tvSignUp;
 
-    // States & Controllers
-    private boolean isPasswordVisible = false;
-    private AuthViewModel authViewModel;
-    private SessionManager sessionManager;
+    // Khai báo trạng thái và các thành phần xử lý logic
+    private boolean isPasswordVisible = false; // Trạng thái hiển thị mật khẩu (ẩn/hiện)
+    private AuthViewModel authViewModel;       // ViewModel xử lý logic đăng nhập
+    private SessionManager sessionManager;     // Quản lý phiên đăng nhập của người dùng
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Chuyển hướng ngay nếu đã đăng nhập trước đó
+        // Kiểm tra xem người dùng đã đăng nhập từ trước đó chưa
         sessionManager = SessionManager.getInstance(getApplicationContext());
         if (sessionManager.isLoggedIn()) {
-            // Chuyển sang đăng nhập nếu đã setup
+            // Nếu đã đăng nhập, chuyển hướng đến màn hình chính hoặc màn hình thiết lập ban đầu
             Class<?> nextActivity = sessionManager.isSetupCompleted()
                     ? HomeDashboardActivity.class
                     : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
 
             Intent intent = new Intent(this, nextActivity);
             startActivity(intent);
-            finish();
+            finish(); // Kết thúc Activity hiện tại để không quay lại màn hình đăng nhập khi nhấn Back
             return;
         }
 
+        // Gắn layout giao diện cho Activity
         setContentView(R.layout.activity_auth_login);
 
+        // Khởi tạo AuthViewModel để kết nối dữ liệu
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+        // Gọi các hàm thiết lập giao diện và sự kiện
         initViews();
         setupListeners();
         setupObservers();
     }
 
     /**
-     * Ánh xạ các View từ XML layout
+     * Ánh xạ các View từ file XML layout sang mã Java
      */
     private void initViews() {
         etUsernameOrEmail = findViewById(R.id.etUsernameOrEmail);
@@ -76,22 +79,22 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Thiết lập sự kiện click cho các nút và liên kết
+     * Thiết lập sự kiện tương tác (click) cho các nút và văn bản điều hướng
      */
     private void setupListeners() {
-        // Bật/tắt ẩn hiện mật khẩu
+        // Sự kiện ẩn/hiện mật khẩu khi bấm vào biểu tượng con mắt
         ivTogglePassword.setOnClickListener(v -> isPasswordVisible = PasswordToggleHelper.togglePasswordVisibility(etPassword, ivTogglePassword, isPasswordVisible));
 
-        // Thực hiện đăng nhập
+        // Sự kiện bấm nút Đăng nhập
         btnLogin.setOnClickListener(v -> handleLogin());
 
-        // Chuyển tới màn hình Quên mật khẩu
+        // Sự kiện bấm vào "Quên mật khẩu" -> Chuyển sang màn hình khôi phục mật khẩu
         tvForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
 
-        // Chuyển tới màn hình Đăng ký
+        // Sự kiện bấm vào "Đăng ký" -> Chuyển sang màn hình tạo tài khoản mới
         tvSignUp.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
@@ -99,40 +102,47 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Lắng nghe trạng thái xử lý đăng nhập từ ViewModel
+     * Lắng nghe các thay đổi trạng thái trả về từ ViewModel (Thành công, Thất bại, Đang tải)
      */
     private void setupObservers() {
         authViewModel.getLoginResult().observe(this, resource -> {
             if (resource == null) return;
+
             switch (resource.getStatus()) {
                 case SUCCESS:
+                    // Bật lại nút đăng nhập và khôi phục text ban đầu khi có kết quả
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
 
-                    // Đăng nhập thành công: Lưu phiên làm việc và chuyển màn hình
+                    // Kiểm tra dữ liệu trả về hợp lệ và có chứa Token xác thực không
                     if (resource.getData() != null && !TextUtils.isEmpty(resource.getData().getAccessToken())) {
+                        // Lưu lại token phiên làm việc
                         sessionManager.saveAuthToken(
                                 resource.getData().getAccessToken(),
                                 resource.getData().getRefreshToken()
                         );
+                        // Lưu thông tin cá nhân cơ bản của người dùng
                         sessionManager.saveUserProfile(
                                 resource.getData().getUserId(),
                                 resource.getData().getEmail(),
                                 resource.getData().getName()
                         );
+                        // Thông báo đăng nhập thành công
                         Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
 
-                        // Điều hướng dựa vào trạng thái thiết lập ban đầu
+                        // Điều hướng dựa vào việc tài khoản đã hoàn tất thiết lập ban đầu chưa
                         Class<?> nextActivity = sessionManager.isSetupCompleted() ? HomeDashboardActivity.class : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
                         Intent intent = new Intent(LoginActivity.this, nextActivity);
                         startActivity(intent);
-                        finish();
+                        finish(); // Kết thúc màn hình đăng nhập
                     } else {
+                        // Báo lỗi nếu dữ liệu trả về rỗng hoặc không hợp lệ
                         Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
                     }
                     break;
 
                 case ERROR:
+                    // Đăng nhập thất bại: Khôi phục nút bấm và hiển thị thông báo lỗi
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
                     String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.login_failed);
@@ -140,6 +150,7 @@ public class LoginActivity extends AppCompatActivity {
                     break;
 
                 case LOADING:
+                    // Đang trong quá trình xử lý đăng nhập: Vô hiệu hóa nút và đổi text thành "Đang tải..."
                     btnLogin.setEnabled(false);
                     btnLogin.setText(getString(R.string.loading_login));
                     break;
@@ -148,24 +159,27 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Validate dữ liệu đầu vào và gửi yêu cầu đăng nhập
+     * Kiểm tra tính hợp lệ (validate) của dữ liệu nhập vào và gọi hàm đăng nhập trong ViewModel
      */
     private void handleLogin() {
         String usernameOrEmail = etUsernameOrEmail.getText().toString().trim();
         String password = etPassword.getText().toString();
 
+        // Kiểm tra xem tên đăng nhập hoặc email có bị để trống không
         if (TextUtils.isEmpty(usernameOrEmail)) {
             etUsernameOrEmail.setError(getString(R.string.error_required_field));
             etUsernameOrEmail.requestFocus();
             return;
         }
 
+        // Kiểm tra xem mật khẩu có bị để trống không
         if (TextUtils.isEmpty(password)) {
             etPassword.setError(getString(R.string.error_required_field));
             etPassword.requestFocus();
             return;
         }
 
+        // Nếu dữ liệu hợp lệ, gọi phương thức xử lý đăng nhập từ ViewModel
         authViewModel.login(usernameOrEmail, password);
     }
 }

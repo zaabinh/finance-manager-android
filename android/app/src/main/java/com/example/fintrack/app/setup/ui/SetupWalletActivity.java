@@ -54,10 +54,11 @@ public class SetupWalletActivity extends AppCompatActivity {
         // Nút Back: Đóng màn hình hiện tại để quay lại màn hình thông báo
         ivBack.setOnClickListener(v -> finish());
 
-        // Bấm vào nút Thêm ví: Hiển thị thông báo nhỏ (Toast) nhắc người dùng có thể thêm ví sau trong app
-        tvAddWallet.setOnClickListener(v ->
-                Toast.makeText(this, "Tùy chọn thêm ví có thể cài đặt thêm trong ứng dụng", Toast.LENGTH_SHORT).show()
-        );
+        // Bấm vào nút Thêm ví: Mở màn hình Thêm ví mới
+        tvAddWallet.setOnClickListener(v -> {
+            Intent intent = new Intent(SetupWalletActivity.this, com.example.fintrack.app.wallet.ui.WalletAddActivity.class);
+            startActivity(intent);
+        });
 
         // Nút Hoàn tất: Chuyển sang màn hình xác nhận hoàn tất (SetupCompleteActivity)
         btnCompleteSetup.setOnClickListener(v -> {

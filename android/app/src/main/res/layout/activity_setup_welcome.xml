@@ -11,56 +11,65 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="@dimen/spacing_24">
+        android:layout_height="match_parent"
+        android:minHeight="400dp"
+        android:paddingHorizontal="@dimen/spacing_24"
+        android:paddingVertical="@dimen/spacing_16">
 
-        <!-- Block Nội dung chính: Đặt chính giữa màn hình (dựa trên không gian khả dụng) -->
+        <!-- Main welcome content -->
         <LinearLayout
             android:id="@+id/llCenterContent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
+            android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/spacing_32"
-            android:paddingVertical="@dimen/spacing_24"
-            app:layout_constraintBottom_toTopOf="@id/btnStart"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:paddingHorizontal="@dimen/spacing_16"
+            android:paddingVertical="@dimen/spacing_16"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/btnStart"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.45"
             app:layout_constraintWidth_max="440dp">
 
+            <!-- App logo -->
             <ImageView
                 android:id="@+id/ivLogo"
                 android:layout_width="@dimen/welcome_logo_size"
                 android:layout_height="@dimen/welcome_logo_size"
                 android:contentDescription="@string/app_name"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_logo" />
 
+            <!-- Brand name -->
             <TextView
                 android:id="@+id/tvBrand"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_16"
+                android:gravity="center"
                 android:text="@string/setup_welcome_brand"
                 android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_size_amount_hero"
                 android:textStyle="bold" />
 
+            <!-- Welcome title -->
             <TextView
                 android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_8"
                 android:gravity="center"
                 android:lineSpacingExtra="@dimen/spacing_4"
                 android:text="@string/setup_welcome_title"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_size_body_primary"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
+            <!-- Subtitle -->
             <TextView
                 android:id="@+id/tvSubtitle"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_8"
                 android:gravity="center"
@@ -71,23 +80,27 @@
 
         </LinearLayout>
 
-        <!-- Nút Bắt đầu cố định ở dưới đáy -->
+        <!-- Bottom action button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnStart"
             android:layout_width="0dp"
             android:layout_height="@dimen/button_height_large"
-            android:layout_marginHorizontal="@dimen/spacing_24"
-            android:layout_marginTop="@dimen/spacing_16"
+            android:layout_marginTop="@dimen/spacing_24"
+            android:layout_marginBottom="@dimen/spacing_12"
             android:background="@drawable/bg_button_primary"
+            android:gravity="center"
+            android:minHeight="48dp"
             android:text="@string/btn_start"
             android:textAllCaps="false"
             android:textColor="@color/text_on_primary"
             android:textSize="@dimen/text_size_button"
             android:textStyle="bold"
+            android:stateListAnimator="@null"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintWidth_max="440dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_max="320dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </ScrollView>
