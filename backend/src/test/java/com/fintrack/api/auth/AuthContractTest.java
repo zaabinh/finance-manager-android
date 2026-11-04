@@ -17,8 +17,8 @@ class AuthContractTest {
     void authObjectsRedactSecretsFromDebugRendering() {
         assertThat(new com.fintrack.api.dto.request.auth.LoginRequest("user", "secret").toString()).doesNotContain("secret");
         assertThat(new com.fintrack.api.dto.request.auth.RegisterRequest("user", "user@example.com", "secret").toString()).doesNotContain("secret");
-        assertThat(new com.fintrack.api.dto.request.auth.VerifyEmailRequest("user@example.com", "123456").toString()).doesNotContain("123456");
-        assertThat(new com.fintrack.api.dto.request.auth.ResetPasswordRequest("user@example.com", "123456", "secret").toString()).doesNotContain("123456", "secret");
+        assertThat(new com.fintrack.api.dto.request.auth.VerifyEmailRequest("user@example.com", "1234").toString()).doesNotContain("1234");
+        assertThat(new com.fintrack.api.dto.request.auth.ResetPasswordRequest("user@example.com", "1234", "secret").toString()).doesNotContain("1234", "secret");
         assertThat(new com.fintrack.api.dto.request.auth.RefreshTokenRequest("refresh-secret").toString()).doesNotContain("refresh-secret");
         assertThat(new com.fintrack.api.dto.response.auth.TokenResponse("access-secret", "refresh-secret", "Bearer", 900).toString()).doesNotContain("access-secret", "refresh-secret");
     }

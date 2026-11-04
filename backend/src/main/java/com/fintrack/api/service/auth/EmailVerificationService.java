@@ -42,7 +42,7 @@ public class EmailVerificationService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void issue(UUID userId, String email, Purpose purpose, String username) {
         var now = clock.instant();
-        String code = String.format(Locale.ROOT, "%06d", random.nextInt(1_000_000));
+        String code = String.format(Locale.ROOT, "%04d", random.nextInt(10_000));
         challenges.invalidate(userId, purpose, now);
         challenges.create(userId, email, purpose, encoder.encode(code), now, now.plus(properties.otpTtl()));
         events.publishEvent(new CodeEmail(email, code, purpose, UUID.randomUUID(), username));

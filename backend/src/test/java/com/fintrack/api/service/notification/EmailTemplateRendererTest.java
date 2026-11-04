@@ -10,9 +10,9 @@ class EmailTemplateRendererTest {
     @Test void wrapsContentInSharedLayoutAndEscapesValues() {
         for (String template : new String[] {"otp-verification", "forgot-password"}) {
             String html = renderer.render(template, Map.of("title", "<Tiêu đề>", "preheader", "Xem trước",
-                    "code", "<b>123456</b>", "ttlMinutes", "10"));
+                    "code", "<b>1234</b>", "ttlMinutes", "10"));
             assertThat(html).startsWith("<!DOCTYPE html>").contains("<title>&lt;Tiêu đề&gt;</title>")
-                    .contains("&lt;b&gt;123456&lt;/b&gt;").doesNotContain("<b>123456</b>")
+                    .contains("&lt;b&gt;1234&lt;/b&gt;").doesNotContain("<b>1234</b>")
                     .contains("src=\"https://cdn.example.test/logo.png?v=1&amp;s=2\"").doesNotContain("{{");
         }
     }
@@ -24,7 +24,7 @@ class EmailTemplateRendererTest {
 
     @Test void verificationGreetsTheNamedRecipientAndEscapesHtml() {
         String html = renderer.render("otp-verification", Map.of("title", "Xác minh", "preheader", "",
-                "code", "123456", "ttlMinutes", "10", "username", "  Nguyễn <A>  "));
+                "code", "1234", "ttlMinutes", "10", "username", "  Nguyễn <A>  "));
         assertThat(html).contains("Chào <strong>Nguyễn &lt;A&gt;</strong>,")
                 .contains("Cảm ơn bạn đã đăng ký tài khoản <strong>Đồng</strong>.")
                 .doesNotContain("Nguyễn <A>", "{{username}}");
@@ -32,7 +32,7 @@ class EmailTemplateRendererTest {
 
     @Test void verificationFallsBackForMissingNullOrBlankUsername() {
         var values = new java.util.HashMap<>(Map.of("title", "Xác minh", "preheader", "",
-                "code", "123456", "ttlMinutes", "10"));
+                "code", "1234", "ttlMinutes", "10"));
         assertThat(renderer.render("otp-verification", values)).contains("Chào <strong>bạn</strong>,");
         values.put("username", null);
         assertThat(renderer.render("otp-verification", values)).contains("Chào <strong>bạn</strong>,");
@@ -42,7 +42,7 @@ class EmailTemplateRendererTest {
 
     @Test void passwordResetGreetsTheRecipientWithTheSameEscapingAndFallback() {
         var values = new java.util.HashMap<>(Map.of("title", "Đặt lại mật khẩu", "preheader", "",
-                "code", "123456", "ttlMinutes", "10"));
+                "code", "1234", "ttlMinutes", "10"));
         values.put("username", "  Nguyễn <A>  ");
         assertThat(renderer.render("forgot-password", values))
                 .contains("Chào <strong>Nguyễn &lt;A&gt;</strong>,")
