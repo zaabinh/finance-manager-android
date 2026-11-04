@@ -36,7 +36,7 @@ không dùng làm cơ chế khóa tạm do đăng nhập sai. User cũ mặc đ�
 Unique email/username dùng CITEXT và constraints đã có từ V2, không tạo index trùng.
 
 `verification_challenges` lưu user/email, purpose (`EMAIL_VERIFICATION` hoặc `PASSWORD_RESET`),
-BCrypt `code_hash`, expiry, consumed time và attempt count 0–5. BCrypt có salt bảo vệ OTP 6 chữ số
+BCrypt `code_hash`, expiry, consumed time và attempt count 0–5. BCrypt có salt bảo vệ OTP 4 chữ số
 trước việc dò toàn bộ không gian OTP chỉ bằng SHA-256 khi database bị lộ. Không lưu OTP thô.
 
 `refresh_sessions` bổ sung `replaced_by_session_id`, `user_agent` (300 ký tự), `ip_address` (INET).
@@ -62,7 +62,7 @@ Các endpoint bên dưới là public cho phương thức POST; API nghiệp v�
 | Endpoint | Request | Thành công |
 | --- | --- | --- |
 | `/register` | `username`, `email`, `password` | 201, body rỗng |
-| `/verify-email` | `email`, `otp` (6 chữ số) | 204 |
+| `/verify-email` | `email`, `otp` (4 chữ số) | 204 |
 | `/resend-verification` | `email` | 202, body rỗng |
 | `/login` | `usernameOrEmail`, `password` | 200, ApiResponse<LoginResponse> |
 | `/refresh` | `refreshToken` | 200, ApiResponse<TokenResponse> |
@@ -112,7 +112,7 @@ với id, username, displayName, email và yêu cầu access token hợp lệ.
 
 ## OTP, reset và transaction
 
-OTP gồm 6 chữ số từ SecureRandom, mặc định hết hạn sau 10 phút. Mỗi purpose chỉ có một challenge chưa consume
+OTP gồm 4 chữ số từ SecureRandom, mặc định hết hạn sau 10 phút. Mỗi purpose chỉ có một challenge chưa consume
 hiện hành; resend làm challenge cũ mất hiệu lực. Kiểm tra/consume challenge khóa user rồi khóa challenge.
 Nhập sai tăng attempt_count; lần sai thứ 5 và các lần sau trả 429. `ChallengeRejectedException` được cấu hình
 `noRollbackFor` để lần thử sai được commit; lỗi database và lỗi ngoài dự kiến vẫn rollback.

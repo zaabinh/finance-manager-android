@@ -72,7 +72,7 @@ class AuthenticationIT {
     @BeforeEach void captureEmails() {
         doAnswer(call -> {
             String purpose = call.<String>getArgument(1).contains("mật khẩu") ? "PASSWORD_RESET" : "EMAIL_VERIFICATION";
-            var code = java.util.regex.Pattern.compile(">(\\d{6})<").matcher(call.<String>getArgument(2));
+            var code = java.util.regex.Pattern.compile(">(\\d{4})<").matcher(call.<String>getArgument(2));
             assertThat(code.find()).isTrue();
             codes.put(call.getArgument(0) + ":" + purpose, code.group(1));
             return null;
@@ -84,7 +84,7 @@ class AuthenticationIT {
         mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\":\"" + name + "\",\"email\":\"" + email + "\",\"password\":\"Strong@123\"}"))
                 .andExpect(status().isCreated()).andExpect(content().string(""));
-        assertThat(codes.get(email + ":EMAIL_VERIFICATION")).matches("[0-9]{6}");
+        assertThat(codes.get(email + ":EMAIL_VERIFICATION")).matches("[0-9]{4}");
         mvc.perform(post("/api/v1/auth/verify-email").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"otp\":\"" + codes.get(email + ":EMAIL_VERIFICATION") + "\"}"))
                 .andExpect(status().isNoContent());
@@ -118,7 +118,7 @@ class AuthenticationIT {
         var old = auth.login(new LoginRequest(email, "Strong@123"), client).token();
         auth.forgotPassword(new ResendOtpRequest(email));
         String code = codes.get(email + ":PASSWORD_RESET");
-        String wrong = code.equals("000000") ? "111111" : "000000";
+        String wrong = code.equals("0000") ? "1111" : "0000";
         for (int i = 0; i < 5; i++) assertThatThrownBy(() -> auth.resetPassword(new ResetPasswordRequest(email, wrong, "NewStrong@456"))).isInstanceOf(AppException.class);
         assertThat(jdbc.queryForObject("SELECT attempt_count FROM fintrack.verification_challenges WHERE email = ? AND purpose = 'PASSWORD_RESET' AND consumed_at IS NULL", Integer.class, email)).isEqualTo(5);
         assertThatThrownBy(() -> auth.resetPassword(new ResetPasswordRequest(email, code, "NewStrong@456"))).isInstanceOf(AppException.class);
@@ -150,7 +150,7 @@ class AuthenticationIT {
         var tablet = auth.login(new LoginRequest(email, "Strong@123"), client).token();
         auth.forgotPassword(new ResendOtpRequest(email));
         String pendingReset = codes.get(email + ":PASSWORD_RESET");
-        assertThat(pendingReset).matches("[0-9]{6}");
+        assertThat(pendingReset).matches("[0-9]{4}");
         String body = mvc.perform(post("/api/v1/auth/change-password").header("Authorization", "Bearer " + phone.accessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"Strong@123\",\"newPassword\":\"NewStrong@456\"}"))

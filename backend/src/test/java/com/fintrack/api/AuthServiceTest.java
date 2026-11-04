@@ -55,7 +55,7 @@ class AuthServiceTest {
         assertThat(event.getValue().username()).isEqualTo("an.nguyen");
         var otpHash = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(challenges).create(eq(id), eq("an@example.com"), eq(Purpose.EMAIL_VERIFICATION), otpHash.capture(), any(), any());
-        assertThat(event.getValue().code()).matches("[0-9]{6}");
+        assertThat(event.getValue().code()).matches("[0-9]{4}");
         assertThat(encoder.matches(event.getValue().code(), otpHash.getValue())).isTrue();
     }
     @Test void springSecurityUsesGenericErrorAndRecordsUnknownCredentials() {
@@ -90,7 +90,7 @@ class AuthServiceTest {
     }
     @Test void wrongOtpRecordsFailureAndNeverConsumesOrChangesPassword() {
         stubChallenge(4, clock.instant().plusSeconds(60));
-        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "000000", "NewStrong@456")))
+        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "0000", "NewStrong@456")))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_OTP_ATTEMPTS_EXCEEDED));
         verify(challenges).fail(id);
         verify(users, never()).updatePassword(any(), any());
@@ -98,7 +98,7 @@ class AuthServiceTest {
     }
     @Test void resetConsumesCodeAndRevokesEveryRefreshSession() {
         stubChallenge(0, clock.instant().plusSeconds(60));
-        service.resetPassword(new ResetPasswordRequest(user.email(), "123456", "NewStrong@456"));
+        service.resetPassword(new ResetPasswordRequest(user.email(), "1234", "NewStrong@456"));
         verify(challenges).consume(id, clock.instant());
         verify(refreshTokens).revokeAllUserSessions(id, RefreshSessionRepository.RevokeReason.PASSWORD_RESET);
         var hash = org.mockito.ArgumentCaptor.forClass(String.class);
@@ -107,10 +107,10 @@ class AuthServiceTest {
     }
     @Test void expiredAndExhaustedCodesCannotBeConsumed() {
         stubChallenge(0, clock.instant());
-        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "123456", "NewStrong@456")))
+        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "1234", "NewStrong@456")))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_OTP_EXPIRED));
         stubChallenge(5, clock.instant().plusSeconds(60));
-        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "123456", "NewStrong@456")))
+        assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest(user.email(), "1234", "NewStrong@456")))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_OTP_ATTEMPTS_EXCEEDED));
         verify(challenges, never()).consume(any(), any());
     }
@@ -141,6 +141,6 @@ class AuthServiceTest {
     private void stubChallenge(int attempts, Instant expiry) {
         when(users.findByEmail(user.email())).thenReturn(Optional.of(user));
         when(users.lockById(id)).thenReturn(Optional.of(user));
-        when(challenges.lockLatest(id, Purpose.PASSWORD_RESET)).thenReturn(Optional.of(new Challenge(id, encoder.encode("123456"), expiry, attempts)));
+        when(challenges.lockLatest(id, Purpose.PASSWORD_RESET)).thenReturn(Optional.of(new Challenge(id, encoder.encode("1234"), expiry, attempts)));
     }
 }

@@ -45,10 +45,10 @@ class ResendEmailSenderServiceTest {
         var service = new EmailVerificationService(mock(VerificationChallengeRepository.class), new BCryptPasswordEncoder(4),
                 mock(ApplicationEventPublisher.class), properties, Clock.systemUTC(), sender,
                 new EmailTemplateRenderer("https://cdn.example.test/logo.png"));
-        var email = new EmailVerificationService.CodeEmail("user@example.test", "123456", Purpose.PASSWORD_RESET, UUID.randomUUID(), null);
+        var email = new EmailVerificationService.CodeEmail("user@example.test", "1234", Purpose.PASSWORD_RESET, UUID.randomUUID(), null);
         service.deliver(email);
         verify(sender).send(eq("user@example.test"), contains("mật khẩu"),
-                argThat(html -> html.contains(">123456<") && html.contains("10 phút")), eq(email.deliveryId()));
+                argThat(html -> html.contains(">1234<") && html.contains("10 phút")), eq(email.deliveryId()));
         doThrow(new IllegalStateException("sensitive provider error")).when(sender).send(any(), any(), any(), any());
         assertThatCode(() -> service.deliver(email)).doesNotThrowAnyException();
     }
