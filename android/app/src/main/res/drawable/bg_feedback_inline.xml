@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Feedback/Inline container, radius/small. Tone colour comes from backgroundTint (Widget.App.FeedbackInline.*). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/white" />
+    <corners android:radius="@dimen/radius_xs" />
+</shape>

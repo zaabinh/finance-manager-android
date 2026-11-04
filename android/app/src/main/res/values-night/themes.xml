@@ -1,11 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme (Dark) -->
     <style name="Base.Theme.Fintrack" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorSecondary">@color/primary</item>
-        <item name="android:windowBackground">@color/background</item>
+        <!-- Brand Colors -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <item name="colorPrimaryDark">@color/color_primary_pressed</item>
+        <item name="colorSecondary">@color/color_accent</item>
+        <item name="colorAccent">@color/color_accent</item>
+
+        <!-- Background & Surface (Đảo ngược màu nền cho Dark Mode) -->
+        <item name="android:windowBackground">@color/neutral_text_900</item>
+        <item name="colorSurface">#26332B</item>
+        <item name="colorSurfaceVariant">#1C5636</item>
+
+        <!-- Status & System Bars -->
+        <item name="android:statusBarColor">@color/neutral_text_900</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Default Text Colors -->
+        <item name="android:textColorPrimary">@color/neutral_surface</item>
+        <item name="android:textColorSecondary">@color/neutral_border</item>
     </style>
 
     <style name="Theme.Fintrack" parent="Base.Theme.Fintrack" />

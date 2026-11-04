@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    android:fitsSystemWindows="true">
+
+    <!-- Container chính: Căn giữa form khi xoay ngang/màn hình to -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_24"
+        android:paddingVertical="@dimen/spacing_16">
+
+        <!-- Form chính: Giới hạn maxWidth để không bị méo khi xoay ngang -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxWidth="440dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!-- Top Header Logo -->
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_micro_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:text="@string/login_title"
+                android:textAppearance="@style/TextAppearance.App.TitlePage" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_4"
+                android:text="@string/login_subtitle"
+                android:textAppearance="@style/TextAppearance.App.BodySecondary" />
+
+            <!-- Form Fields Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_16"
+                android:orientation="vertical">
+
+                <!-- Field 1: Username or Email -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_username_or_email"
+                    android:textAppearance="@style/TextAppearance.App.TitleSection" />
+
+                <EditText
+                    android:id="@+id/etUsernameOrEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/spacing_4"
+                    android:autofillHints="username"
+                    android:background="@drawable/bg_input_field"
+                    android:drawableStart="@drawable/ic_person"
+                    android:drawablePadding="@dimen/spacing_12"
+                    android:hint="@string/hint_username"
+                    android:inputType="textEmailAddress"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_disabled"
+                    android:textSize="@dimen/text_size_body_primary" />
+
+                <!-- Field 2: Password -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:text="@string/label_password"
+                    android:textAppearance="@style/TextAppearance.App.TitleSection" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/spacing_4"
+                    android:background="@drawable/bg_input_field">
+
+                    <EditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_toStartOf="@+id/ivTogglePassword"
+                        android:autofillHints="password"
+                        android:background="@null"
+                        android:drawableStart="@drawable/ic_lock"
+                        android:drawablePadding="@dimen/spacing_12"
+                        android:hint="@string/hint_password"
+                        android:inputType="textPassword"
+                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_disabled"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <ImageView
+                        android:id="@+id/ivTogglePassword"
+                        android:layout_width="48dp"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/label_password"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_eye_close" />
+                </RelativeLayout>
+
+                <!-- Forgot Password Link -->
+                <TextView
+                    android:id="@+id/tvForgotPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="@dimen/spacing_8"
+                    android:text="@string/forgot_password_link"
+                    android:textAppearance="@style/TextAppearance.App.Button" />
+
+                <!-- Login Button -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:background="@drawable/bg_button_primary"
+                    android:text="@string/btn_login"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_on_primary"
+                    android:textSize="@dimen/text_size_title_section"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Flexible Spacer: Đẩy phần Đăng ký xuống đáy màn hình nếu còn thừa chỗ -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Bottom Link to Register -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_16"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="@dimen/spacing_8">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/prompt_dont_have_account"
+                android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
+
+            <Space
+                android:layout_width="@dimen/spacing_4"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvSignUp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:padding="@dimen/spacing_4"
+                android:text="@string/action_sign_up"
+                android:textAppearance="@style/TextAppearance.App.Button" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

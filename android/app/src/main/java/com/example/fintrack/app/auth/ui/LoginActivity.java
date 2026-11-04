@@ -17,10 +17,13 @@ import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
-import com.example.fintrack.app.setup.SetupWelcomeActivity;
 
+/**
+ * Màn hình đăng nhập người dùng.
+ */
 public class LoginActivity extends AppCompatActivity {
 
+    // UI Elements
     private EditText etUsernameOrEmail;
     private EditText etPassword;
     private ImageView ivTogglePassword;
@@ -28,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView tvSignUp;
 
+    // States & Controllers
     private boolean isPasswordVisible = false;
     private AuthViewModel authViewModel;
     private SessionManager sessionManager;
@@ -36,14 +40,21 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Chuyển hướng ngay nếu đã đăng nhập trước đó
         sessionManager = SessionManager.getInstance(getApplicationContext());
         if (sessionManager.isLoggedIn()) {
-            navigateAfterLogin(sessionManager.isSetupCompleted());
+            // Chuyển sang đăng nhập nếu đã setup
+            Class<?> nextActivity = sessionManager.isSetupCompleted()
+                    ? HomeDashboardActivity.class
+                    : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
+
+            Intent intent = new Intent(this, nextActivity);
+            startActivity(intent);
             finish();
             return;
         }
 
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_auth_login);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
@@ -52,6 +63,9 @@ public class LoginActivity extends AppCompatActivity {
         setupObservers();
     }
 
+    /**
+     * Ánh xạ các View từ XML layout
+     */
     private void initViews() {
         etUsernameOrEmail = findViewById(R.id.etUsernameOrEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -61,21 +75,32 @@ public class LoginActivity extends AppCompatActivity {
         tvSignUp = findViewById(R.id.tvSignUp);
     }
 
+    /**
+     * Thiết lập sự kiện click cho các nút và liên kết
+     */
     private void setupListeners() {
+        // Bật/tắt ẩn hiện mật khẩu
         ivTogglePassword.setOnClickListener(v -> isPasswordVisible = PasswordToggleHelper.togglePasswordVisibility(etPassword, ivTogglePassword, isPasswordVisible));
+
+        // Thực hiện đăng nhập
         btnLogin.setOnClickListener(v -> handleLogin());
 
+        // Chuyển tới màn hình Quên mật khẩu
         tvForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
 
+        // Chuyển tới màn hình Đăng ký
         tvSignUp.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
     }
 
+    /**
+     * Lắng nghe trạng thái xử lý đăng nhập từ ViewModel
+     */
     private void setupObservers() {
         authViewModel.getLoginResult().observe(this, resource -> {
             if (resource == null) return;
@@ -83,16 +108,24 @@ public class LoginActivity extends AppCompatActivity {
                 case SUCCESS:
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
-                    if (resource.getData() != null && resource.getData().getToken() != null
-                            && !TextUtils.isEmpty(resource.getData().getToken().getAccessToken())) {
+
+                    // Đăng nhập thành công: Lưu phiên làm việc và chuyển màn hình
+                    if (resource.getData() != null && !TextUtils.isEmpty(resource.getData().getAccessToken())) {
                         sessionManager.saveAuthToken(
-                                resource.getData().getToken().getAccessToken(),
-                                resource.getData().getToken().getRefreshToken()
+                                resource.getData().getAccessToken(),
+                                resource.getData().getRefreshToken()
                         );
-                        sessionManager.saveDisplayName(resource.getData().getDisplayName());
-                        sessionManager.setSetupCompleted(resource.getData().isOnboardingCompleted());
+                        sessionManager.saveUserProfile(
+                                resource.getData().getUserId(),
+                                resource.getData().getEmail(),
+                                resource.getData().getName()
+                        );
                         Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-                        navigateAfterLogin(resource.getData().isOnboardingCompleted());
+
+                        // Điều hướng dựa vào trạng thái thiết lập ban đầu
+                        Class<?> nextActivity = sessionManager.isSetupCompleted() ? HomeDashboardActivity.class : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
+                        Intent intent = new Intent(LoginActivity.this, nextActivity);
+                        startActivity(intent);
                         finish();
                     } else {
                         Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
@@ -114,11 +147,9 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void navigateAfterLogin(boolean onboardingCompleted) {
-        Class<?> destination = onboardingCompleted ? HomeDashboardActivity.class : SetupWelcomeActivity.class;
-        startActivity(new Intent(this, destination));
-    }
-
+    /**
+     * Validate dữ liệu đầu vào và gửi yêu cầu đăng nhập
+     */
     private void handleLogin() {
         String usernameOrEmail = etUsernameOrEmail.getText().toString().trim();
         String password = etPassword.getText().toString();

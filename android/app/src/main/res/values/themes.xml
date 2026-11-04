@@ -1,11 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme (Light) -->
     <style name="Base.Theme.Fintrack" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorSecondary">@color/primary</item>
-        <item name="android:windowBackground">@color/background</item>
+        <!-- Brand Colors -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <item name="colorPrimaryDark">@color/color_primary_pressed</item>
+        <item name="colorSecondary">@color/color_accent</item>
+        <item name="colorAccent">@color/color_accent</item>
+
+        <!-- Background & Surface -->
+        <item name="android:windowBackground">@color/bg_app_canvas</item>
+        <item name="colorSurface">@color/bg_card_surface</item>
+        <item name="colorSurfaceVariant">@color/bg_surface_secondary</item>
+
+        <!-- Status & System Bars -->
+        <item name="android:statusBarColor">@color/bg_app_canvas</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Default Text Colors -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
     <style name="Theme.Fintrack" parent="Base.Theme.Fintrack" />

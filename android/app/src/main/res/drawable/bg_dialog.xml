@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dialog/Confirm 628:2734: surface, radius/dialog 20 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/bg_card_surface" />
+    <corners android:radius="@dimen/radius_hero" />
+</shape>

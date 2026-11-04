@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Quyen truy cap internet, thong bao -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -47,12 +49,90 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Home Screens -->
+        <activity android:name=".app.transaction.ui.TransactionListActivity" android:exported="false" />
+        <activity android:name=".app.transaction.ui.TransactionDetailActivity" android:exported="false" />
+        <activity android:name=".app.transaction.ui.TransactionFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".app.transaction.ui.ReceiptImportActivity" android:exported="false" />
+        <activity android:name=".app.transaction.ui.ReceiptReviewActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".app.budget.ui.BudgetListActivity" android:exported="false" />
+        <activity android:name=".app.budget.ui.BudgetDetailActivity" android:exported="false" />
+        <activity android:name=".app.budget.ui.BudgetFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <provider android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.receipts" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/receipt_paths" />
+        </provider>
         <activity
             android:name=".app.home.ui.HomeDashboardActivity"
             android:exported="false" />
 
+        <!-- Setting Screens -->
         <activity
-            android:name=".app.setup.SetupWelcomeActivity"
+            android:name=".app.settings.ui.SettingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingUserActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingNotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.settings.ui.SettingSecurityActivity"
+            android:exported="false" />
+
+        <!-- Setup Screens -->
+        <activity
+            android:name=".app.setup.ui.SetupWelcomeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupBasicInfoActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".app.setup.ui.SetupNotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupWalletActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.setup.ui.SetupCompleteActivity"
+            android:exported="false" />
+
+        <!-- Wallet Screens -->
+        <activity
+            android:name=".app.wallet.ui.WalletListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletAddActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.wallet.ui.WalletEditActivity"
+            android:exported="false" />
+
+        <!-- Category Screens -->
+        <activity
+            android:name=".app.category.ui.CategoryListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.category.ui.CategoryAddActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".app.category.ui.CategoryEditActivity"
             android:exported="false" />
     </application>
 

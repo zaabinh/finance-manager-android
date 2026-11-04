@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Quy tắc sao lưu dữ liệu cho Android 12 trở lên (API 31+) -->
 <data-extraction-rules>
+    <!-- Sao lưu lên Google Cloud -->
     <cloud-backup>
+        <!-- Không sao lưu file chứa token/session đăng nhập để tránh lộ tài khoản -->
         <exclude domain="sharedpref" path="fintrack_session_pref.xml" />
     </cloud-backup>
+
+    <!-- Chuyển dữ liệu trực tiếp sang máy mới (Device-to-Device) -->
     <device-transfer>
+        <!-- Bỏ qua file session đăng nhập -->
         <exclude domain="sharedpref" path="fintrack_session_pref.xml" />
     </device-transfer>
 </data-extraction-rules>
