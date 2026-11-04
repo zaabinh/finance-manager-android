@@ -19,6 +19,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 class PostgresMigrationIT {
+    @Container
+    private static final org.testcontainers.containers.GenericContainer<?> REDIS =
+            new org.testcontainers.containers.GenericContainer<>("redis:7.4-alpine").withExposedPorts(6379);
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17.7");
@@ -53,7 +56,7 @@ class PostgresMigrationIT {
             }
             var flyway = Flyway.configure().dataSource(upgradeDatabase.getJdbcUrl(), upgradeDatabase.getUsername(),
                     upgradeDatabase.getPassword()).defaultSchema("fintrack").load();
-            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
             try (var connection = DriverManager.getConnection(upgradeDatabase.getJdbcUrl(),
                     upgradeDatabase.getUsername(), upgradeDatabase.getPassword());
                  var statement = connection.createStatement()) {
@@ -87,6 +90,13 @@ class PostgresMigrationIT {
         for (int attempt = 0; attempt < 2; attempt++) {
             try (var context = new SpringApplicationBuilder(FinanceManagerApplication.class).run(
                     "--spring.profiles.active=dev",
+                    "--spring.config.import=",
+                    "--spring.data.redis.host=" + REDIS.getHost(),
+                    "--spring.data.redis.port=" + REDIS.getMappedPort(6379),
+                    "--spring.data.redis.username=",
+                    "--spring.data.redis.password=",
+                    "--spring.data.redis.ssl.enabled=false",
+                    "--app.auth.rate-limit-key-prefix=it-migration:",
                     "--server.port=0",
                     "--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
                     "--spring.datasource.username=" + POSTGRES.getUsername(),
@@ -101,15 +111,15 @@ class PostgresMigrationIT {
                     }
                 }
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("3");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
                      var statement = connection.createStatement();
                      var result = statement.executeQuery(
-                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3') AND success")) {
+                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5') AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(3);
+                    assertThat(result.getInt(1)).isEqualTo(5);
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
@@ -125,7 +135,8 @@ class PostgresMigrationIT {
                         }
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
-                            "wallets", "categories", "transactions", "transaction_entries", "budgets");
+                            "wallets", "categories", "transactions", "transaction_entries", "budgets",
+                            "verification_challenges");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();
                         statement.execute(new String(script.readAllBytes(), StandardCharsets.UTF_8));

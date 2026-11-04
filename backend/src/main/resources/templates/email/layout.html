@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Shared layout for every Đồng email. Content templates are inserted at the content placeholder.
+     Tokens: docs/ui/complete_figma_prototype.md §1.2–1.4; logo: docs/design/LOGO_DESIGN.md.
+     Table layout + inline styles because Gmail/Outlook ignore most <style> rules. -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>{{title}}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F8FAF9;font-family:Roboto,'Segoe UI',Arial,sans-serif;color:#111827;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{preheader}}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F8FAF9;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+          <tr>
+            <td style="padding:0 0 24px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <img src="{{logoUrl}}" width="48" height="48" alt="Đồng" style="display:block;border:0;width:48px;height:48px;">
+                  </td>
+                  <td style="vertical-align:middle;padding-left:12px;font-size:24px;line-height:32px;font-weight:700;color:#1D2922;">Đồng</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#FFFFFF;border:1px solid #E4E7EC;border-radius:16px;padding:32px 24px;">
+              {{content}}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 8px 0 8px;font-size:12px;line-height:16px;color:#667085;text-align:center;">
+              Email này được gửi tự động từ ứng dụng Đồng. Vui lòng không trả lời email này.<br>
+              Đồng không bao giờ yêu cầu bạn cung cấp mật khẩu hoặc mã xác thực qua email hay điện thoại.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

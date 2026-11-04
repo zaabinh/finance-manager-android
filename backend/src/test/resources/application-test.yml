@@ -5,6 +5,9 @@ spring:
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
 management:
+  health:
+    redis:
+      enabled: false
   endpoint:
     health:
       group:

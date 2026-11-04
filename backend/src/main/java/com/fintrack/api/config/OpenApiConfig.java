@@ -12,7 +12,9 @@ public class OpenApiConfig {
 
     @Bean
     OpenAPI financeManagerOpenApi() {
-        return new OpenAPI().info(new Info()
+        return new OpenAPI().components(new io.swagger.v3.oas.models.Components().addSecuritySchemes("bearerAuth",
+                new io.swagger.v3.oas.models.security.SecurityScheme().type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+                        .scheme("bearer").bearerFormat("JWT"))).info(new Info()
                 .title("Finance Manager API")
                 .version("v1")
                 .description("REST API for Finance Manager."));

@@ -14,13 +14,13 @@ class SecurityConfigTest {
         var config = new SecurityConfig();
         for (String origin : List.of("*", "https://*.example.com", "https://example.com/path", "file:///tmp")) {
             assertThrows(IllegalArgumentException.class,
-                    () -> config.corsConfigurationSource(List.of(origin)));
+                    () -> config.corsConfigurationSource(List.of(origin), false));
         }
     }
 
     @Test
     void corsDefaultsToNoAllowedOrigins() {
-        var source = new SecurityConfig().corsConfigurationSource(List.of());
+        var source = new SecurityConfig().corsConfigurationSource(List.of(), false);
         var configuration = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/v1/wallets"));
         assertThat(configuration).isNotNull();
         assertThat(configuration.getAllowedOrigins()).isEmpty();
