@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 // One repository for both users and user preferences
 @Repository
@@ -52,6 +53,24 @@ public class UserRepository {
     public void updatePassword(UUID id, String hash) {
         jdbc.update("UPDATE fintrack.users SET password_hash = ?, updated_at = now() WHERE id = ?", hash, id);
     }
+    // 1. Tìm user kèm preferences theo ID
+    public Optional<UserRecord> findWithPreferencesById(UUID id) {
+        return jdbc.query(SELECT + " WHERE u.id = ?", MAPPER, id).stream().findFirst();
+    }
+
+    // 2. Kiểm tra trùng email (bỏ qua user hiện tại, không phân biệt hoa thường)
+    public boolean existsByEmailIgnoreCaseAndIdNot(String email, UUID id) {
+        String sql = "SELECT EXISTS(SELECT 1 FROM fintrack.users WHERE lower(email) = lower(?) AND id != ?)";
+        return Boolean.TRUE.equals(jdbc.queryForObject(sql, Boolean.class, email, id));
+    }
+
+    // 3. Kiểm tra trùng username (bỏ qua user hiện tại, không phân biệt hoa thường)
+    public boolean existsByUsernameIgnoreCaseAndIdNot(String username, UUID id) {
+        String sql = "SELECT EXISTS(SELECT 1 FROM fintrack.users WHERE lower(username) = lower(?) AND id != ?)";
+        return Boolean.TRUE.equals(jdbc.queryForObject(sql, Boolean.class, username, id));
+    }
+
     public record UserRecord(UUID id, String username, String email, String passwordHash, String status,
             String role, String displayName, boolean onboardingCompleted, boolean emailVerified) { }
+
 }

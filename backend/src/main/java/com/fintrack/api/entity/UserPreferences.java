@@ -15,7 +15,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @NoArgsConstructor 
 @AllArgsConstructor 
 @Builder 
-public class UserPreference {
+public class UserPreferences {
     @Id
     @Column(name = "user_id", nullable = false)
     private UUID id;
@@ -46,6 +46,7 @@ public class UserPreference {
 
     @UpdateTimestamp 
     @Column(name = "updated_at", nullable = false)
+    @Builder.Default
     Instant updatedAt = Instant.now();
 
 }
