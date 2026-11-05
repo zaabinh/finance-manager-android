@@ -59,7 +59,7 @@ public class User {
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private UserPreferences preference;
+    private UserPreferences preferences;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private NotificationSettings notificationSettings;

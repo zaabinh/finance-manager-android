@@ -3,6 +3,8 @@ package com.fintrack.api;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import com.fintrack.api.config.AuthProperties;
+import com.fintrack.api.entity.enums.UserRole;
+import com.fintrack.api.entity.enums.UserStatus;
 import com.fintrack.api.repository.*;
 import com.fintrack.api.security.*;
 import com.fintrack.api.service.auth.*;
@@ -30,11 +32,11 @@ class TokenServiceTest {
         var decoder = NimbusJwtDecoder.withPublicKey(key.toRSAPublicKey()).build();
         decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.issuer()));
         tokens = new TokenService(new CustomUserDetailsService(users), encoder, decoder, properties, clock);
-        var user = new UserRepository.UserRecord(userId, "user", "user@example.com", "hash", "ACTIVE", "USER", null, false, true);
+        var user = new UserRepository.UserRecord(userId, "user", "user@example.com", "hash", UserStatus.ACTIVE, UserRole.USER, null, false, true);
         when(users.findById(userId)).thenReturn(Optional.of(user));
     }
     @Test void issuesRs256AccessTokenThatAuthenticates() {
-        String access = tokens.createAccessToken(userId, "USER");
+        String access = tokens.createAccessToken(userId, UserRole.USER);
         assertThat(tokens.authenticate(access)).isPresent();
         assertThat(tokens.authenticate(access + "tampered")).isEmpty();
         assertThat(tokens.authenticate("not-a-jwt")).isEmpty();

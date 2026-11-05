@@ -1,6 +1,7 @@
 package com.fintrack.api.service.auth;
 
 import com.fintrack.api.config.AuthProperties;
+import com.fintrack.api.entity.enums.UserRole;
 import com.fintrack.api.security.AuthenticatedUser;
 import com.fintrack.api.security.CustomUserDetailsService;
 import java.time.Clock;
@@ -39,11 +40,11 @@ public class TokenService {
             return Optional.empty();
         }
     }
-    public String createAccessToken(UUID userId, String role) {
+    public String createAccessToken(UUID userId, UserRole role) {
         Instant now = clock.instant();
         var claims = JwtClaimsSet.builder().issuer(properties.issuer()).subject(userId.toString())
                 .issuedAt(now).expiresAt(now.plus(properties.accessTokenTtl())).id(UUID.randomUUID().toString())
-                .claim("role", role).build();
+                .claim("role", role.name()).build();
         return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(SignatureAlgorithm.RS256).build(), claims)).getTokenValue();
     }
 }

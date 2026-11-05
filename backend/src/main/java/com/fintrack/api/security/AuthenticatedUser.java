@@ -1,6 +1,7 @@
 package com.fintrack.api.security;
 
 import com.fintrack.api.repository.UserRepository.UserRecord;
+import com.fintrack.api.entity.enums.UserStatus;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -17,10 +18,10 @@ public final class AuthenticatedUser implements UserDetails {
     @Override public String getUsername() { return user.username(); }
     @Override public String getPassword() { return user.passwordHash(); }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + user.role()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name()));
     }
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return !"LOCKED".equals(user.status()); }
-    @Override public boolean isEnabled() { return !"DISABLED".equals(user.status()); }
+    @Override public boolean isAccountNonLocked() { return user.status() != UserStatus.LOCKED; }
+    @Override public boolean isEnabled() { return user.status() != UserStatus.DISABLED; }
 }

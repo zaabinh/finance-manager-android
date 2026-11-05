@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import com.fintrack.api.config.AuthProperties;
+import com.fintrack.api.entity.enums.UserRole;
+import com.fintrack.api.entity.enums.UserStatus;
 import com.fintrack.api.dto.request.auth.*;
 import com.fintrack.api.exception.*;
 import com.fintrack.api.repository.*;
@@ -42,7 +44,7 @@ class AuthServiceTest {
         service = new AuthService(users, verification, encoder, refreshTokens, new PasswordPolicy(),
                 new ProviderManager(provider), limits);
         user = new UserRepository.UserRecord(id, "an.nguyen", "an@example.com", encoder.encode("Strong@123"),
-                "ACTIVE", "USER", null, false, true);
+                UserStatus.ACTIVE, UserRole.USER, null, false, true);
     }
     @Test void registrationHashesPasswordAndOtpAndPublishesDeliveryEvent() {
         when(users.create(anyString(), anyString(), anyString())).thenReturn(id);
@@ -77,11 +79,11 @@ class AuthServiceTest {
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(user));
         when(users.lockByIdForAuthentication(id)).thenReturn(Optional.of(user));
         assertThat(service.login(new LoginRequest("an.nguyen", "Strong@123"), client).onboardingCompleted()).isFalse();
-        verify(refreshTokens).generateTokenPair(id, "USER", null, client);
+        verify(refreshTokens).generateTokenPair(id, UserRole.USER, null, client);
         verify(limits).clearLoginFailures("an.nguyen", client);
     }
     @Test void unverifiedUserCannotLogin() {
-        var unverified = new UserRepository.UserRecord(id, user.username(), user.email(), user.passwordHash(), "ACTIVE", "USER", null, false, false);
+        var unverified = new UserRepository.UserRecord(id, user.username(), user.email(), user.passwordHash(), UserStatus.ACTIVE, UserRole.USER, null, false, false);
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(unverified));
         when(users.lockByIdForAuthentication(id)).thenReturn(Optional.of(unverified));
         assertThatThrownBy(() -> service.login(new LoginRequest("an.nguyen", "Strong@123"), client))
@@ -125,7 +127,7 @@ class AuthServiceTest {
         var order = inOrder(users, refreshTokens);
         order.verify(users).updatePassword(eq(id), argThat(hash -> encoder.matches("NewStrong@456", hash)));
         order.verify(refreshTokens).revokeAllUserSessions(id, RefreshSessionRepository.RevokeReason.PASSWORD_CHANGED);
-        order.verify(refreshTokens).generateTokenPair(id, "USER", null, client);
+        order.verify(refreshTokens).generateTokenPair(id, UserRole.USER, null, client);
         verify(challenges).invalidate(id, Purpose.PASSWORD_RESET, clock.instant());
     }
     @Test void changePasswordRejectsWrongCurrentOrUnchangedPasswordWithoutTouchingSessions() {

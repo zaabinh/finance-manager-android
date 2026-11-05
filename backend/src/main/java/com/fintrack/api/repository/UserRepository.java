@@ -5,8 +5,13 @@ import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
+import com.fintrack.api.entity.UserPreferences;
+import com.fintrack.api.entity.enums.UserRole;
+import com.fintrack.api.entity.enums.UserStatus;
+import com.fintrack.api.entity.User;
+
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.jpa.repository.EntityGraph;
 
 // One repository for both users and user preferences
 @Repository
@@ -21,8 +26,8 @@ public class UserRepository {
             rs.getString("username"), 
             rs.getString("email"),
             rs.getString("password_hash"), 
-            rs.getString("status"), 
-            rs.getString("role"),
+            toUserStatus(rs.getString("status")), 
+            toUserRole(rs.getString("role")),
             rs.getString("display_name"), 
             rs.getBoolean("onboarding_completed"), 
             rs.getBoolean("email_verified")
@@ -74,7 +79,60 @@ public class UserRepository {
         return Boolean.TRUE.equals(jdbc.queryForObject(sql, Boolean.class, username, id));
     }
 
-    public record UserRecord(UUID id, String username, String email, String passwordHash, String status,
-            String role, String displayName, boolean onboardingCompleted, boolean emailVerified) { }
+    public record UserRecord(
+        UUID id, 
+        String username, 
+        String email, 
+        String passwordHash, 
+        UserStatus status,
+        UserRole role, 
+        String displayName, 
+        boolean onboardingCompleted, 
+        boolean emailVerified
+) {
+    public User toUser() {
+        User user = User.builder()
+                .id(this.id)
+                .username(this.username)
+                .email(this.email)
+                .passwordHash(this.passwordHash)
+                .status(this.status)
+                .role(this.role)
+                .build();
+
+        if (this.displayName != null) {
+            UserPreferences prefs = UserPreferences.builder()
+                    .user(user)
+                    .id(this.id)
+                    .displayName(this.displayName)
+                    .build();
+            user.setPreferences(prefs);
+        }
+
+        return user;
+    }
+}
+    
+    private static UserStatus toUserStatus(String status) {
+    if (status == null || status.isBlank()) {
+        return UserStatus.ACTIVE; // Giá trị mặc định
+    }
+    try {
+        return UserStatus.valueOf(status.trim().toUpperCase());
+    } catch (IllegalArgumentException e) {
+        return UserStatus.ACTIVE;
+    }
+}
+
+    private static UserRole toUserRole(String role) {
+        if (role == null || role.isBlank()) {
+            return UserRole.USER; // Giá trị mặc định
+        }
+        try {
+            return UserRole.valueOf(role.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UserRole.USER;
+        }
+    }
 
 }
