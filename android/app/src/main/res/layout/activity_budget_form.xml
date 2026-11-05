@@ -56,7 +56,9 @@
                         tools:text="Ăn uống &amp; Cafe" />
                 </LinearLayout>
 
-                <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                <ImageView
+                    style="@style/Widget.App.FieldSelector.Chevron"
+                    android:contentDescription="@null" />
             </LinearLayout>
 
             <!-- Amount input -->
@@ -90,7 +92,9 @@
                         tools:text="Tháng 10/2026" />
                 </LinearLayout>
 
-                <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                <ImageView
+                    style="@style/Widget.App.FieldSelector.Chevron"
+                    android:contentDescription="@null" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -11,6 +11,7 @@ import com.example.fintrack.R;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.transaction.adapter.TransactionAdapter;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.ChipGroup;
 import java.util.List;
@@ -23,7 +24,7 @@ public final class TransactionListActivity extends FinanceActivity {
         if (saved != null) {
             month = saved.getString("month", month); walletFilter = saved.getString("wallet"); categoryFilter = saved.getString("category");
         }
-        FinanceUi.navigation(this, R.id.navTabHistory);
+        FinanceUi.navigation(this, R.id.navReport);
         findViewById(R.id.tvChangeMonth).setOnClickListener(view -> FinanceUi.month(this, month, value -> { month = value; render(); }));
         ((ChipGroup) findViewById(R.id.chipGroupTransactionType)).setOnCheckedStateChangeListener((group, ids) -> {
             int id = ids.isEmpty() ? R.id.chipFilterAll : ids.get(0);
@@ -48,7 +49,7 @@ public final class TransactionListActivity extends FinanceActivity {
                     }).show(); return true;
         });
         toolbar.getMenu().add(R.string.receipt_import_title).setOnMenuItemClickListener(item -> {
-            startActivity(new Intent(this, ReceiptImportActivity.class)); return true;
+            startActivity(new Intent(this, TransactionImportActivity.class)); return true;
         });
         findViewById(R.id.btnStatePrimary).setOnClickListener(view -> startActivity(new Intent(this, TransactionFormActivity.class)));
         findViewById(R.id.btnStateSecondary).setOnClickListener(view -> clearFilters());
@@ -63,7 +64,7 @@ public final class TransactionListActivity extends FinanceActivity {
         String query = ((EditText) findViewById(R.id.etTransactionSearch)).getText().toString();
         List<FinanceBook.Transaction> rows = book.transactions(month, type, query, walletFilter, categoryFilter);
         ((RecyclerView) findViewById(R.id.rvTransactions)).setAdapter(new TransactionAdapter(book, rows));
-        text(R.id.tvTransactionMonth, getString(R.string.transaction_month_format, FinanceUi.monthLabel(month)));
+        text(R.id.tvTransactionMonth, FinanceUi.monthLabel(month));
         text(R.id.tvMonthSummary, getString(R.string.transaction_month_summary, FinanceUi.money(book.total(FinanceBook.Type.EXPENSE, month)),
                 FinanceUi.money(book.total(FinanceBook.Type.INCOME, month))));
         boolean filtered = type != null || !query.trim().isEmpty() || walletFilter != null || categoryFilter != null;

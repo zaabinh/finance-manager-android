@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="budget_period_label">Tháng áp dụng</string>
+    <string name="error_duplicate_budget">Danh mục này đã được thiết lập ngân sách trong tháng</string>
 </resources>

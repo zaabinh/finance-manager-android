@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App & Common Information -->
+    <string name="app_name">Đồng</string>
+    <string name="app_slogan">Người bạn đồng hành tài chính cá nhân của bạn</string>
+    <string name="splash_brand_title">Tiền của tôi ở đâu</string>
+    <string name="splash_version">v1.0.0</string>
+
+    <!-- Common Button Actions -->
+    <string name="btn_start">Bắt đầu</string>
+    <string name="btn_continue">Tiếp tục</string>
+    <string name="btn_submit">Gửi</string>
+    <string name="btn_save">Lưu</string>
+    <string name="btn_cancel">Huỷ</string>
+    <string name="btn_edit">Sửa</string>
+    <string name="btn_delete">Xoá</string>
+    <string name="btn_disable">Vô hiệu hoá</string>
+    <string name="btn_save_changes">Lưu thay đổi</string>
+    <string name="see_more">Xem thêm</string>
+    <string name="see_all">Xem tất cả</string>
+    <string name="btn_later">Để sau</string>
+
+    <!-- Validation & Error Messages -->
+    <string name="error_required_field">Trường này không được để trống</string>
+    <string name="error_invalid_email">Email không đúng định dạng</string>
+    <string name="error_password_length">Mật khẩu phải có ít nhất 8 ký tự</string>
+    <string name="error_password_not_match">Mật khẩu xác nhận không khớp</string>
+    <string name="error_agree_terms">Bạn cần đồng ý với Điều khoản &amp; Chính sách</string>
+    <string name="error_invalid_otp">Vui lòng nhập đủ 4 chữ số OTP</string>
+
+    <string name="error_timeout">Kết nối quá thời gian chờ. Vui lòng thử lại.</string>
+    <string name="error_connection">Không thể kết nối đến máy chủ.</string>
+    <string name="error_unknown">Đã xảy ra lỗi không xác định.</string>
+    <string name="error_server">Máy chủ đang gặp sự cố. Vui lòng thử lại sau.</string>
+    <string name="error_bad_request">Yêu cầu không hợp lệ.</string>
+    <string name="error_unauthorized">Thông tin xác thực không chính xác hoặc đã hết hạn.</string>
+    <string name="error_forbidden">Bạn không có quyền truy cập.</string>
+    <string name="error_not_found">Không tìm thấy tài nguyên yêu cầu.</string>
+
+    <!-- Loading Indicators -->
+    <string name="loading_login">Đang đăng nhập...</string>
+    <string name="loading_register">Đang đăng ký...</string>
+    <string name="loading_verify">Đang xác thực...</string>
+    <string name="loading_send_code">Đang gửi...</string>
+    <string name="loading_processing">Đang xử lý...</string>
+
+    <!-- Budget, OCR & Transaction labels -->
+    <string name="budget_list_title">Ngân sách</string>
+    <string name="budget_add_title">Tạo Ngân sách</string>
+    <string name="budget_edit_title">Sửa Ngân sách</string>
+    <string name="budget_detail_title">Chi tiết Ngân sách</string>
+    <string name="total_month_budget">Tổng ngân sách Tháng</string>
+    <string name="budget_limit_label">Giới hạn ngân sách</string>
+    <string name="btn_create_budget">Tạo ngân sách</string>
+    <string name="btn_delete_budget">Xóa Ngân sách</string>
+
+    <string name="ocr_camera_title">Chụp trực tiếp hóa đơn</string>
+    <string name="ocr_review_title">Xem lại kết quả quét (OCR)</string>
+    <string name="ocr_detected_banner">Đã phát hiện 3 giao dịch mới</string>
+    <string name="transaction_detail_title">Chi tiết giao dịch</string>
+
+    <string name="label_wallet">Ví</string>
+    <string name="label_category">Danh mục</string>
+
+    <!-- Navigation Labels -->
+    <string name="nav_home_label">Trang chủ</string>
+    <string name="nav_report_label">Lịch sử</string>
+    <string name="nav_budget_label">Ngân sách</string>
+    <string name="nav_setting_label">Cài đặt</string>
+</resources>

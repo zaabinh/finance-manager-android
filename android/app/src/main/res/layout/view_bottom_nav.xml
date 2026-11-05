@@ -1,190 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Figma Navigation/BottomBar v2 643:2498: 4 tabs + centre "Ghi giao dịch" action, 50dp.
-     Active tab = setSelected(true) on its navTab* view (History is active in the list screen).
-     Shared component: the Home screen should adopt it in a separate task. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/bottomNav"
+    android:id="@+id/bottomNavContainer"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/bottom_bar_height"
-    android:background="@drawable/bg_bottom_bar"
-    android:orientation="horizontal"
-    android:paddingStart="@dimen/spacing_8"
-    android:paddingEnd="@dimen/spacing_8">
+    android:layout_height="@dimen/nav_bar_height"
+    android:background="@color/bg_card_surface">
+
+    <!-- Top Divider Line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="top"
+        android:background="@color/divider_light" />
 
     <LinearLayout
-        android:id="@+id/navTabHome"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="28dp"
-            android:background="@drawable/bg_nav_indicator"
-            android:duplicateParentState="true">
+        <!-- Item 1: Home -->
+        <LinearLayout
+            android:id="@+id/containerNavHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <ImageView
-                android:layout_width="@dimen/icon_size_default"
-                android:layout_height="@dimen/icon_size_default"
-                android:layout_gravity="center"
-                android:duplicateParentState="true"
-                android:importantForAccessibility="no"
+                android:id="@+id/navHome"
+                android:layout_width="44dp"
+                android:layout_height="24dp"
+                android:background="@drawable/bg_nav_indicator"
+                android:contentDescription="@string/nav_home_label"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="2dp"
                 android:src="@drawable/ic_nav_house"
-                app:tint="@color/nav_tab_fg" />
-        </FrameLayout>
+                app:tint="@color/text_secondary" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:duplicateParentState="true"
-            android:maxLines="1"
-            android:text="@string/nav_home"
-            android:textAppearance="@style/TextAppearance.App.Label"
-            android:textColor="@color/nav_tab_fg" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/lblNavHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_home_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption" />
 
-    <LinearLayout
-        android:id="@+id/navTabHistory"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical">
+        </LinearLayout>
 
-        <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="28dp"
-            android:background="@drawable/bg_nav_indicator"
-            android:duplicateParentState="true">
+        <!-- Item 2: Transaction / Report -->
+        <LinearLayout
+            android:id="@+id/containerNavReport"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <ImageView
-                android:layout_width="@dimen/icon_size_default"
-                android:layout_height="@dimen/icon_size_default"
-                android:layout_gravity="center"
-                android:duplicateParentState="true"
-                android:importantForAccessibility="no"
+                android:id="@+id/navReport"
+                android:layout_width="44dp"
+                android:layout_height="24dp"
+                android:background="@drawable/bg_nav_indicator"
+                android:contentDescription="@string/nav_report_label"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="2dp"
                 android:src="@drawable/ic_nav_history"
-                app:tint="@color/nav_tab_fg" />
-        </FrameLayout>
+                app:tint="@color/text_secondary" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:duplicateParentState="true"
-            android:maxLines="1"
-            android:text="@string/nav_history"
-            android:textAppearance="@style/TextAppearance.App.Label"
-            android:textColor="@color/nav_tab_fg" />
+            <TextView
+                android:id="@+id/lblNavReport"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_report_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption" />
+
+        </LinearLayout>
+
+        <!-- Placeholder for Center FAB -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Item 3: Budget -->
+        <LinearLayout
+            android:id="@+id/containerNavBudget"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/navBudget"
+                android:layout_width="44dp"
+                android:layout_height="24dp"
+                android:background="@drawable/bg_nav_indicator"
+                android:contentDescription="@string/nav_budget_label"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="2dp"
+                android:src="@drawable/ic_nav_layers"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/lblNavBudget"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_budget_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption" />
+
+        </LinearLayout>
+
+        <!-- Item 4: Setting -->
+        <LinearLayout
+            android:id="@+id/containerNavSetting"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/navSetting"
+                android:layout_width="44dp"
+                android:layout_height="24dp"
+                android:background="@drawable/bg_nav_indicator"
+                android:contentDescription="@string/nav_setting_label"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="2dp"
+                android:src="@drawable/ic_nav_settings"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/lblNavSetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_setting_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_caption" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
+    <!-- Floating Action Button in Middle -->
     <FrameLayout
-        android:layout_width="56dp"
-        android:layout_height="match_parent">
+        android:id="@+id/fabAddTransaction"
+        android:layout_width="@dimen/fab_size"
+        android:layout_height="@dimen/fab_size"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_fab_circle"
+        android:elevation="4dp">
 
-        <View
-            android:layout_width="@dimen/bottom_bar_add_size"
-            android:layout_height="@dimen/bottom_bar_add_size"
+        <ImageView
+            android:layout_width="@dimen/icon_fab_size"
+            android:layout_height="@dimen/icon_fab_size"
             android:layout_gravity="center"
-            android:background="@drawable/bg_add_button" />
-
-        <ImageButton
-            android:id="@+id/btnNavAdd"
-            android:layout_width="@dimen/touch_target_min"
-            android:layout_height="@dimen/touch_target_min"
-            android:layout_gravity="center"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/nav_add_transaction"
-            android:padding="4dp"
-            android:scaleType="center"
-            android:src="@drawable/ic_plus" />
-
+            android:contentDescription="@null"
+            android:src="@drawable/ic_plus"
+            app:tint="@color/text_on_primary" />
     </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/navTabKhoan"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="28dp"
-            android:background="@drawable/bg_nav_indicator"
-            android:duplicateParentState="true">
-
-            <ImageView
-                android:layout_width="@dimen/icon_size_default"
-                android:layout_height="@dimen/icon_size_default"
-                android:layout_gravity="center"
-                android:duplicateParentState="true"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_nav_layers"
-                app:tint="@color/nav_tab_fg" />
-        </FrameLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:duplicateParentState="true"
-            android:maxLines="1"
-            android:text="@string/tab_budget"
-            android:textAppearance="@style/TextAppearance.App.Label"
-            android:textColor="@color/nav_tab_fg" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/navTabSettings"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="28dp"
-            android:background="@drawable/bg_nav_indicator"
-            android:duplicateParentState="true">
-
-            <ImageView
-                android:layout_width="@dimen/icon_size_default"
-                android:layout_height="@dimen/icon_size_default"
-                android:layout_gravity="center"
-                android:duplicateParentState="true"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_nav_settings"
-                app:tint="@color/nav_tab_fg" />
-        </FrameLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:duplicateParentState="true"
-            android:maxLines="1"
-            android:text="@string/nav_settings"
-            android:textAppearance="@style/TextAppearance.App.Label"
-            android:textColor="@color/nav_tab_fg" />
-    </LinearLayout>
-</LinearLayout>
+</FrameLayout>

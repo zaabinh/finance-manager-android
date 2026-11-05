@@ -63,6 +63,7 @@
                     <ImageView
                         android:id="@+id/ivCategoryIcon"
                         style="@style/Widget.App.FieldSelector.Icon"
+                        android:contentDescription="@null"
                         android:src="@drawable/ic_category" />
 
                     <LinearLayout style="@style/Widget.App.FieldSelector.Content">

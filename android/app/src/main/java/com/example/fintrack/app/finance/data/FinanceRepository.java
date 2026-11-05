@@ -4,8 +4,16 @@ import android.content.Context;
 import com.example.fintrack.BuildConfig;
 import com.example.fintrack.app.core.network.ApiClient;
 import com.example.fintrack.app.finance.domain.FinanceBook;
-import com.example.fintrack.app.finance.remote.FinanceApiService;
-import com.example.fintrack.app.finance.remote.FinanceDtos;
+import com.example.fintrack.app.finance.remote.FinanceApiBundle;
+import com.example.fintrack.app.wallet.remote.WalletApiService;
+import com.example.fintrack.app.wallet.remote.WalletResponse;
+import com.example.fintrack.app.category.remote.CategoryApiService;
+import com.example.fintrack.app.category.remote.CategoryResponse;
+import com.example.fintrack.app.budget.remote.BudgetApiService;
+import com.example.fintrack.app.budget.remote.BudgetResponse;
+import com.example.fintrack.app.transaction.remote.TransactionApiService;
+import com.example.fintrack.app.transaction.remote.TransactionResponse;
+import com.example.fintrack.app.transaction.remote.TransactionPageResponse;
 import com.google.gson.Gson;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,7 +22,7 @@ import java.util.concurrent.Executors;
 public final class FinanceRepository {
     public static final ExecutorService IO = Executors.newSingleThreadExecutor();
     private final MockFinanceStore mock;
-    private final FinanceApiService api;
+    private final FinanceApiBundle api;
     public FinanceRepository(Context context, String owner) {
         mock = BuildConfig.USE_MOCK ? new MockFinanceStore(context, owner) : null;
         if (BuildConfig.USE_MOCK) api = null;
@@ -27,21 +35,26 @@ public final class FinanceRepository {
                     throw new java.io.IOException("Session changed before financial request");
                 return chain.proceed(chain.request());
             }).build();
-            api = base.newBuilder().client(client).build().create(FinanceApiService.class);
+            retrofit2.Retrofit configured = base.newBuilder().client(client).build();
+            WalletApiService w = configured.create(WalletApiService.class);
+            CategoryApiService c = configured.create(CategoryApiService.class);
+            BudgetApiService b = configured.create(BudgetApiService.class);
+            TransactionApiService t = configured.create(TransactionApiService.class);
+            api = new FinanceApiBundle(w, c, b, t);
         }
     }
     public FinanceBook read() {
         if (mock != null) return mock.read();
         FinanceBook.State state = new FinanceBook.State();
-        for (FinanceDtos.Wallet wallet : FinanceAction.required(api.wallets())) state.wallets.add(wallet.domain());
-        for (FinanceDtos.Category category : FinanceAction.required(api.categories())) state.categories.add(category.domain());
-        for (FinanceDtos.Budget budget : FinanceAction.required(api.budgets())) state.budgets.add(budget.domain());
+        for (WalletResponse wallet : FinanceAction.required(api.wallets.wallets())) state.wallets.add(wallet.domain());
+        for (CategoryResponse category : FinanceAction.required(api.categories.categories())) state.categories.add(category.domain());
+        for (BudgetResponse budget : FinanceAction.required(api.budgets.budgets())) state.budgets.add(budget.domain());
         int page = 0;
         while (true) {
-            FinanceDtos.TransactionPage result = FinanceAction.required(api.transactions(page, 200));
+            TransactionPageResponse result = FinanceAction.required(api.transactions.transactions(page, 200));
             if (result.items == null || result.page != page || result.totalPages < 0 || result.totalPages > 10000)
                 throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
-            for (FinanceDtos.Transaction value : result.items) state.transactions.add(value.domain());
+            for (TransactionResponse value : result.items) state.transactions.add(value.domain());
             if (++page >= result.totalPages) break;
         }
         try { return new FinanceBook(state); }

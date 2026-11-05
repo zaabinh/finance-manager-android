@@ -16,6 +16,9 @@ public class UserProfileResponse {
     @SerializedName("displayName")
     private String displayName;
 
+    @SerializedName("phone")
+    private String phone;
+
     public String getId() {
         return id;
     }
@@ -30,5 +33,14 @@ public class UserProfileResponse {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    /** Backward-compatible name used by the profile settings screen. */
+    public String getName() {
+        return displayName;
+    }
+
+    public String getPhone() {
+        return phone;
     }
 }

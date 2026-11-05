@@ -1,199 +1,266 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:fillViewport="true"
+    android:background="@color/bg_app_canvas"
     android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!-- Header Toolbar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Header -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Quay lại"/>
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="Hồ sơ người dùng"
-                android:textColor="#26332B"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/btnEdit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:text="Chỉnh sửa"
-                android:textColor="#216B45"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Profile card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:padding="24dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card_white">
-
-            <TextView
-                android:layout_width="88dp"
-                android:layout_height="88dp"
-                android:background="@drawable/bg_avatar"
-                android:gravity="center"
-                android:text="MA"
-                android:textColor="#216B45"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDisplayName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Nguyễn Minh Anh"
-                android:textColor="#202A24"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDisplayEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="minh.anh@example.com"
-                android:textColor="#7B827D"
-                android:textSize="14sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Thành viên FinTrack"
-                android:textColor="#4CAF50"
-                android:textSize="12sp" />
-        </LinearLayout>
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/text_primary" />
 
         <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="@string/user_profile_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnEdit"
+            app:layout_constraintStart_toEndOf="@id/btnBack"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/btnEdit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="10dp"
-            android:text="THÔNG TIN CÁ NHÂN"
-            android:textColor="#7B827D"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:background="?attr/selectableItemBackground"
+            android:padding="@dimen/spacing_4"
+            android:text="@string/action_edit"
+            android:textColor="@color/color_primary"
+            android:textSize="@dimen/text_size_body_primary"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Form -->
-        <LinearLayout
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="@dimen/spacing_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/bg_card_white">
+            android:paddingHorizontal="@dimen/spacing_16">
 
-            <TextView
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:id="@+id/llFormContainer"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Họ và tên"
-                android:textColor="#202A24"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="440dp">
 
-            <EditText
-                android:id="@+id/etFullName"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input_field"
-                android:enabled="false"
-                android:paddingHorizontal="12dp"
-                android:singleLine="true"
-                android:text="Nguyễn Minh Anh"
-                android:textColor="#202A24"
-                android:inputType="textPersonName" />
+                <!-- Profile Hero Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:background="@drawable/bg_card_white"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_24">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Email"
-                android:textColor="#202A24"
-                android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tvAvatarInitialsHero"
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:background="@drawable/bg_avatar"
+                        android:gravity="center"
+                        android:text="@string/sample_user_initials"
+                        android:textColor="@color/color_primary"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/etEmail"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input_field"
-                android:enabled="false"
-                android:paddingHorizontal="12dp"
-                android:singleLine="true"
-                android:text="minh.anh@example.com"
-                android:textColor="#202A24"
-                android:inputType="textEmailAddress" />
+                    <TextView
+                        android:id="@+id/tvDisplayName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:text="@string/sample_user_name"
+                        android:textColor="@color/text_primary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Số điện thoại"
-                android:textColor="#202A24"
-                android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tvDisplayEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/sample_user_email"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_body_primary" />
 
-            <EditText
-                android:id="@+id/etPhone"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input_field"
-                android:enabled="false"
-                android:paddingHorizontal="12dp"
-                android:singleLine="true"
-                android:hint="Nhập số điện thoại"
-                android:inputType="phone" />
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:background="@drawable/bg_badge_in_budget"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="Thành viên FinTrack"
+                        android:textColor="@color/status_success"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-        <Button
-            android:id="@+id/btnSaveProfile"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="Lưu thay đổi"
-            android:textColor="#FFFFFF"
-            android:textAllCaps="false"
-            android:visibility="gone" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_20"
+                    android:layout_marginBottom="@dimen/spacing_8"
+                    android:text="@string/section_personal_info"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnCancelEdit"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:text="Hủy"
-            android:textAllCaps="false"
-            android:visibility="gone" />
+                <!-- Form Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
 
-    </LinearLayout>
-</ScrollView>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_full_name"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/etFullName"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:autofillHints="name"
+                        android:background="@drawable/bg_currency_box"
+                        android:enabled="false"
+                        android:inputType="textPersonName"
+                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:singleLine="true"
+                        android:text="@string/sample_user_name"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:text="@string/label_email"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:autofillHints="emailAddress"
+                        android:background="@drawable/bg_currency_box"
+                        android:enabled="false"
+                        android:inputType="textEmailAddress"
+                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:singleLine="true"
+                        android:text="@string/sample_user_email"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
+                        android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:text="@string/label_phone_number"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/etPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:autofillHints="phone"
+                        android:background="@drawable/bg_currency_box"
+                        android:enabled="false"
+                        android:hint="@string/hint_enter_phone"
+                        android:inputType="phone"
+                        android:paddingHorizontal="@dimen/spacing_16"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
+                        android:textSize="@dimen/text_size_body_primary" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnSaveProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="@dimen/spacing_24"
+                    android:background="@drawable/bg_button_primary"
+                    android:text="@string/btn_save_changes"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnCancelEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="@dimen/spacing_12"
+                    android:background="@drawable/bg_button_outline"
+                    android:text="@string/btn_cancel"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

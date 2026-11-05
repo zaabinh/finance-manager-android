@@ -29,6 +29,7 @@ public class CategoryListActivity extends AppCompatActivity {
     private TextView tabIncome;
     private EditText etSearchCategory;
     private RecyclerView rvCategories;
+    private android.view.View layoutEmptyCategories;
 
     private CategoryViewModel categoryViewModel;
     private CategoryAdapter categoryAdapter;
@@ -55,6 +56,7 @@ public class CategoryListActivity extends AppCompatActivity {
         tabIncome = findViewById(R.id.tabIncome);
         etSearchCategory = findViewById(R.id.etSearchCategory);
         rvCategories = findViewById(R.id.rvCategories);
+        layoutEmptyCategories = findViewById(R.id.layoutEmptyCategories);
     }
 
     private void setupRecyclerView() {
@@ -95,6 +97,11 @@ public class CategoryListActivity extends AppCompatActivity {
             }
         }
         categoryAdapter.setCategories(filtered);
+        boolean isEmpty = filtered.isEmpty();
+        if (layoutEmptyCategories != null) {
+            layoutEmptyCategories.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
+        }
+        rvCategories.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
     }
 
     private void setupListeners() {
