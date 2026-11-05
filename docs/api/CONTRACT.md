@@ -31,9 +31,9 @@ and development OpenAPI/Swagger. Health returns its native Actuator payload, suc
 The wallet routes and types above reserve the naming for future implementation; they are not implemented APIs.
 Do not add compatibility routes using the previous financial-domain name.
 
-The proposed Authentication contract, token lifecycle, email sender and implementation checklist are documented
-in [AUTHENTICATION_IMPLEMENTATION.md](AUTHENTICATION_IMPLEMENTATION.md). Those endpoints remain unimplemented
-until the corresponding backend code and migration are merged.
+The Authentication contract and implemented token lifecycle are documented
+in [AUTHENTICATION_IMPLEMENTATION.md](AUTHENTICATION_IMPLEMENTATION.md). Android and backend auth DTOs and routes
+must follow that contract.
 
 ## Response conventions
 

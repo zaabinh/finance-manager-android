@@ -11,17 +11,10 @@ class AuthDtoTest {
     private static final TokenResponse TOKEN = new TokenResponse("access", "refresh", "Bearer", 900);
 
     @Test
-    void usesDisplayNameWhenAvailable() {
-        var response = LoginResponse.of("An Nguyen", "an.nguyen", true, TOKEN);
+    void containsOnboardingStateAndTokensWithoutProfileData() {
+        var response = new LoginResponse(true, TOKEN);
 
-        assertThat(response.displayName()).isEqualTo("An Nguyen");
         assertThat(response.onboardingCompleted()).isTrue();
         assertThat(response.token()).isSameAs(TOKEN);
-    }
-
-    @Test
-    void fallsBackToUsernameWhenDisplayNameIsMissing() {
-        assertThat(LoginResponse.of(null, "an.nguyen", false, TOKEN).displayName()).isEqualTo("an.nguyen");
-        assertThat(LoginResponse.of("  ", "an.nguyen", false, TOKEN).displayName()).isEqualTo("an.nguyen");
     }
 }

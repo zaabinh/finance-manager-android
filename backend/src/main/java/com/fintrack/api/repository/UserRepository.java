@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 public class UserRepository {
     private final JdbcTemplate jdbc;
     private static final String SELECT = "SELECT u.*, p.display_name FROM fintrack.users u LEFT JOIN fintrack.user_preferences p ON p.user_id = u.id";
+    private static final String SELECT_AUTH = "SELECT u.*, NULL::text AS display_name FROM fintrack.users u";
     private static final RowMapper<UserRecord> MAPPER = (rs, row) -> 
     new UserRecord(
             rs.getObject("id", UUID.class), 
@@ -34,7 +35,7 @@ public class UserRepository {
         return id;
     }
     public Optional<UserRecord> findByIdentifier(String identifier) {
-        return jdbc.query(SELECT + " WHERE u.username = ? OR u.email = ?", MAPPER, identifier, identifier).stream().findFirst();
+        return jdbc.query(SELECT_AUTH + " WHERE u.username = ? OR u.email = ?", MAPPER, identifier, identifier).stream().findFirst();
     }
     public Optional<UserRecord> findByEmail(String email) {
         return jdbc.query(SELECT + " WHERE u.email = ?", MAPPER, email).stream().findFirst();
@@ -44,6 +45,9 @@ public class UserRepository {
     }
     public Optional<UserRecord> lockById(UUID id) {
         return jdbc.query(SELECT + " WHERE u.id = ? FOR UPDATE OF u", MAPPER, id).stream().findFirst();
+    }
+    public Optional<UserRecord> lockByIdForAuthentication(UUID id) {
+        return jdbc.query(SELECT_AUTH + " WHERE u.id = ? FOR UPDATE OF u", MAPPER, id).stream().findFirst();
     }
     public boolean emailExists(String email) { return findByEmail(email).isPresent(); }
     public boolean usernameExists(String username) {

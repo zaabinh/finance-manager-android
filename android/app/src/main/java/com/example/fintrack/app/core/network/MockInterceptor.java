@@ -36,14 +36,29 @@ public class MockInterceptor implements Interceptor {
         String jsonResponse = getMockJsonResponse(path);
 
         // Tạo và trả về một Response giả lập chứa dữ liệu JSON mẫu với mã thành công 200 (OK)
+        int status = statusFor(path);
+        ResponseBody body = isEmptySuccess(path) ? null : ResponseBody.create(jsonResponse, MEDIA_TYPE_JSON);
         return new Response.Builder()
-                .code(200)
-                .message("OK")
+                .code(status)
+                .message(status == 204 ? "No Content" : "OK")
                 .request(chain.request())
                 .protocol(Protocol.HTTP_1_1)
-                .body(ResponseBody.create(jsonResponse, MEDIA_TYPE_JSON))
-                .addHeader("content-type", "application/json")
+                .body(body)
+                .addHeader("content-type", MEDIA_TYPE_JSON.toString())
                 .build();
+    }
+
+    private int statusFor(String path) {
+        if (path.endsWith("/register")) return 201;
+        if (path.endsWith("/resend-verification") || path.endsWith("/forgot-password")) return 202;
+        if (path.endsWith("/verify-email") || path.endsWith("/reset-password") || path.endsWith("/logout")) return 204;
+        return 200;
+    }
+
+    private boolean isEmptySuccess(String path) {
+        return path.endsWith("/register") || path.endsWith("/resend-verification")
+                || path.endsWith("/forgot-password") || path.endsWith("/verify-email")
+                || path.endsWith("/reset-password") || path.endsWith("/logout");
     }
 
     /**
@@ -55,11 +70,13 @@ public class MockInterceptor implements Interceptor {
                     "  \"success\": true,\n" +
                     "  \"message\": \"Đăng nhập thành công\",\n" +
                     "  \"data\": {\n" +
-                    "    \"accessToken\": \"mock_access_token_123456789\",\n" +
-                    "    \"refreshToken\": \"mock_refresh_token_987654321\",\n" +
-                    "    \"userId\": \"user_demo_001\",\n" +
-                    "    \"email\": \"demo@fintrack.com\",\n" +
-                    "    \"name\": \"Nguyễn Văn Demo\"\n" +
+                    "    \"onboardingCompleted\": true,\n" +
+                    "    \"token\": {\n" +
+                    "      \"accessToken\": \"mock_access_token_123456789\",\n" +
+                    "      \"refreshToken\": \"mock_refresh_token_987654321\",\n" +
+                    "      \"tokenType\": \"Bearer\",\n" +
+                    "      \"expiresIn\": 900\n" +
+                    "    }\n" +
                     "  },\n" +
                     "  \"code\": 200\n" +
                     "}";
@@ -77,7 +94,7 @@ public class MockInterceptor implements Interceptor {
                     "  \"data\": null,\n" +
                     "  \"code\": 200\n" +
                     "}";
-        } else if (path.endsWith("/resend-otp")) {
+        } else if (path.endsWith("/resend-verification")) {
             return "{\n" +
                     "  \"success\": true,\n" +
                     "  \"message\": \"Mã OTP mới đã được gửi đến email của bạn.\",\n" +
@@ -98,15 +115,27 @@ public class MockInterceptor implements Interceptor {
                     "  \"data\": null,\n" +
                     "  \"code\": 200\n" +
                     "}";
-        } else if (path.contains("/profile") || path.contains("/user")) {
+        } else if (path.endsWith("/refresh") || path.endsWith("/change-password")) {
+            return "{\n" +
+                    "  \"success\": true,\n" +
+                    "  \"message\": \"Authentication successful\",\n" +
+                    "  \"data\": {\n" +
+                    "    \"accessToken\": \"mock_access_token_123456789\",\n" +
+                    "    \"refreshToken\": \"mock_refresh_token_987654321\",\n" +
+                    "    \"tokenType\": \"Bearer\",\n" +
+                    "    \"expiresIn\": 900\n" +
+                    "  },\n" +
+                    "  \"code\": 200\n" +
+                    "}";
+        } else if (path.endsWith("/users/me")) {
             return "{\n" +
                     "  \"success\": true,\n" +
                     "  \"message\": \"Lấy thông tin thành công\",\n" +
                     "  \"data\": {\n" +
-                    "    \"userId\": \"user_demo_001\",\n" +
+                    "    \"id\": \"user_demo_001\",\n" +
+                    "    \"username\": \"demo\",\n" +
                     "    \"email\": \"demo@fintrack.com\",\n" +
-                    "    \"name\": \"Nguyễn Văn Demo\",\n" +
-                    "    \"phone\": \"0987654321\"\n" +
+                    "    \"displayName\": \"Nguyễn Văn Demo\"\n" +
                     "  },\n" +
                     "  \"code\": 200\n" +
                     "}";

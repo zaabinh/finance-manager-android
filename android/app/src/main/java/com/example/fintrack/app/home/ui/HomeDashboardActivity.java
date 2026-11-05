@@ -90,11 +90,11 @@ public class HomeDashboardActivity extends AppCompatActivity {
         // Quan sát dữ liệu profile từ API/Mock để đồng bộ mới nhất
         userViewModel.getProfileResult().observe(this, resource -> {
             if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                String fetchedName = resource.getData().getName();
+                String fetchedName = resource.getData().getDisplayName();
                 if (fetchedName != null && !fetchedName.isEmpty()) {
                     tvUserName.setText(fetchedName);
                     sessionManager.saveUserProfile(
-                            resource.getData().getUserId(),
+                            resource.getData().getId(),
                             resource.getData().getEmail(),
                             fetchedName
                     );

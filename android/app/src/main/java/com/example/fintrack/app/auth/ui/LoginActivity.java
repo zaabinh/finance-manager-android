@@ -17,6 +17,9 @@ import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
+import com.example.fintrack.app.user.remote.UserProfileResponse;
+import com.example.fintrack.app.user.viewmodel.UserViewModel;
+import com.example.fintrack.app.core.network.Resource;
 
 /**
  * Màn hình đăng nhập người dùng.
@@ -34,7 +37,10 @@ public class LoginActivity extends AppCompatActivity {
     // States & Controllers
     private boolean isPasswordVisible = false;
     private AuthViewModel authViewModel;
+    private UserViewModel userViewModel;
     private SessionManager sessionManager;
+    private boolean onboardingCompletedAfterLogin;
+    private boolean awaitingLoginProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Chuyển hướng ngay nếu đã đăng nhập trước đó
         sessionManager = SessionManager.getInstance(getApplicationContext());
-        if (sessionManager.isLoggedIn()) {
+        if (sessionManager.isLoggedIn() && !TextUtils.isEmpty(sessionManager.getUserId())) {
             // Chuyển sang đăng nhập nếu đã setup
             Class<?> nextActivity = sessionManager.isSetupCompleted()
                     ? HomeDashboardActivity.class
@@ -52,11 +58,15 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
             return;
+        } else if (sessionManager.isLoggedIn()) {
+            // Discard a partially saved session if profile loading did not finish after login.
+            sessionManager.clearSession();
         }
 
         setContentView(R.layout.activity_auth_login);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         initViews();
         setupListeners();
@@ -110,23 +120,17 @@ public class LoginActivity extends AppCompatActivity {
                     btnLogin.setText(R.string.btn_login);
 
                     // Đăng nhập thành công: Lưu phiên làm việc và chuyển màn hình
-                    if (resource.getData() != null && !TextUtils.isEmpty(resource.getData().getAccessToken())) {
+                    if (resource.getData() != null && resource.getData().getToken() != null
+                            && !TextUtils.isEmpty(resource.getData().getToken().getAccessToken())) {
+                        var login = resource.getData();
+                        onboardingCompletedAfterLogin = login.isOnboardingCompleted();
+                        awaitingLoginProfile = true;
                         sessionManager.saveAuthToken(
-                                resource.getData().getAccessToken(),
-                                resource.getData().getRefreshToken()
+                                login.getToken().getAccessToken(),
+                                login.getToken().getRefreshToken()
                         );
-                        sessionManager.saveUserProfile(
-                                resource.getData().getUserId(),
-                                resource.getData().getEmail(),
-                                resource.getData().getName()
-                        );
-                        Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-
-                        // Điều hướng dựa vào trạng thái thiết lập ban đầu
-                        Class<?> nextActivity = sessionManager.isSetupCompleted() ? HomeDashboardActivity.class : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
-                        Intent intent = new Intent(LoginActivity.this, nextActivity);
-                        startActivity(intent);
-                        finish();
+                        sessionManager.setSetupCompleted(onboardingCompletedAfterLogin);
+                        userViewModel.fetchProfile();
                     } else {
                         Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
                     }
@@ -143,6 +147,30 @@ public class LoginActivity extends AppCompatActivity {
                     btnLogin.setEnabled(false);
                     btnLogin.setText(getString(R.string.loading_login));
                     break;
+            }
+        });
+
+        userViewModel.getProfileResult().observe(this, resource -> {
+            if (!awaitingLoginProfile || resource == null) return;
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                UserProfileResponse profile = resource.getData();
+                sessionManager.saveUserProfile(profile.getId(), profile.getEmail(), profile.getDisplayName());
+                awaitingLoginProfile = false;
+                Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
+                Class<?> nextActivity = onboardingCompletedAfterLogin
+                        ? HomeDashboardActivity.class
+                        : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
+                Intent intent = new Intent(LoginActivity.this, nextActivity);
+                startActivity(intent);
+                finish();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                awaitingLoginProfile = false;
+                sessionManager.clearSession();
+                btnLogin.setEnabled(true);
+                btnLogin.setText(R.string.btn_login);
+                String message = resource.getMessage() != null
+                        ? resource.getMessage() : getString(R.string.login_failed);
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             }
         });
     }

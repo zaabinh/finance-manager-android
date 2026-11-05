@@ -93,11 +93,11 @@ public class SettingActivity extends AppCompatActivity {
     private void setupObservers() {
         userViewModel.getProfileResult().observe(this, resource -> {
             if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                String name = resource.getData().getName();
+                String name = resource.getData().getDisplayName();
                 String email = resource.getData().getEmail();
                 if (name != null) tvProfileName.setText(name);
                 if (email != null) tvProfileEmail.setText(email);
-                sessionManager.saveUserProfile(resource.getData().getUserId(), email, name);
+                sessionManager.saveUserProfile(resource.getData().getId(), email, name);
             }
         });
     }

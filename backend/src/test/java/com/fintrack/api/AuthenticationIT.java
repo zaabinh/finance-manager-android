@@ -90,7 +90,8 @@ class AuthenticationIT {
                 .andExpect(status().isNoContent());
         mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"usernameOrEmail\":\"" + name + "\",\"password\":\"Strong@123\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.displayName").value(name))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.displayName").doesNotExist())
+                .andExpect(jsonPath("$.data.onboardingCompleted").value(false))
                 .andExpect(jsonPath("$.data.token.tokenType").value("Bearer"));
         var login = auth.login(new LoginRequest(email, "Strong@123"), client);
         assertThat(tokens.authenticate(login.token().accessToken())).isPresent();

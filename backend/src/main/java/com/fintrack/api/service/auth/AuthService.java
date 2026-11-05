@@ -101,7 +101,7 @@ public class AuthService implements AuthOperations {
             throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.AUTH_USERNAME_NOT_EXIST, "User not found");
         }
 
-        var user = users.lockById(principal.id())
+        var user = users.lockByIdForAuthentication(principal.id())
                         .orElseThrow(() -> new AppException(
                             HttpStatus.UNAUTHORIZED, 
                             ErrorCode.AUTH_INVALID_CREDENTIALS,
@@ -127,7 +127,7 @@ public class AuthService implements AuthOperations {
                 "Email is not verified"
             );
         limiter.clearLoginFailures(identifier, client);
-        return LoginResponse.of(user.displayName(), user.username(), user.onboardingCompleted(), refreshTokens.generateTokenPair(user.id(), user.role(), null, client));
+        return new LoginResponse(user.onboardingCompleted(), refreshTokens.generateTokenPair(user.id(), user.role(), null, client));
     }
 
     @Override 

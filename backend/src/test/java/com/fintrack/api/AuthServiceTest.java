@@ -75,15 +75,15 @@ class AuthServiceTest {
     }
     @Test void verifiedLoginUsesPrincipalFromSpringSecurity() {
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(user));
-        when(users.lockById(id)).thenReturn(Optional.of(user));
-        assertThat(service.login(new LoginRequest("an.nguyen", "Strong@123"), client).displayName()).isEqualTo("an.nguyen");
+        when(users.lockByIdForAuthentication(id)).thenReturn(Optional.of(user));
+        assertThat(service.login(new LoginRequest("an.nguyen", "Strong@123"), client).onboardingCompleted()).isFalse();
         verify(refreshTokens).generateTokenPair(id, "USER", null, client);
         verify(limits).clearLoginFailures("an.nguyen", client);
     }
     @Test void unverifiedUserCannotLogin() {
         var unverified = new UserRepository.UserRecord(id, user.username(), user.email(), user.passwordHash(), "ACTIVE", "USER", null, false, false);
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(unverified));
-        when(users.lockById(id)).thenReturn(Optional.of(unverified));
+        when(users.lockByIdForAuthentication(id)).thenReturn(Optional.of(unverified));
         assertThatThrownBy(() -> service.login(new LoginRequest("an.nguyen", "Strong@123"), client))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_EMAIL_NOT_VERIFIED));
         verifyNoInteractions(refreshTokens);

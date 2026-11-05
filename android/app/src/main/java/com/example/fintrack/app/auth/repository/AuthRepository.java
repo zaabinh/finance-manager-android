@@ -45,7 +45,9 @@ public class AuthRepository {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<LoginResponse> apiResponse = response.body();
                     // Kiểm tra xem API trả về thành công và có chứa Token hay không
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null && !TextUtils.isEmpty(apiResponse.getData().getAccessToken())) {
+                    if (apiResponse.isSuccess() && apiResponse.getData() != null
+                            && apiResponse.getData().getToken() != null
+                            && !TextUtils.isEmpty(apiResponse.getData().getToken().getAccessToken())) {
                         result.setValue(Resource.success(apiResponse.getData()));
                     } else {
                         String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.login_response_invalid);
@@ -67,24 +69,18 @@ public class AuthRepository {
 
     /** Gọi API Đăng ký tài khoản */
     public void register(String username, String email, String password, MutableLiveData<Resource<Void>> result) {
-        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.register_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -92,24 +88,18 @@ public class AuthRepository {
 
     /** Gọi API Xác thực email bằng mã OTP */
     public void verifyEmail(String email, String otp, MutableLiveData<Resource<Void>> result) {
-        apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.verify_email_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -117,24 +107,18 @@ public class AuthRepository {
 
     /** Gọi API Gửi lại mã OTP */
     public void resendOtp(String email, MutableLiveData<Resource<Void>> result) {
-        apiService.resendOtp(new ResendOtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.resendOtp(new ResendOtpRequest(email)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.resend_otp_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -142,24 +126,18 @@ public class AuthRepository {
 
     /** Gọi API Yêu cầu quên mật khẩu (gửi OTP về email) */
     public void forgotPassword(String email, MutableLiveData<Resource<Void>> result) {
-        apiService.forgotPassword(new ForgotPasswordRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.forgotPassword(new ForgotPasswordRequest(email)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.forgot_password_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
@@ -167,24 +145,18 @@ public class AuthRepository {
 
     /** Gọi API Đặt lại mật khẩu mới */
     public void resetPassword(String email, String otp, String newPassword, MutableLiveData<Resource<Void>> result) {
-        apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)).enqueue(new Callback<ApiResponse<Void>>() {
+        apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.reset_password_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });

@@ -4,31 +4,31 @@ import com.google.gson.annotations.SerializedName;
 
 public class UserProfileResponse {
 
-    @SerializedName("userId")
-    private String userId;
+    @SerializedName("id")
+    private String id;
+
+    @SerializedName("username")
+    private String username;
 
     @SerializedName("email")
     private String email;
 
-    @SerializedName("name")
-    private String name;
+    @SerializedName("displayName")
+    private String displayName;
 
-    @SerializedName("phone")
-    private String phone;
+    public String getId() {
+        return id;
+    }
 
-    public String getUserId() {
-        return userId;
+    public String getUsername() {
+        return username;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getPhone() {
-        return phone;
+    public String getDisplayName() {
+        return displayName;
     }
 }
