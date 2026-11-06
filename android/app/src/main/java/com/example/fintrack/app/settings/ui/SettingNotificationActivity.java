@@ -1,14 +1,20 @@
 package com.example.fintrack.app.settings.ui;
 
+import android.Manifest;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.fintrack.R;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -17,10 +23,11 @@ import java.util.Locale;
 
 /**
  * Màn hình Cấu hình Thông báo (SettingNotificationActivity):
- * Tự động lưu và khôi phục trạng thái bật/tắt nhắc nhở hằng ngày, giờ nhắc, cảnh báo hạn mức.
+ * Tự động xin quyền POST_NOTIFICATIONS (Android 13+), lưu và khôi phục trạng thái bật/tắt nhắc nhở hằng ngày, giờ nhắc, cảnh báo hạn mức.
  */
 public class SettingNotificationActivity extends AppCompatActivity {
 
+    private static final int NOTIF_PERMISSION_CODE = 102;
     private static final String PREF_NOTIF_SETTINGS = "fintrack_notif_config";
     private static final String KEY_DAILY_ENABLED = "daily_reminder_enabled";
     private static final String KEY_REMINDER_HOUR = "reminder_hour";
@@ -73,6 +80,28 @@ public class SettingNotificationActivity extends AppCompatActivity {
         updateSubOptionsEnabledState(dailyEnabled);
     }
 
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIF_PERMISSION_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIF_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Đã cấp quyền Thông báo", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     private void updateReminderTimeDisplay() {
         String formattedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
         if (tvReminderTime != null) {
@@ -92,6 +121,9 @@ public class SettingNotificationActivity extends AppCompatActivity {
 
         if (switchDailyReminder != null) {
             switchDailyReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    checkAndRequestNotificationPermission();
+                }
                 updateSubOptionsEnabledState(isChecked);
                 getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
                         .edit()
@@ -104,21 +136,27 @@ public class SettingNotificationActivity extends AppCompatActivity {
         }
 
         if (switchLimitWarning != null) {
-            switchLimitWarning.setOnCheckedChangeListener((buttonView, isChecked) ->
-                    getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                            .edit()
-                            .putBoolean(KEY_NEAR_LIMIT_ENABLED, isChecked)
-                            .apply()
-            );
+            switchLimitWarning.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    checkAndRequestNotificationPermission();
+                }
+                getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
+                        .edit()
+                        .putBoolean(KEY_NEAR_LIMIT_ENABLED, isChecked)
+                        .apply();
+            });
         }
 
         if (switchBudgetWarning != null) {
-            switchBudgetWarning.setOnCheckedChangeListener((buttonView, isChecked) ->
-                    getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                            .edit()
-                            .putBoolean(KEY_OVER_BUDGET_ENABLED, isChecked)
-                            .apply()
-            );
+            switchBudgetWarning.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    checkAndRequestNotificationPermission();
+                }
+                getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
+                        .edit()
+                        .putBoolean(KEY_OVER_BUDGET_ENABLED, isChecked)
+                        .apply();
+            });
         }
 
         if (tvReminderTime != null) {
