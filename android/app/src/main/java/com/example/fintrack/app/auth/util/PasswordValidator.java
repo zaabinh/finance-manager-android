@@ -45,4 +45,30 @@ public class PasswordValidator {
                 && DIGIT_PATTERN.matcher(password).find()
                 && SPECIAL_CHAR_PATTERN.matcher(password).find();
     }
+
+    public static boolean hasMinLength(String password) {
+        return password != null && password.length() >= MIN_LENGTH;
+    }
+
+    public static boolean hasLowercase(String password) {
+        return password != null && LOWERCASE_PATTERN.matcher(password).find();
+    }
+
+    public static boolean hasUppercase(String password) {
+        return password != null && UPPERCASE_PATTERN.matcher(password).find();
+    }
+
+    public static boolean hasDigitOrSpecial(String password) {
+        return password != null && (DIGIT_PATTERN.matcher(password).find() || SPECIAL_CHAR_PATTERN.matcher(password).find());
+    }
+
+    public static int calculateStrengthPercentage(String password) {
+        if (TextUtils.isEmpty(password)) return 0;
+        int score = 0;
+        if (hasMinLength(password)) score += 25;
+        if (hasLowercase(password)) score += 25;
+        if (hasUppercase(password)) score += 25;
+        if (hasDigitOrSpecial(password)) score += 25;
+        return score;
+    }
 }
