@@ -20,6 +20,7 @@ public class UserViewModel extends AndroidViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<Resource<UserProfileResponse>> profileResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<UserProfileResponse>> updateProfileResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<Void>> deleteAccountResult = new MutableLiveData<>();
 
     public UserViewModel(@NonNull Application application) {
         super(application);
@@ -36,6 +37,11 @@ public class UserViewModel extends AndroidViewModel {
         return updateProfileResult;
     }
 
+    /** Trả về LiveData kết quả xóa tài khoản */
+    public LiveData<Resource<Void>> getDeleteAccountResult() {
+        return deleteAccountResult;
+    }
+
     /** Yêu cầu lấy thông tin hồ sơ mới nhất từ Server */
     public void fetchProfile() {
         profileResult.setValue(Resource.loading(null));
@@ -46,5 +52,11 @@ public class UserViewModel extends AndroidViewModel {
     public void updateProfile(String name, String phone) {
         updateProfileResult.setValue(Resource.loading(null));
         userRepository.updateProfile(name, phone, updateProfileResult);
+    }
+
+    /** Yêu cầu xóa vĩnh viễn tài khoản người dùng khỏi Server */
+    public void deleteAccount() {
+        deleteAccountResult.setValue(Resource.loading(null));
+        userRepository.deleteAccount(deleteAccountResult);
     }
 }

@@ -10,19 +10,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.auth.util.PasswordValidator;
+import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.user.viewmodel.UserViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Objects;
 
 /**
  * Màn hình Cài đặt Bảo mật & Tài khoản (SettingSecurityActivity):
- * Xử lý đổi mật khẩu (nhập mật khẩu hiện tại -> mật khẩu mới -> xác nhận mật khẩu mới)
- * và xử lý đăng xuất thiết bị hiện tại, đăng xuất tất cả thiết bị hoặc xóa tài khoản.
+ * Xử lý đổi mật khẩu và gọi API đăng xuất thiết bị hiện tại (/logout), đăng xuất tất cả thiết bị (/logout-all)
+ * hoặc xóa vĩnh viễn tài khoản người dùng (/api/v1/user/profile).
  */
 public class SettingSecurityActivity extends AppCompatActivity {
 
@@ -31,6 +34,8 @@ public class SettingSecurityActivity extends AppCompatActivity {
     private EditText etConfirmPassword;
     private Button btnChangePassword;
     private SessionManager sessionManager;
+    private AuthViewModel authViewModel;
+    private UserViewModel userViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +43,11 @@ public class SettingSecurityActivity extends AppCompatActivity {
         setContentView(R.layout.activity_setting_security);
 
         sessionManager = SessionManager.getInstance(getApplicationContext());
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         initViews();
+        setupObservers();
         setupListeners();
     }
 
@@ -48,6 +56,35 @@ public class SettingSecurityActivity extends AppCompatActivity {
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnChangePassword = findViewById(R.id.btnChangePassword);
+    }
+
+    private void setupObservers() {
+        authViewModel.getLogoutResult().observe(this, resource -> {
+            if (resource == null) return;
+            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+                sessionManager.clearSession();
+                Toast.makeText(this, R.string.msg_logged_out_device, Toast.LENGTH_SHORT).show();
+                redirectToLogin();
+            }
+        });
+
+        authViewModel.getLogoutAllResult().observe(this, resource -> {
+            if (resource == null) return;
+            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+                sessionManager.clearSession();
+                Toast.makeText(this, R.string.msg_logged_out_all, Toast.LENGTH_SHORT).show();
+                redirectToLogin();
+            }
+        });
+
+        userViewModel.getDeleteAccountResult().observe(this, resource -> {
+            if (resource == null) return;
+            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+                sessionManager.clearSession();
+                Toast.makeText(this, R.string.msg_account_deleted, Toast.LENGTH_LONG).show();
+                redirectToLogin();
+            }
+        });
     }
 
     private void setupListeners() {
@@ -64,10 +101,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             btnLogoutThisDevice.setOnClickListener(v -> confirmAction(
                     getString(R.string.logout_this_device),
                     getString(R.string.msg_logged_out_device),
-                    () -> {
-                        sessionManager.clearSession();
-                        redirectToLogin();
-                    }
+                    () -> authViewModel.logout(sessionManager.getRefreshToken())
             ));
         }
 
@@ -75,10 +109,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             btnLogoutAllDevices.setOnClickListener(v -> confirmAction(
                     getString(R.string.logout_all_devices),
                     getString(R.string.msg_logged_out_all),
-                    () -> {
-                        sessionManager.clearSession();
-                        redirectToLogin();
-                    }
+                    () -> authViewModel.logoutAll()
             ));
         }
 
@@ -86,10 +117,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             btnDeleteAccount.setOnClickListener(v -> confirmAction(
                     getString(R.string.delete_account),
                     getString(R.string.msg_account_deleted),
-                    () -> {
-                        sessionManager.clearSession();
-                        redirectToLogin();
-                    }
+                    () -> userViewModel.deleteAccount()
             ));
         }
     }

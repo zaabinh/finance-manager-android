@@ -46,7 +46,7 @@ public interface AuthApiService {
 
     /** API Đăng xuất thiết bị hiện tại */
     @POST("api/v1/auth/logout")
-    Call<ApiResponse<Void>> logout();
+    Call<ApiResponse<Void>> logout(@Body RefreshTokenRequest request);
 
     /** API Đăng xuất tất cả thiết bị */
     @POST("api/v1/auth/logout-all")
