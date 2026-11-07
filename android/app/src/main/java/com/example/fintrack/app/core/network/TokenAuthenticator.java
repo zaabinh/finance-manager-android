@@ -7,8 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.fintrack.app.auth.remote.AuthApiService;
-import com.example.fintrack.app.auth.remote.LoginResponse;
 import com.example.fintrack.app.auth.remote.RefreshTokenRequest;
+import com.example.fintrack.app.auth.remote.TokenResponse;
 import com.example.fintrack.app.core.session.SessionManager;
 
 import java.io.IOException;
@@ -53,12 +53,12 @@ public class TokenAuthenticator implements Authenticator {
 
         // BƯỚC 3: Gọi API làm mới token (Yêu cầu phải gọi đồng bộ - .execute() thay vì .enqueue())
         AuthApiService authApiService = ApiClient.createService(context, AuthApiService.class);
-        retrofit2.Response<ApiResponse<LoginResponse>> refreshResponse =
-                authApiService.refreshToken(new RefreshTokenRequest(refreshToken)).execute();
+        retrofit2.Response<ApiResponse<TokenResponse>> refreshResponse =
+                authApiService.refresh(new RefreshTokenRequest(refreshToken)).execute();
 
         // BƯỚC 4: Kiểm tra kết quả gọi API làm mới token
         if (refreshResponse.isSuccessful() && refreshResponse.body() != null && refreshResponse.body().isSuccess()) {
-            LoginResponse newTokens = refreshResponse.body().getData();
+            TokenResponse newTokens = refreshResponse.body().getData();
 
             // Nếu server trả về Token mới hợp lệ
             if (newTokens != null && !TextUtils.isEmpty(newTokens.getAccessToken())) {
