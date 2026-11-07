@@ -23,7 +23,7 @@
         <activity
             android:name=".app.auth.ui.LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.Fintrack"
+            android:theme="@style/Theme.Fintrack.Starting"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

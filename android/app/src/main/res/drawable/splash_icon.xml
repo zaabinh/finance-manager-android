@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma 01_Splash — v2 (679:10436): DrumArc motif at 6% behind Brand/Logo/Mark.
+     SplashScreen icon canvas is 288dp with a 192dp visible circle; motif fills it, logo at half (Figma 240:120). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/bg_splash_motif"
+        android:left="48dp" android:top="48dp" android:right="48dp" android:bottom="48dp" />
+    <!-- ic_logo is 248×243; vertical inset keeps its aspect ratio -->
+    <item android:drawable="@drawable/ic_logo"
+        android:left="96dp" android:top="97dp" android:right="96dp" android:bottom="97dp" />
+</layer-list>

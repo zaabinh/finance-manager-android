@@ -16,8 +16,9 @@
     <string name="setup_welcome_slogan_part3"> bộ. </string>
     <string name="setup_welcome_slogan_part4">Đồng</string>
     <string name="setup_welcome_slogan_part5"> hành.</string>
-    <string name="setup_welcome_title">Đồng tiền, Đồng bộ, Đồng hành</string>
-    <string name="setup_welcome_subtitle">Một cách đơn giản hơn\nđê quản lý tài chính cá nhận của bạn</string>
+    <!-- Each "Đồng" bold brand green (color/text/brand) as in Figma 718:11739 -->
+    <string name="setup_welcome_title"><b><font fgcolor="#FF246B43">Đồng</font></b> tiền. <b><font fgcolor="#FF246B43">Đồng</font></b> bộ. <b><font fgcolor="#FF246B43">Đồng</font></b> hành.</string>
+    <string name="setup_welcome_subtitle">Một cách đơn giản hơn\nđể quản lý tài chính cá nhân</string>
 
     <!-- Basic Info Screen -->
     <string name="setup_basic_title">Chúng tôi nên gọi bạn là gì?</string>
