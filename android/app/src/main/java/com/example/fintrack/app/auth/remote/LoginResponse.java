@@ -3,38 +3,17 @@ package com.example.fintrack.app.auth.remote;
 import com.google.gson.annotations.SerializedName;
 
 public class LoginResponse {
-    @SerializedName("accessToken")
-    private String accessToken;
+    @SerializedName("onboardingCompleted")
+    private boolean onboardingCompleted;
 
-    @SerializedName("refreshToken")
-    private String refreshToken;
+    @SerializedName("token")
+    private TokenResponse token;
 
-    @SerializedName("userId")
-    private String userId;
-
-    @SerializedName("email")
-    private String email;
-
-    @SerializedName("name")
-    private String name;
-
-    public String getAccessToken() {
-        return accessToken;
+    public boolean isOnboardingCompleted() {
+        return onboardingCompleted;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getName() {
-        return name;
+    public TokenResponse getToken() {
+        return token;
     }
 }

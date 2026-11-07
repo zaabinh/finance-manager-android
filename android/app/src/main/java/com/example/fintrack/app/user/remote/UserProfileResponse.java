@@ -2,36 +2,52 @@ package com.example.fintrack.app.user.remote;
 
 import com.google.gson.annotations.SerializedName;
 
-/**
- * Lớp DTO nhận dữ liệu phản hồi thông tin Hồ sơ cá nhân từ Server.
- */
 public class UserProfileResponse {
 
-    @SerializedName("userId")
-    private String userId; // Mã định danh duy nhất của người dùng
+    @SerializedName("id")
+    private String id;
+
+    @SerializedName("username")
+    private String username;
 
     @SerializedName("email")
-    private String email; // Địa chỉ email đăng ký tài khoản
+    private String email;
 
-    @SerializedName("name")
-    private String name; // Họ và tên hiển thị
+    @SerializedName("displayName")
+    private String displayName;
 
-    @SerializedName("phone")
-    private String phone; // Số điện thoại liên hệ
+    @SerializedName("currencyCode")
+    private String currencyCode;
 
-    public String getUserId() {
-        return userId;
+    @SerializedName("timeZone")
+    private String timeZone;
+
+    public String getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getName() {
-        return name;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public String getPhone() {
-        return phone;
+    /** Backward-compatible name used by the profile settings screen. */
+    public String getName() {
+        return displayName;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
     }
 }

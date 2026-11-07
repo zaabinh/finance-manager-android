@@ -60,7 +60,7 @@ public class AuthController {
         ipLimit("login-requests", request, 100, Duration.ofMinutes(15));
         var login = auth.login(body, ClientMetadata.from(request));
         return new ApiResponse<>(true, "Login successful",
-                new LoginResponse(login.displayName(), login.onboardingCompleted(), deliver(login.token(), response)), 200);
+                new LoginResponse(login.onboardingCompleted(), deliver(login.token(), response)), 200);
     }
     @PostMapping("/refresh")
     @io.swagger.v3.oas.annotations.Operation(summary = "Rotate a refresh token (body or cookie) and issue an access token")

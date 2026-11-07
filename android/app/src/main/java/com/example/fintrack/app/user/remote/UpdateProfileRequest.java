@@ -7,22 +7,22 @@ import com.google.gson.annotations.SerializedName;
  */
 public class UpdateProfileRequest {
 
-    @SerializedName("name")
-    private String name; // Họ và tên mới
+    @SerializedName("displayName")
+    private final String displayName;
 
-    @SerializedName("phone")
-    private String phone; // Số điện thoại mới
+    @SerializedName("timeZone")
+    private final String timeZone;
 
-    public UpdateProfileRequest(String name, String phone) {
-        this.name = name;
-        this.phone = phone;
+    public UpdateProfileRequest(String displayName, String timeZone) {
+        this.displayName = displayName;
+        this.timeZone = timeZone;
     }
 
-    public String getName() {
-        return name;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getTimeZone() {
+        return timeZone;
     }
 }

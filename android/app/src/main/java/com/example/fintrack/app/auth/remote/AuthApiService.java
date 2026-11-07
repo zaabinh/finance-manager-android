@@ -18,37 +18,34 @@ public interface AuthApiService {
 
     /** API Đăng ký tài khoản mới */
     @POST("api/v1/auth/register")
-    Call<ApiResponse<Void>> register(@Body RegisterRequest request);
+    Call<Void> register(@Body RegisterRequest request);
 
     /** API Xác thực email bằng mã OTP */
     @POST("api/v1/auth/verify-email")
-    Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
+    Call<Void> verifyEmail(@Body VerifyEmailRequest request);
 
     /** API Yêu cầu gửi lại email xác nhận tài khoản */
     @POST("api/v1/auth/resend-verification")
     Call<ApiResponse<Void>> resendVerification(@Body ResendOtpRequest request);
 
     /** API Yêu cầu gửi lại mã OTP */
-    @POST("api/v1/auth/resend-otp")
-    Call<ApiResponse<Void>> resendOtp(@Body ResendOtpRequest request);
+    @POST("api/v1/auth/resend-verification")
+    Call<Void> resendOtp(@Body ResendOtpRequest request);
 
     /** API Yêu cầu quên mật khẩu (gửi OTP về email) */
     @POST("api/v1/auth/forgot-password")
-    Call<ApiResponse<Void>> forgotPassword(@Body ForgotPasswordRequest request);
+    Call<Void> forgotPassword(@Body ForgotPasswordRequest request);
 
     /** API Đặt lại mật khẩu mới bằng mã OTP */
     @POST("api/v1/auth/reset-password")
-    Call<ApiResponse<Void>> resetPassword(@Body ResetPasswordRequest request);
+    Call<Void> resetPassword(@Body ResetPasswordRequest request);
 
-    /** API Làm mới Token tự động bằng RefreshToken */
-    @POST("api/v1/auth/refresh-token")
-    Call<ApiResponse<LoginResponse>> refreshToken(@Body RefreshTokenRequest request);
+    @POST("api/v1/auth/refresh")
+    Call<ApiResponse<TokenResponse>> refresh(@Body RefreshTokenRequest request);
 
-    /** API Đăng xuất thiết bị hiện tại */
     @POST("api/v1/auth/logout")
-    Call<ApiResponse<Void>> logout();
+    Call<Void> logout(@Body RefreshTokenRequest request);
 
-    /** API Đăng xuất tất cả thiết bị */
-    @POST("api/v1/auth/logout-all")
-    Call<ApiResponse<Void>> logoutAll();
+    @POST("api/v1/auth/change-password")
+    Call<ApiResponse<TokenResponse>> changePassword(@Body ChangePasswordRequest request);
 }

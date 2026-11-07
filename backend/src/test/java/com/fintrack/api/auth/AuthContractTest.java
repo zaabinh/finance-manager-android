@@ -50,37 +50,24 @@ class AuthContractTest {
     }
 
     @Test
-    void loginResponseMatchesTheAndroidContractAndContainsNoUserProfile() throws Exception {
+    void loginResponseContainsOnlyOnboardingStateAndTokens() throws Exception {
         Class<?> tokenType = Class.forName("com.fintrack.api.dto.response.auth.TokenResponse");
         Object token = tokenType.getDeclaredConstructor(String.class, String.class, String.class, long.class)
                 .newInstance("access-token", "refresh-token", "Bearer", 900L);
         Class<?> responseType = Class.forName("com.fintrack.api.dto.response.auth.LoginResponse");
-        Object response = responseType.getDeclaredConstructor(String.class, boolean.class, tokenType)
-                .newInstance("An Nguyen", false, token);
+        Object response = responseType.getDeclaredConstructor(boolean.class, tokenType)
+                .newInstance(false, token);
 
         JsonNode json = OBJECT_MAPPER.valueToTree(response);
 
         assertThat(json.fieldNames()).toIterable()
-                .containsExactlyInAnyOrder("displayName", "onboardingCompleted", "token");
+                .containsExactlyInAnyOrder("onboardingCompleted", "token");
         assertThat(json.path("token").fieldNames()).toIterable()
                 .containsExactlyInAnyOrder("accessToken", "refreshToken", "tokenType", "expiresIn");
         assertThat(json.has("user")).isFalse();
         assertThat(json.has("email")).isFalse();
         assertThat(json.has("userId")).isFalse();
-    }
-
-    @Test
-    void loginResponseFallsBackToUsernameForMissingDisplayName() throws Exception {
-        Class<?> tokenType = Class.forName("com.fintrack.api.dto.response.auth.TokenResponse");
-        Object token = tokenType.getDeclaredConstructor(String.class, String.class, String.class, long.class)
-                .newInstance("access-token", "refresh-token", "Bearer", 900L);
-        Class<?> responseType = Class.forName("com.fintrack.api.dto.response.auth.LoginResponse");
-
-        Object response = responseType
-                .getDeclaredMethod("of", String.class, String.class, boolean.class, tokenType)
-                .invoke(null, "  ", "an.nguyen", false, token);
-
-        assertThat(OBJECT_MAPPER.valueToTree(response).path("displayName").asText()).isEqualTo("an.nguyen");
+        assertThat(json.has("displayName")).isFalse();
     }
 
     @Test

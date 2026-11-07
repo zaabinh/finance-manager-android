@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import com.fintrack.api.config.AuthProperties;
+import com.fintrack.api.entity.enums.UserRole;
+import com.fintrack.api.entity.enums.UserStatus;
 import com.fintrack.api.exception.AppException;
 import com.fintrack.api.exception.ErrorCode;
 import com.fintrack.api.exception.RefreshTokenReuseException;
@@ -35,14 +37,14 @@ class RefreshTokenRotatingServiceTest {
 
     @BeforeEach void setup() {
         service = new RefreshTokenRotatingService(sessions, users, tokens, properties, clock);
-        var user = new UserRepository.UserRecord(userId, "user", "user@example.com", "hash", "ACTIVE", "USER", null, false, true);
+        var user = new UserRepository.UserRecord(userId, "user", "user@example.com", "hash", UserStatus.ACTIVE, UserRole.USER, null, false, true);
         when(users.lockById(userId)).thenReturn(Optional.of(user));
-        when(tokens.createAccessToken(userId, "USER")).thenReturn("access");
+        when(tokens.createAccessToken(userId, UserRole.USER)).thenReturn("access");
         when(sessions.create(any(), any(), any(), any(), any())).thenReturn(successorId);
     }
 
     @Test void loginStartsNewFamilyAndStoresOnlyTheHash() {
-        var pair = service.generateTokenPair(userId, "USER", null, client);
+        var pair = service.generateTokenPair(userId, UserRole.USER, null, client);
         var familyId = ArgumentCaptor.forClass(UUID.class);
         verify(sessions).create(eq(userId), familyId.capture(), eq(TokenHash.sha256(pair.refreshToken())),
                 eq(now.plus(Duration.ofDays(30))), eq(client));
