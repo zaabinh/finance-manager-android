@@ -59,6 +59,19 @@ class UserServiceTest {
     }
 
     @Test
+    void profileAndPreferencesFallbackToUsernameWhenDisplayNameIsUnset() {
+        when(preferences.findByUserId(userId))
+                .thenReturn(Optional.of(prefs(null, "Asia/Ho_Chi_Minh")));
+        when(notifications.findByUserId(userId)).thenReturn(Optional.of(notificationSettings(80)));
+
+        assertThat(service.getMyProfile(userId).displayName()).isEqualTo("minhanh");
+        assertThat(service.getMyPreferences(userId).displayName()).isEqualTo("minhanh");
+        var settings = service.getMySettings(userId);
+        assertThat(settings.profile().displayName()).isEqualTo("minhanh");
+        assertThat(settings.preferences().displayName()).isEqualTo("minhanh");
+    }
+
+    @Test
     void profilePatchUpdatesDisplayNameAndTimeZoneInPreferences() {
         when(preferences.findByUserId(userId))
                 .thenReturn(Optional.of(prefs("Minh Anh", "Asia/Ho_Chi_Minh")))
