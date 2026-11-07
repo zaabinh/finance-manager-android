@@ -30,7 +30,9 @@ public class UserRepository {
             toUserRole(rs.getString("role")),
             rs.getString("display_name"), 
             rs.getBoolean("onboarding_completed"), 
-            rs.getBoolean("email_verified")
+            rs.getBoolean("email_verified"),
+            rs.getObject("created_at", java.time.OffsetDateTime.class).toInstant(),
+            rs.getObject("updated_at", java.time.OffsetDateTime.class).toInstant()
         );
     public UserRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
     public UUID create(String username, String email, String passwordHash) {
@@ -62,6 +64,9 @@ public class UserRepository {
     public void updatePassword(UUID id, String hash) {
         jdbc.update("UPDATE fintrack.users SET password_hash = ?, updated_at = now() WHERE id = ?", hash, id);
     }
+    public void disable(UUID id) {
+        jdbc.update("UPDATE fintrack.users SET status = 'DISABLED', updated_at = now() WHERE id = ?", id);
+    }
     // 1. Tìm user kèm preferences theo ID
     public Optional<UserRecord> findWithPreferencesById(UUID id) {
         return jdbc.query(SELECT + " WHERE u.id = ?", MAPPER, id).stream().findFirst();
@@ -88,8 +93,15 @@ public class UserRepository {
         UserRole role, 
         String displayName, 
         boolean onboardingCompleted, 
-        boolean emailVerified
+        boolean emailVerified,
+        java.time.Instant createdAt,
+        java.time.Instant updatedAt
 ) {
+    public UserRecord(UUID id, String username, String email, String passwordHash, UserStatus status,
+            UserRole role, String displayName, boolean onboardingCompleted, boolean emailVerified) {
+        this(id, username, email, passwordHash, status, role, displayName, onboardingCompleted,
+                emailVerified, null, null);
+    }
     public User toUser() {
         User user = User.builder()
                 .id(this.id)
@@ -98,6 +110,8 @@ public class UserRepository {
                 .passwordHash(this.passwordHash)
                 .status(this.status)
                 .role(this.role)
+                .createdAt(this.createdAt)
+                .updatedAt(this.updatedAt)
                 .build();
 
         if (this.displayName != null) {

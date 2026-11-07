@@ -16,8 +16,8 @@ public class UserPreferencesRepository {
     private final JdbcTemplate jdbc;
 
     private static final String SELECT = """
-            SELECT user_id, display_name, currency_code, time_zone, 
-                   week_starts_on, notifications_enabled, updated_at 
+            SELECT user_id, display_name, currency_code, time_zone,
+                   week_starts_on, updated_at
             FROM fintrack.user_preferences
             """;
 
@@ -28,7 +28,6 @@ public class UserPreferencesRepository {
                     rs.getString("currency_code"),
                     rs.getString("time_zone"),
                     rs.getShort("week_starts_on"),
-                    rs.getBoolean("notifications_enabled"),
                     rs.getObject("updated_at", java.time.OffsetDateTime.class).toInstant()
             );
 
@@ -54,22 +53,21 @@ public class UserPreferencesRepository {
     }
 
     // 3. Cập nhật hoặc thêm mới (Upsert) cấu hình tùy chọn
-    public void upsert(UUID userId, String displayName, String currencyCode, 
-                       String timeZone, short weekStartsOn, boolean notificationsEnabled) {
+    public void upsert(UUID userId, String displayName, String currencyCode,
+                       String timeZone, short weekStartsOn) {
         String sql = """
                 INSERT INTO fintrack.user_preferences (
-                    user_id, display_name, currency_code, time_zone, 
-                    week_starts_on, notifications_enabled, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, now())
+                    user_id, display_name, currency_code, time_zone,
+                    week_starts_on, updated_at
+                ) VALUES (?, ?, ?, ?, ?, now())
                 ON CONFLICT (user_id) DO UPDATE SET
                     display_name = EXCLUDED.display_name,
                     currency_code = EXCLUDED.currency_code,
                     time_zone = EXCLUDED.time_zone,
                     week_starts_on = EXCLUDED.week_starts_on,
-                    notifications_enabled = EXCLUDED.notifications_enabled,
                     updated_at = now()
                 """;
-        jdbc.update(sql, userId, displayName, currencyCode, timeZone, weekStartsOn, notificationsEnabled);
+        jdbc.update(sql, userId, displayName, currencyCode, timeZone, weekStartsOn);
     }
 
     // 4. Record bất biến đại diện cho 1 dòng trong bảng fintrack.user_preferences
@@ -79,7 +77,6 @@ public class UserPreferencesRepository {
             String currencyCode,
             String timeZone,
             short weekStartsOn,
-            boolean notificationsEnabled,
             Instant updatedAt
     ) {}
 }

@@ -18,8 +18,9 @@ public class NotificationSettingsRepository {
     private final JdbcTemplate jdbc;
 
     private static final String SELECT = """
-            SELECT user_id, daily_reminder_enabled, daily_reminder_time, 
-                   budget_alert_enabled, budget_alert_threshold_percent, updated_at 
+            SELECT user_id, notifications_enabled, daily_reminder_enabled, daily_reminder_time,
+                   budget_alert_enabled, budget_alert_threshold_percent,
+                   budget_exceed_alert_enabled, other_notifications_enabled, updated_at
             FROM fintrack.notification_settings
             """;
 
@@ -29,10 +30,13 @@ public class NotificationSettingsRepository {
 
         return new NotificationSettingsRecord(
                 rs.getObject("user_id", UUID.class),
+                rs.getBoolean("notifications_enabled"),
                 rs.getBoolean("daily_reminder_enabled"),
                 reminderTime,
                 rs.getBoolean("budget_alert_enabled"),
                 rs.getShort("budget_alert_threshold_percent"),
+                rs.getBoolean("budget_exceed_alert_enabled"),
+                rs.getBoolean("other_notifications_enabled"),
                 rs.getObject("updated_at", java.time.OffsetDateTime.class).toInstant()
         );
     };
@@ -61,32 +65,43 @@ public class NotificationSettingsRepository {
     }
 
     // 3. Cập nhật hoặc thêm mới (Upsert) thiết lập thông báo
-    public void upsert(UUID userId, boolean dailyReminderEnabled, LocalTime dailyReminderTime, 
-                       boolean budgetAlertEnabled, short budgetAlertThresholdPercent) {
+    public void upsert(UUID userId, boolean notificationsEnabled, boolean dailyReminderEnabled,
+                       LocalTime dailyReminderTime, boolean budgetAlertEnabled,
+                       short budgetAlertThresholdPercent, boolean budgetExceedAlertEnabled,
+                       boolean otherNotificationsEnabled) {
         String sql = """
                 INSERT INTO fintrack.notification_settings (
-                    user_id, daily_reminder_enabled, daily_reminder_time, 
-                    budget_alert_enabled, budget_alert_threshold_percent, updated_at
-                ) VALUES (?, ?, ?, ?, ?, now())
+                    user_id, notifications_enabled, daily_reminder_enabled, daily_reminder_time,
+                    budget_alert_enabled, budget_alert_threshold_percent,
+                    budget_exceed_alert_enabled, other_notifications_enabled, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, now())
                 ON CONFLICT (user_id) DO UPDATE SET
+                    notifications_enabled = EXCLUDED.notifications_enabled,
                     daily_reminder_enabled = EXCLUDED.daily_reminder_enabled,
                     daily_reminder_time = EXCLUDED.daily_reminder_time,
                     budget_alert_enabled = EXCLUDED.budget_alert_enabled,
                     budget_alert_threshold_percent = EXCLUDED.budget_alert_threshold_percent,
+                    budget_exceed_alert_enabled = EXCLUDED.budget_exceed_alert_enabled,
+                    other_notifications_enabled = EXCLUDED.other_notifications_enabled,
                     updated_at = now()
                 """;
 
         Time sqlTime = (dailyReminderTime != null) ? Time.valueOf(dailyReminderTime) : null;
-        jdbc.update(sql, userId, dailyReminderEnabled, sqlTime, budgetAlertEnabled, budgetAlertThresholdPercent);
+        jdbc.update(sql, userId, notificationsEnabled, dailyReminderEnabled, sqlTime,
+                budgetAlertEnabled, budgetAlertThresholdPercent, budgetExceedAlertEnabled,
+                otherNotificationsEnabled);
     }
 
     // 4. Record bất biến đại diện cho 1 dòng trong bảng fintrack.notification_settings
     public record NotificationSettingsRecord(
             UUID userId,
+            boolean notificationsEnabled,
             boolean dailyReminderEnabled,
             LocalTime dailyReminderTime,
             boolean budgetAlertEnabled,
             short budgetAlertThresholdPercent,
+            boolean budgetExceedAlertEnabled,
+            boolean otherNotificationsEnabled,
             Instant updatedAt
     ) {}
 }

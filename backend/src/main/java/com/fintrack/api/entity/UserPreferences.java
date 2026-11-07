@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity 
-@Table(name = "user_preference", schema = "fintrack")
+@Table(name = "user_preferences", schema = "fintrack")
 @Getter 
 @Setter 
 @NoArgsConstructor 
@@ -39,10 +39,6 @@ public class UserPreferences {
     @Column(name = "week_starts_on", nullable = false)
     @Builder.Default
     private Short weekStartsOn = 1;
-
-    @Column(name = "notification_enabled", nullable = false)
-    @Builder.Default
-    Boolean notificationEnabled = false;
 
     @UpdateTimestamp 
     @Column(name = "updated_at", nullable = false)

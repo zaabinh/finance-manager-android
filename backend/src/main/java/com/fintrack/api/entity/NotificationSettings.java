@@ -8,7 +8,7 @@ import java.time.LocalTime;
 
 import org.hibernate.annotations.UpdateTimestamp;
 @Entity 
-@Table(name = "notificaition_settings", schema = "fintrack")
+@Table(name = "notification_settings", schema = "fintrack")
 @Getter
 @Setter
 @NoArgsConstructor 
@@ -24,6 +24,10 @@ public class NotificationSettings {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "notifications_enabled", nullable = false)
+    @Builder.Default
+    private Boolean notificationsEnabled = false;
+
     @Column(name = "daily_reminder_enabled", nullable = false)
     @Builder.Default
     private Boolean dailyReminderEnabled = false;
@@ -33,12 +37,20 @@ public class NotificationSettings {
     private LocalTime dailyReminderTime = LocalTime.of(20, 0);
 
     @Column(name = "budget_alert_enabled", nullable = false)
-    @Bulder.Default
+    @Builder.Default
     private Boolean budgetAlertEnabled = true;
 
     @Column(name = "budget_alert_threshold_percent", nullable = false)
     @Builder.Default
     private Short budgetAlertThresholdPercent = 80;
+
+    @Column(name = "budget_exceed_alert_enabled", nullable = false)
+    @Builder.Default
+    private Boolean budgetExceedAlertEnabled = true;
+
+    @Column(name = "other_notifications_enabled", nullable = false)
+    @Builder.Default
+    private Boolean otherNotificationsEnabled = true;
 
     @UpdateTimestamp 
     @Column(name = "updated_at", nullable = false)
