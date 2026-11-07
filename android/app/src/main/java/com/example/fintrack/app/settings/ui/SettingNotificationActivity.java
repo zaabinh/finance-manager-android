@@ -17,7 +17,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import java.util.Locale;
 
 public class SettingNotificationActivity extends AppCompatActivity {
-    private static final int[] THRESHOLDS = {50, 60, 70, 80, 90, 100};
+    public static final int[] THRESHOLDS = {50, 60, 70, 80, 90, 100};
 
     private SwitchMaterial switchNotifications;
     private SwitchMaterial switchDailyReminder;

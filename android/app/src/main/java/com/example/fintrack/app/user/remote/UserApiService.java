@@ -6,6 +6,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.PATCH;
+import retrofit2.http.POST;
 
 public interface UserApiService {
 
@@ -24,4 +25,7 @@ public interface UserApiService {
     @PATCH("api/v1/users/me/notification-settings")
     Call<ApiResponse<NotificationSettingsResponse>> updateNotificationSettings(
             @Body UpdateNotificationSettingsRequest request);
+
+    @POST("api/v1/users/me/first-setup")
+    Call<ApiResponse<FirstSetupResponse>> completeFirstSetup(@Body FirstSetupRequest request);
 }

@@ -8,9 +8,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.settings.ui.SettingNotificationActivity;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.Locale;
@@ -21,6 +23,9 @@ public class SetupNotificationActivity extends AppCompatActivity {
     // Các khóa (Key) để truyền dữ liệu thời gian nhắc nhở và trạng thái bật/tắt thông báo sang màn hình tiếp theo
     public static final String EXTRA_REMINDER_TIME = "extra_reminder_time";
     public static final String EXTRA_NOTIF_ENABLED = "extra_notif_enabled";
+    public static final String EXTRA_DAILY_REMINDER = "extra_daily_reminder";
+    public static final String EXTRA_BUDGET_ALERT = "extra_budget_alert";
+    public static final String EXTRA_BUDGET_THRESHOLD = "extra_budget_threshold";
 
     // Khai báo các thành phần giao diện (UI)
     private ImageView ivBack;                 // Nút Quay lại
@@ -29,11 +34,13 @@ public class SetupNotificationActivity extends AppCompatActivity {
     private LinearLayout llTimePickerRow;     // Dòng chứa thời gian (bấm vào để chọn giờ)
     private TextView tvReminderTime;          // Thẻ hiển thị giờ đã chọn (ví dụ: 20:00)
     private SwitchMaterial switchBudgetAlert;  // Công tắc bật/tắt cảnh báo ngân sách
+    private LinearLayout rowBudgetThreshold;  // Dòng chọn ngưỡng cảnh báo ngân sách
+    private TextView tvBudgetThreshold;       // Ngưỡng đã chọn (ví dụ: 80%)
+    private int selectedThreshold = 80;       // Ngưỡng mặc định
     private Button btnContinue;               // Nút "Tiếp tục"
     private TextView tvSkip;                  // Nút "Bỏ qua"
 
     // Lưu trữ thông tin cài đặt mặc định
-    private String displayName = "Minh Anh";   // Tên người dùng (nhận từ màn hình trước)
     private int selectedHour = 20;             // Giờ mặc định: 20h
     private int selectedMinute = 0;            // Phút mặc định: 00
 
@@ -41,11 +48,6 @@ public class SetupNotificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup_notification); // Gắn giao diện XML vào Activity
-
-        // Lấy tên người dùng được truyền sang từ màn hình SetupBasicInfoActivity (nếu có)
-        if (getIntent() != null && getIntent().hasExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME)) {
-            displayName = getIntent().getStringExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME);
-        }
 
         initViews();       // Ánh xạ các thành phần giao diện
         setupListeners();  // Gán sự kiện bấm cho các nút/dòng
@@ -59,6 +61,8 @@ public class SetupNotificationActivity extends AppCompatActivity {
         llTimePickerRow = findViewById(R.id.llTimePickerRow);
         tvReminderTime = findViewById(R.id.tvReminderTime);
         switchBudgetAlert = findViewById(R.id.switchBudgetAlert);
+        rowBudgetThreshold = findViewById(R.id.rowBudgetThreshold);
+        tvBudgetThreshold = findViewById(R.id.tvBudgetThreshold);
         btnContinue = findViewById(R.id.btnContinue);
         tvSkip = findViewById(R.id.tvSkip);
     }
@@ -70,6 +74,10 @@ public class SetupNotificationActivity extends AppCompatActivity {
 
         // Dòng chọn thời gian: Bấm vào dòng này sẽ hiển thị bảng đồng hồ chọn giờ
         llTimePickerRow.setOnClickListener(v -> showTimePickerDialog());
+
+        // Ngưỡng chỉ có ý nghĩa khi bật cảnh báo ngân sách
+        rowBudgetThreshold.setOnClickListener(v -> showThresholdPicker());
+        switchBudgetAlert.setOnCheckedChangeListener((b, checked) -> rowBudgetThreshold.setEnabled(checked));
 
         // Nút Tiếp tục: Chuyển sang bước tiếp theo
         btnContinue.setOnClickListener(v -> navigateNext());
@@ -107,12 +115,35 @@ public class SetupNotificationActivity extends AppCompatActivity {
         // Tạo Intent chuyển đến màn hình tạo Ví (SetupWalletActivity)
         Intent intent = new Intent(SetupNotificationActivity.this, SetupWalletActivity.class);
 
-        // Đóng gói dữ liệu (Tên, Giờ nhắc nhở, Trạng thái bật thông báo) để chuyển đi
-        intent.putExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME, displayName);
+        // Giữ lại toàn bộ input bước trước (tên, múi giờ) rồi thêm cài đặt thông báo
+        intent.putExtras(getIntent());
         intent.putExtra(EXTRA_REMINDER_TIME, formattedTime);
         intent.putExtra(EXTRA_NOTIF_ENABLED, notifEnabled);
+        intent.putExtra(EXTRA_DAILY_REMINDER, switchDailyReminder.isChecked());
+        intent.putExtra(EXTRA_BUDGET_ALERT, switchBudgetAlert.isChecked());
+        intent.putExtra(EXTRA_BUDGET_THRESHOLD, selectedThreshold);
 
         // Khởi chạy màn hình mới
         startActivity(intent);
+    }
+
+    // Hộp thoại chọn ngưỡng cảnh báo, dùng chung danh sách với màn Cài đặt thông báo
+    private void showThresholdPicker() {
+        int[] thresholds = SettingNotificationActivity.THRESHOLDS;
+        String[] labels = new String[thresholds.length];
+        int selected = 0;
+        for (int i = 0; i < thresholds.length; i++) {
+            labels[i] = thresholds[i] + "%";
+            if (thresholds[i] == selectedThreshold) selected = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.budget_alert_threshold)
+                .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                    selectedThreshold = thresholds[which];
+                    tvBudgetThreshold.setText(labels[which]);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
     }
 }
