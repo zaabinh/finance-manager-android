@@ -3,10 +3,12 @@ package com.fintrack.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fintrack.api.dto.request.user.UpdateNotificationSettingsRequest;
+import com.fintrack.api.dto.request.user.FirstSetupRequest;
 import com.fintrack.api.dto.request.user.UpdateProfileRequest;
 import com.fintrack.api.entity.enums.UserRole;
 import com.fintrack.api.entity.enums.UserStatus;
@@ -92,6 +94,31 @@ class UserServiceTest {
         verify(notifications).upsert(userId, true, true, LocalTime.of(20, 0), true,
                 (short) 90, true, true);
         assertThat(response.budgetAlertThresholdPercent()).isEqualTo((short) 90);
+    }
+
+    @Test
+    void firstSetupSavesProfileAndNotificationsThenCompletesOnboarding() {
+        when(preferences.findByUserId(userId))
+                .thenReturn(Optional.of(prefs("Minh Anh", "Asia/Ho_Chi_Minh")))
+                .thenReturn(Optional.of(prefs("An", "Asia/Tokyo")));
+        when(notifications.findByUserId(userId)).thenReturn(Optional.of(notificationSettings(80)));
+
+        var response = service.completeFirstSetup(userId, new FirstSetupRequest(
+                new UpdateProfileRequest("An", "Asia/Tokyo"),
+                new UpdateNotificationSettingsRequest(true, false, LocalTime.of(21, 0), true, (short) 80, true, true)));
+
+        verify(preferences).upsert(userId, "An", "VND", "Asia/Tokyo", (short) 1);
+        verify(notifications).upsert(userId, true, false, LocalTime.of(21, 0), true, (short) 80, true, true);
+        verify(users).completeOnboarding(userId);
+        assertThat(response.onboardingCompleted()).isTrue();
+    }
+
+    @Test
+    void firstSetupRequiresDisplayName() {
+        assertThatThrownBy(() -> service.completeFirstSetup(userId,
+                new FirstSetupRequest(new UpdateProfileRequest(" ", "Asia/Tokyo"), null)))
+                .isInstanceOf(AppException.class);
+        verify(users, never()).completeOnboarding(userId);
     }
 
     private UserPreferencesRecord prefs(String displayName, String timeZone) {

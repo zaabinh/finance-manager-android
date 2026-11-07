@@ -1,10 +1,12 @@
 package com.fintrack.api.controller;
 
 import com.fintrack.api.dto.request.user.DeactivateUserRequest;
+import com.fintrack.api.dto.request.user.FirstSetupRequest;
 import com.fintrack.api.dto.request.user.UpdateNotificationSettingsRequest;
 import com.fintrack.api.dto.request.user.UpdatePreferencesRequest;
 import com.fintrack.api.dto.request.user.UpdateProfileRequest;
 import com.fintrack.api.dto.response.ApiResponse;
+import com.fintrack.api.dto.response.user.FirstSetupResponse;
 import com.fintrack.api.dto.response.user.NotificationSettingsResponse;
 import com.fintrack.api.dto.response.user.UserPreferencesResponse;
 import com.fintrack.api.dto.response.user.UserProfileResponse;
@@ -19,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -70,6 +73,12 @@ public class UserController {
             @AuthenticationPrincipal AuthenticatedUser principal,
             @Valid @RequestBody UpdateNotificationSettingsRequest request) {
         return ok("Notification settings updated", users.updateMyNotificationSettings(principal.id(), request));
+    }
+
+    @PostMapping("/first-setup")
+    public ApiResponse<FirstSetupResponse> completeFirstSetup(@AuthenticationPrincipal AuthenticatedUser principal,
+            @Valid @RequestBody FirstSetupRequest request) {
+        return ok("First setup completed", users.completeFirstSetup(principal.id(), request));
     }
 
     @DeleteMapping
