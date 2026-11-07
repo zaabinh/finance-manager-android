@@ -17,4 +17,19 @@ public interface CategoryApiService {
     /** API Thêm mới một danh mục thu/chi */
     @POST("api/v1/categories")
     Call<CategoryResponse> addCategory(@Body CategoryRequest request);
+
+    @GET("api/v1/categories")
+    Call<List<CategoryResponse>> categories(@Query("status") String status, @Query("categoryType") String type);
+
+    @GET("api/v1/categories/{id}")
+    Call<CategoryResponse> category(@Path("id") String id);
+
+    @PUT("api/v1/categories/{id}")
+    Call<CategoryResponse> updateCategory(@Path("id") String id, @Body CategoryRequest request);
+
+    @PATCH("api/v1/categories/{id}/status")
+    Call<CategoryResponse> categoryStatus(@Path("id") String id, @Body CategoryStatusRequest request);
+
+    @DELETE("api/v1/categories/{id}")
+    Call<Void> archiveCategory(@Path("id") String id);
 }

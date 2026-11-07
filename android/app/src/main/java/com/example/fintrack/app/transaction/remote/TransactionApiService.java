@@ -1,5 +1,6 @@
 package com.example.fintrack.app.transaction.remote;
 
+import com.example.fintrack.app.finance.domain.FinanceBook;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -10,8 +11,16 @@ import retrofit2.http.*;
 public interface TransactionApiService {
 
     /** API Lấy danh sách giao dịch phân trang từ Server */
+    /** Lịch sử phân trang theo contract mục 5; tham số null bị bỏ khỏi URL */
     @GET("api/v1/transactions")
-    Call<TransactionPageResponse> transactions(@Query("page") int page, @Query("size") int size);
+    Call<TransactionPageResponse> transactions(@Query("page") int page, @Query("size") int size,
+                                               @Query("dateFrom") String dateFrom, @Query("dateTo") String dateTo,
+                                               @Query("walletId") String walletId, @Query("categoryId") String categoryId,
+                                               @Query("type") FinanceBook.Type type, @Query("q") String q, @Query("sort") String sort);
+
+    /** API Chi tiết giao dịch theo ID (kể cả VOIDED để audit) */
+    @GET("api/v1/transactions/{id}")
+    Call<TransactionResponse> transaction(@Path("id") String id);
 
     /** API Thêm mới một giao dịch (Thu nhập, Chi tiêu, Chuyển khoản) */
     @POST("api/v1/transactions")

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="finance_insufficient_funds">Ví không đủ tiền cho thao tác này. Dữ liệu được giữ nguyên.</string>
+    <string name="finance_transaction_voided">Giao dịch này đã được xóa. Tải lại để xem trạng thái hiện tại.</string>
+    <string name="finance_archived">Dữ liệu đã lưu trữ. Khôi phục hoặc chọn dữ liệu đang hoạt động trước khi sửa.</string>
     <string name="finance_saved">Đã cập nhật</string>
     <string name="finance_loading_value">—</string>
     <string name="finance_conflict">Dữ liệu đã thay đổi hoặc bị trùng. Hãy tải lại và kiểm tra trước khi lưu.</string>

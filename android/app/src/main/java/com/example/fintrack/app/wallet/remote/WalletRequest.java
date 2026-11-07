@@ -15,9 +15,18 @@ public class WalletRequest {
     @SerializedName("openingBalanceMinor")
     public final long openingBalanceMinor;
 
+    public final boolean includeInAssets;
+    public final int sortOrder;
+
     public WalletRequest(String name, long amount, FinanceBook.WalletType type) {
+        this(name, amount, type, true, 0);
+    }
+
+    public WalletRequest(String name, long amount, FinanceBook.WalletType type, boolean includeInAssets, int sortOrder) {
         this.name = name;
         openingBalanceMinor = amount;
         walletType = type;
+        this.includeInAssets = includeInAssets;
+        this.sortOrder = sortOrder;
     }
 }

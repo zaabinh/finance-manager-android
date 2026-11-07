@@ -14,6 +14,13 @@ public interface BudgetApiService {
     @GET("api/v1/budgets")
     Call<List<BudgetResponse>> budgets();
 
+    @GET("api/v1/budgets")
+    Call<List<BudgetResponse>> budgets(@Query("month") String month, @Query("categoryId") String categoryId,
+            @Query("status") String status);
+
+    @GET("api/v1/budgets/{id}")
+    Call<BudgetResponse> budget(@Path("id") String id);
+
     /** API Thiết lập một khoản ngân sách mới */
     @POST("api/v1/budgets")
     Call<BudgetResponse> addBudget(@Body BudgetRequest request);

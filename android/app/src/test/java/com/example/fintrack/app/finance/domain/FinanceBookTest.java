@@ -56,7 +56,9 @@ public class FinanceBookTest {
         book.save(first, false); book.save(transaction(FinanceBook.Type.EXPENSE, 15_000, "food", cash, null), false);
         assertTrue(book.usage(budget).exceeded); assertEquals(-10_000, book.usage(budget).remaining);
         book.deleteTransaction(first.id); assertEquals(15_000, book.spent(budget)); assertFalse(book.usage(budget).warning);
-        book.deleteBudget(budget.id); assertEquals(1, book.state().transactions.size());
+        // Soft delete: the voided record stays for audit, budget deletion never touches the ledger.
+        book.deleteBudget(budget.id); assertEquals(2, book.state().transactions.size());
+        assertEquals("VOIDED", book.state().transactions.get(0).status);
     }
     @Test public void budgetsUseExactCategoryAndMonthAndExpenseOnly() {
         FinanceBook.Budget budget = new FinanceBook.Budget("b", "food", "2026-10", 500_000); book.save(budget, false);
@@ -107,7 +109,7 @@ public class FinanceBookTest {
         problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, true));
         book.save(value, false);
         problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, false));
-        book.deleteTransaction(value.id); problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, true));
+        book.deleteTransaction(value.id); problem(FinanceBook.Problem.VOIDED, () -> book.save(value, true));
     }
     @Test public void searchIgnoresVietnameseAccentsAndMatchesDestinationWallet() {
         book.save(transaction(FinanceBook.Type.TRANSFER, 100, null, cash, bank), false);
@@ -122,7 +124,9 @@ public class FinanceBookTest {
     }
     @Test public void namesAndMonthsAreValidated() {
         problem(FinanceBook.Problem.NAME, () -> book.addWallet("tiền mặt", 0));
-        problem(FinanceBook.Problem.NAME, () -> book.addCategory(" An uong ", FinanceBook.Type.EXPENSE));
+        // Contract: case-insensitive but accent-sensitive.
+        problem(FinanceBook.Problem.NAME, () -> book.addCategory(" ĂN UỐNG ", FinanceBook.Type.EXPENSE));
+        book.addCategory("An uong", FinanceBook.Type.EXPENSE);
         for (String month : new String[]{"2026-00", "2026-13", "26-10", "2026-1", ""})
             problem(FinanceBook.Problem.DATE, () -> FinanceBook.validateMonth(month));
     }

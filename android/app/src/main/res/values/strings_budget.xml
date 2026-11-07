@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="budget_history_hint">Xem lịch sử giao dịch để tra cứu chi tiêu theo danh mục và tháng.</string>
+    <string name="budget_view_history">Xem giao dịch trong tháng</string>
     <string name="budget_period_label">Tháng áp dụng</string>
     <string name="error_duplicate_budget">Danh mục này đã được thiết lập ngân sách trong tháng</string>
 </resources>

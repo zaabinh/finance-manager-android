@@ -54,12 +54,64 @@ public class FinanceApiContractTest {
         assertEquals(value.occurredAt, TransactionResponse.parseTimestamp(json.get("occurredAt").getAsString()));
         action.remote.send(api); assertEquals(value.id, new Gson().fromJson(body(), com.google.gson.JsonObject.class).get("clientRequestId").getAsString());
     }
-    @Test public void transferOmitsCategoryAndIncludesBothWallets() throws Exception {
-        FinanceBook.Transaction value = new FinanceBook.Transaction("id", FinanceBook.Type.TRANSFER, 50_000, "ignored", "from", "to", 0, "", "");
-        FinanceAction.transaction(value, true).remote.send(apiBundle(200, "{\"transactionId\":\"id\"}"));
-        assertEquals("PUT", captured.method()); assertEquals("/api/v1/transactions/id", captured.url().encodedPath());
-        com.google.gson.JsonObject json = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
-        assertFalse(json.has("categoryId")); assertEquals("from", json.get("walletId").getAsString()); assertEquals("to", json.get("destinationWalletId").getAsString());
+    // Was transferOmitsCategoryAndIncludesBothWallets: TRANSFER is out of scope (contract section 5), so it is never sent.
+    @Test public void transferIsRejectedBeforeAnyRequestAndInMock() {
+        FinanceBook.Transaction value = new FinanceBook.Transaction("id", FinanceBook.Type.TRANSFER, 50_000, null, "from", "to", 0, "", "");
+        FinanceApiBundle api = apiBundle(200, "{\"transactionId\":\"id\"}");
+        for (boolean editing : new boolean[]{false, true}) {
+            FinanceBook.Failure failure = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.transaction(value, editing).remote.send(api));
+            assertEquals("TRANSACTION_TYPE_UNSUPPORTED", failure.code);
+        }
+        assertNull(captured);
+        FinanceBook book = new FinanceBook(FinanceBook.empty());
+        String cash = book.addWallet("Tiền mặt", 100_000).id, bank = book.addWallet("Ngân hàng", 0).id;
+        FinanceBook.Transaction mock = new FinanceBook.Transaction("t", FinanceBook.Type.TRANSFER, 1_000, null, cash, bank, 0, "", "");
+        assertEquals(FinanceBook.Problem.VALIDATION, assertThrows(FinanceBook.Failure.class,
+                () -> FinanceAction.transaction(mock, false).local.accept(book)).problem);
+        assertTrue(book.state().transactions.isEmpty());
+    }
+    @Test public void postUsesStableClientRequestIdSeparateFromIdAndPutOmitsIt() throws Exception {
+        FinanceBook.Transaction value = new FinanceBook.Transaction("local-id", FinanceBook.Type.INCOME, 1_000, "c", "w", "ignored", 0, "", "");
+        value.clientRequestId = "3bef66f9-8969-447e-b0ea-aa94dd3422f3";
+        FinanceApiBundle api = apiBundle(201, "{\"transactionId\":\"server-id\",\"status\":\"POSTED\"}");
+        FinanceAction action = FinanceAction.transaction(value, false);
+        action.remote.send(api);
+        com.google.gson.JsonObject first = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
+        action.remote.send(api); // timeout retry reuses the same action/key
+        com.google.gson.JsonObject retry = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
+        assertEquals(value.clientRequestId, first.get("clientRequestId").getAsString());
+        assertEquals(first, retry); assertFalse(first.has("destinationWalletId"));
+        FinanceAction.transaction(value, true).remote.send(api);
+        assertEquals("/api/v1/transactions/local-id", captured.url().encodedPath());
+        assertFalse(new Gson().fromJson(body(), com.google.gson.JsonObject.class).has("clientRequestId"));
+    }
+    @Test public void replayedVoidedCreateIsNotReportedAsCreated() {
+        FinanceBook.Transaction value = new FinanceBook.Transaction("id", FinanceBook.Type.EXPENSE, 1_000, "c", "w", null, 0, "", "");
+        FinanceBook.Failure failure = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.transaction(value, false).remote
+                .send(apiBundle(200, "{\"transactionId\":\"id\",\"status\":\"VOIDED\",\"voidedAt\":\"2026-11-07T08:45:00Z\"}")));
+        assertEquals(FinanceBook.Problem.VOIDED, failure.problem); assertEquals("TRANSACTION_REPLAY_VOIDED", failure.code);
+    }
+    @Test public void transactionErrorCodesAndFieldErrorsAreKeptForLocalisation() {
+        FinanceBook.Failure funds = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.deleteTransaction("id").remote.send(apiBundle(409,
+                "{\"status\":409,\"errorCode\":\"WALLET_INSUFFICIENT_FUNDS\",\"message\":\"Wallet would be negative\"}")));
+        assertEquals(FinanceBook.Problem.INSUFFICIENT_FUNDS, funds.problem); assertNull(funds.userMessage);
+        FinanceBook.Failure voided = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.transaction(new FinanceBook.Transaction("id",
+                FinanceBook.Type.EXPENSE, 1, "c", "w", null, 0, "", ""), true).remote.send(apiBundle(409, "{\"errorCode\":\"TRANSACTION_VOIDED\"}")));
+        assertEquals(FinanceBook.Problem.VOIDED, voided.problem);
+        FinanceBook.Failure fields = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.deleteTransaction("id").remote.send(apiBundle(422,
+                "{\"errorCode\":\"VALIDATION_ERROR\",\"fieldErrors\":[{\"field\":\"amountMinor\",\"message\":\"must be positive\"}]}")));
+        assertEquals(FinanceBook.Problem.VALIDATION, fields.problem); assertEquals(java.util.Collections.singletonList("amountMinor"), fields.fields);
+        FinanceBook.Failure missing = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.deleteTransaction("id").remote.send(apiBundle(404,
+                "{\"errorCode\":\"NOT_FOUND\",\"message\":\"Not found\"}")));
+        assertEquals(FinanceBook.Problem.NOT_FOUND, missing.problem); assertNull(missing.userMessage);
+    }
+    @Test public void detailResponseCarriesLifecycleFields() {
+        TransactionResponse response = new Gson().fromJson("{\"transactionId\":\"t\",\"transactionType\":\"EXPENSE\",\"amountMinor\":95000,"
+                + "\"occurredAt\":\"2026-11-07T08:45:00Z\",\"status\":\"VOIDED\",\"voidedAt\":\"2026-11-08T00:00:00Z\","
+                + "\"createdAt\":\"2026-11-07T08:45:01Z\",\"updatedAt\":\"2026-11-08T00:00:00Z\",\"clientRequestId\":\"k\"}", TransactionResponse.class);
+        assertEquals("2026-11-07T08:45:01Z", response.createdAt); assertEquals("2026-11-08T00:00:00Z", response.updatedAt);
+        FinanceBook.Transaction value = response.domain();
+        assertEquals("VOIDED", value.status); assertEquals("k", value.clientRequestId); assertEquals(95_000, value.amount);
     }
     @Test public void budgetRequestUsesMonthAndLimitAndSupports204Delete() throws Exception {
         FinanceAction.budget(new FinanceBook.Budget("b", "food", "2026-10", 1_500_000), true).remote.send(apiBundle(200, "{\"budgetId\":\"b\"}"));
@@ -71,9 +123,21 @@ public class FinanceApiContractTest {
     }
     @Test public void listUsesExplicitPaginationAndDirectDtoBodies() {
         FinanceApiBundle bundle = apiBundle(200, "{\"items\":[],\"page\":2,\"totalPages\":3}");
-        TransactionPageResponse page = FinanceAction.required(bundle.transactions.transactions(2, 200));
+        TransactionPageResponse page = FinanceAction.required(bundle.transactions.transactions(2, 200, null, null, null, null, null, null, null));
         assertEquals(2, page.page); assertTrue(page.items.isEmpty());
         assertEquals("2", captured.url().queryParameter("page")); assertEquals("200", captured.url().queryParameter("size"));
+        assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("page", "size")), captured.url().queryParameterNames()); // null filters are omitted
+    }
+    @Test public void historyQuerySendsContractFilters() {
+        FinanceBook.Query query = FinanceBook.Query.month("2026-02", FinanceBook.Type.INCOME, "w", "c", "  50% off ");
+        FinanceApiBundle bundle = apiBundle(200, "{\"items\":[],\"page\":0,\"totalPages\":0}");
+        FinanceAction.required(bundle.transactions.transactions(0, 50, query.dateFrom, query.dateTo, query.walletId, query.categoryId,
+                query.type, query.q, query.sort));
+        okhttp3.HttpUrl url = captured.url();
+        assertEquals("2026-02-01", url.queryParameter("dateFrom")); assertEquals("2026-02-28", url.queryParameter("dateTo"));
+        assertEquals("INCOME", url.queryParameter("type")); assertEquals("w", url.queryParameter("walletId"));
+        assertEquals("c", url.queryParameter("categoryId")); assertEquals("50% off", url.queryParameter("q"));
+        assertEquals("occurredAt,desc", url.queryParameter("sort"));
     }
     @Test public void httpErrorsKeepTheirMeaningAndDoNotBecomeMockSuccess() {
         int[] statuses = {401, 404, 409, 422, 500};

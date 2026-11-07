@@ -28,6 +28,10 @@ public abstract class FinanceActivity extends AppCompatActivity {
     protected abstract void bind(Bundle saved); // Khởi tạo các view và sự kiện
     protected abstract void render(); // Cập nhật giao diện khi dữ liệu tài chính thay đổi
     protected void loading(boolean loading) { } // Xử lý hiệu ứng loading
+    protected com.example.fintrack.app.finance.data.FinanceRepository.Scope readScope() {
+        return com.example.fintrack.app.finance.data.FinanceRepository.Scope.REFERENCES;
+    }
+    protected String detailId() { return null; }
 
     @Override 
     protected void onCreate(Bundle saved) {
@@ -37,6 +41,7 @@ public abstract class FinanceActivity extends AppCompatActivity {
         setContentView(layout());
         FinanceUi.insets(findViewById(android.R.id.content));
         model = new ViewModelProvider(this).get(FinanceViewModel.class);
+        model.configure(readScope(), detailId());
         bind(saved);
 
         // Quan sát dữ liệu tài chính (FinanceBook) từ LiveData
@@ -60,7 +65,7 @@ public abstract class FinanceActivity extends AppCompatActivity {
         // Quan sát sự kiện hoàn tất lệnh (Command) thêm/sửa/xóa
         model.command().observe(this, command -> {
             if (!command.consume()) return;
-            if (command.error != null) Toast.makeText(this, FinanceUi.error(command.error), Toast.LENGTH_LONG).show();
+            if (command.error != null) { CharSequence text = failure(command); if (text != null) Toast.makeText(this, text, Toast.LENGTH_LONG).show(); }
             else if (command.complete) {
                 Toast.makeText(this, R.string.finance_saved, Toast.LENGTH_SHORT).show();
                 completed();
@@ -69,6 +74,11 @@ public abstract class FinanceActivity extends AppCompatActivity {
     }
 
     protected void completed() { setResult(RESULT_OK); finish(); }
+
+    /** Text for a failed command; screens may localise specific server codes. Null shows nothing. */
+    protected CharSequence failure(FinanceViewModel.Command command) {
+        return command.message != null ? command.message : getString(FinanceUi.error(command.error));
+    }
 
     /** Kiểm tra xem người dùng đã đăng nhập đúng tài khoản hay chưa */
     private boolean authenticated() {

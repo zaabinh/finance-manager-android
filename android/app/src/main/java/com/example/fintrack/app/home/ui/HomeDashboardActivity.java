@@ -56,9 +56,9 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
     // Biến lưu trạng thái hiển thị số dư và các giá trị tiền tệ (tính theo đơn vị cents)
     private boolean isBalanceHidden = false;
-    private long totalAssetsCents = 32750000;
-    private long availableCents = 18420000;
-    private long savingsCents = 14330000;
+    private long totalAssetsCents;
+    private long availableCents;
+    private long savingsCents;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +133,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
             }
             if (resource.getData() == null) return;
             FinanceBook book = resource.getData();
-            String month = FinanceBook.month(System.currentTimeMillis());
+            String month = book.monthAt(System.currentTimeMillis());
 
             // Tính toán tài sản tổng, tiền tiết kiệm và tiền khả dụng
             totalAssetsCents = book.assets(false);
@@ -150,11 +150,12 @@ public class HomeDashboardActivity extends AppCompatActivity {
             if (tvBudgetUsage != null && tvBudgetRemaining != null && pbBudgetProgress != null) {
                 if (limit > 0) {
                     // Đã thiết lập hạn mức ngân sách
-                    int percent = (int) Math.min(100, (spent * 100) / limit);
+                    int percent = java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
+                            .divide(java.math.BigInteger.valueOf(limit)).min(java.math.BigInteger.valueOf(100)).intValue();
                     pbBudgetProgress.setProgress(percent);
                     tvBudgetUsage.setText(getString(R.string.budget_usage_format, FinanceUi.money(spent), FinanceUi.money(limit)));
 
-                    if (spent > limit) {
+                    if (spent >= limit) {
                         // Trường hợp chi tiêu vượt quá hạn mức
                         tvBudgetStatusBadge.setText(R.string.budget_status_exceeded);
                         tvBudgetStatusBadge.setBackgroundResource(R.drawable.bg_badge_over_budget);

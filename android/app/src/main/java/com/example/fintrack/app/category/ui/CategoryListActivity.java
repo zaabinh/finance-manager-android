@@ -5,142 +5,67 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.adapter.CategoryAdapter;
+import com.example.fintrack.app.category.model.CategoryIcons;
 import com.example.fintrack.app.category.model.CategoryItem;
-import com.example.fintrack.app.category.viewmodel.CategoryViewModel;
-
+import com.example.fintrack.app.finance.data.FinanceAction;
+import com.example.fintrack.app.finance.data.FinanceRepository;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.ui.FinanceActivity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-public class CategoryListActivity extends AppCompatActivity {
-
-    private ImageView btnBack;
-    private TextView btnAddCategory;
-    private TextView tabSpend;
-    private TextView tabIncome;
-    private EditText etSearchCategory;
-    private RecyclerView rvCategories;
-    private android.view.View layoutEmptyCategories;
-
-    private CategoryViewModel categoryViewModel;
-    private CategoryAdapter categoryAdapter;
-    private String currentTab = "EXPENSE"; // EXPENSE or INCOME
-    private List<CategoryItem> fullList = new ArrayList<>();
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_category_list);
-
-        categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
-
-        initViews();
-        setupRecyclerView();
-        setupObservers();
-        setupListeners();
-    }
-
-    private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
-        btnAddCategory = findViewById(R.id.btnAddCategory);
-        tabSpend = findViewById(R.id.tabSpend);
-        tabIncome = findViewById(R.id.tabIncome);
-        etSearchCategory = findViewById(R.id.etSearchCategory);
-        rvCategories = findViewById(R.id.rvCategories);
-        layoutEmptyCategories = findViewById(R.id.layoutEmptyCategories);
-    }
-
-    private void setupRecyclerView() {
-        categoryAdapter = new CategoryAdapter(new CategoryAdapter.OnCategoryClickListener() {
-            @Override
-            public void onCategoryClick(CategoryItem category) {
-                Intent intent = new Intent(CategoryListActivity.this, CategoryEditActivity.class);
-                intent.putExtra("CATEGORY_ID", category.getId());
-                startActivity(intent);
+public class CategoryListActivity extends FinanceActivity {
+    private CategoryAdapter adapter;
+    private EditText search;
+    private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
+    @Override protected int layout() { return R.layout.activity_category_list; }
+    @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.CATEGORIES; }
+    @Override protected void bind(Bundle saved) {
+        if (saved != null) type = FinanceBook.Type.valueOf(saved.getString("categoryType","EXPENSE"));
+        search = findViewById(R.id.etSearchCategory);
+        RecyclerView list = findViewById(R.id.rvCategories);
+        adapter = new CategoryAdapter(new CategoryAdapter.OnCategoryClickListener() {
+            @Override public void onCategoryClick(CategoryItem category) {
+                startActivity(new Intent(CategoryListActivity.this,CategoryEditActivity.class).putExtra("CATEGORY_ID",category.getId()));
             }
-
-            @Override
-            public void onStatusToggle(CategoryItem category, boolean isChecked) {
-                categoryViewModel.toggleStatus(category.getId(), isChecked);
+            @Override public void onStatusToggle(CategoryItem category,boolean active) {
+                if (!model.busy()) model.change(FinanceAction.categoryStatus(category.getId(),active),false);
             }
         });
-        rvCategories.setLayoutManager(new LinearLayoutManager(this));
-        rvCategories.setAdapter(categoryAdapter);
-    }
-
-    private void setupObservers() {
-        categoryViewModel.getCategories().observe(this, categories -> {
-            if (categories != null) {
-                fullList = categories;
-                filterCategories();
-            }
+        list.setLayoutManager(new LinearLayoutManager(this)); list.setAdapter(adapter);
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        findViewById(R.id.btnAddCategory).setOnClickListener(v -> startActivity(
+                new Intent(this,CategoryAddActivity.class).putExtra("category_type",type.name())));
+        findViewById(R.id.tabSpend).setOnClickListener(v -> { type=FinanceBook.Type.EXPENSE; render(); });
+        findViewById(R.id.tabIncome).setOnClickListener(v -> { type=FinanceBook.Type.INCOME; render(); });
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after) {}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count) { render(); }
+            @Override public void afterTextChanged(Editable s) {}
         });
     }
-
-    private void filterCategories() {
-        String query = etSearchCategory.getText().toString().trim().toLowerCase();
-        List<CategoryItem> filtered = new ArrayList<>();
-        for (CategoryItem c : fullList) {
-            if (currentTab.equalsIgnoreCase(c.getType())) {
-                if (query.isEmpty() || c.getName().toLowerCase().contains(query)) {
-                    filtered.add(c);
-                }
-            }
+    @Override protected void render() {
+        if (adapter == null || book == null) return;
+        String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);
+        List<CategoryItem> items=new ArrayList<>();
+        for (FinanceBook.Category c:book.state().categories) {
+            if(c.type==type && c.name.toLowerCase(Locale.ROOT).contains(query))
+                items.add(new CategoryItem(c.id,c.name,c.type.name(),CategoryIcons.resource(c.iconKey),"",c.archivedAt==null));
         }
-        categoryAdapter.setCategories(filtered);
-        boolean isEmpty = filtered.isEmpty();
-        if (layoutEmptyCategories != null) {
-            layoutEmptyCategories.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
-        }
-        rvCategories.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+        adapter.setCategories(items);
+        visible(R.id.layoutEmptyCategories,items.isEmpty()); visible(R.id.rvCategories,!items.isEmpty());
+        findViewById(R.id.tabSpend).setBackgroundResource(type==FinanceBook.Type.EXPENSE?R.drawable.bg_pill_selected:android.R.color.transparent);
+        findViewById(R.id.tabIncome).setBackgroundResource(type==FinanceBook.Type.INCOME?R.drawable.bg_pill_selected:android.R.color.transparent);
+        ((android.widget.TextView)findViewById(R.id.tabSpend)).setTextColor(getColor(type==FinanceBook.Type.EXPENSE?R.color.white:R.color.text_secondary));
+        ((android.widget.TextView)findViewById(R.id.tabIncome)).setTextColor(getColor(type==FinanceBook.Type.INCOME?R.color.white:R.color.text_secondary));
     }
-
-    private void setupListeners() {
-        btnBack.setOnClickListener(v -> finish());
-
-        btnAddCategory.setOnClickListener(v -> {
-            Intent intent = new Intent(CategoryListActivity.this, CategoryAddActivity.class);
-            startActivity(intent);
-        });
-
-        tabSpend.setOnClickListener(v -> {
-            currentTab = "EXPENSE";
-            tabSpend.setBackgroundResource(R.drawable.bg_pill_selected);
-            tabSpend.setTextColor(getColor(R.color.white));
-            tabIncome.setBackgroundResource(android.R.color.transparent);
-            tabIncome.setTextColor(getColor(R.color.text_secondary));
-            filterCategories();
-        });
-
-        tabIncome.setOnClickListener(v -> {
-            currentTab = "INCOME";
-            tabIncome.setBackgroundResource(R.drawable.bg_pill_selected);
-            tabIncome.setTextColor(getColor(R.color.white));
-            tabSpend.setBackgroundResource(android.R.color.transparent);
-            tabSpend.setTextColor(getColor(R.color.text_secondary));
-            filterCategories();
-        });
-
-        etSearchCategory.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterCategories();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+    @Override protected void completed() { model.refresh(); }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putString("categoryType",type.name()); super.onSaveInstanceState(state);
     }
 }

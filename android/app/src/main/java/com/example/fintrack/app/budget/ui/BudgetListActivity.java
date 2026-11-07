@@ -17,19 +17,24 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
  */
 public final class BudgetListActivity extends FinanceActivity {
 
+    @Override protected com.example.fintrack.app.finance.data.FinanceRepository.Scope readScope() {
+        return com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS;
+    }
+
     private String month = FinanceBook.month(System.currentTimeMillis());
+    private boolean monthInitialized;
 
     @Override 
     protected int layout() { return R.layout.activity_budget_list; }
 
     @Override 
     protected void bind(Bundle saved) {
-        if (saved != null) month = saved.getString("month", month);
+        if (saved != null) { month = saved.getString("month", month); monthInitialized = true; }
         FinanceUi.navigation(this, R.id.navBudget);
         
         // Tạo menu đổi tháng báo cáo ngân sách
         ((MaterialToolbar) findViewById(R.id.toolbarBudgets)).getMenu().add(R.string.transaction_change_month)
-                .setOnMenuItemClickListener(item -> { FinanceUi.month(this, month, value -> { month = value; render(); }); return true; });
+                .setOnMenuItemClickListener(item -> { FinanceUi.month(this, month, value -> { month = value; monthInitialized = true; render(); }); return true; });
         
         findViewById(R.id.fabAddBudget).setOnClickListener(view -> add());
         findViewById(R.id.btnStatePrimary).setOnClickListener(view -> add());
@@ -44,6 +49,7 @@ public final class BudgetListActivity extends FinanceActivity {
     @Override 
     protected void render() {
         if (book == null) return;
+        if (!monthInitialized) { month = book.monthAt(System.currentTimeMillis()); monthInitialized = true; }
         ((MaterialToolbar) findViewById(R.id.toolbarBudgets)).setSubtitle(FinanceUi.monthLabel(month));
         
         // Cập nhật danh sách ngân sách lên RecyclerView qua BudgetAdapter

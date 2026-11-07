@@ -102,10 +102,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
 
             // Hiển thị trạng thái hoạt động bằng chữ và màu sắc tương ứng
             if (category.isActive()) {
-                tvCategoryStatus.setText("Đang hoạt động");
+                tvCategoryStatus.setText(R.string.status_active);
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.status_success));
             } else {
-                tvCategoryStatus.setText("Đã vô hiệu hóa");
+                tvCategoryStatus.setText(R.string.status_disabled);
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.neutral_text_400));
             }
 

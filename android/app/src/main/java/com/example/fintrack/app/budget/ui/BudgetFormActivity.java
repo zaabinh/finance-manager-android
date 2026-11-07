@@ -17,6 +17,12 @@ import java.util.UUID;
  */
 public final class BudgetFormActivity extends FinanceActivity {
 
+    @Override protected com.example.fintrack.app.finance.data.FinanceRepository.Scope readScope() {
+        return com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS;
+    }
+
+    @Override protected String detailId() { return getIntent().getStringExtra(EXTRA_ID); }
+
     public static final String EXTRA_ID = "budget_id";
     private String id, category, month = FinanceBook.month(System.currentTimeMillis());
     private boolean editing, initialized;
@@ -47,9 +53,10 @@ public final class BudgetFormActivity extends FinanceActivity {
         if (!initialized) {
             if (editing) {
                 FinanceBook.Budget value = book.budget(id);
-                if (value == null) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); return; }
+                if (value == null || value.archivedAt != null) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); return; }
                 category = value.categoryId; month = value.month; text(R.id.etAmount, Long.toString(value.limit));
             }
+            else if (!getIntent().hasExtra("month")) month = book.monthAt(System.currentTimeMillis());
             initialized = true;
         }
         text(R.id.tvBudgetCatValue, book.category(category) == null ? getString(R.string.transaction_category_placeholder) : book.category(category).name);
@@ -68,7 +75,7 @@ public final class BudgetFormActivity extends FinanceActivity {
         
         // 2. Kiểm tra chống tạo trùng ngân sách cùng danh mục trong tháng
         for (FinanceBook.Budget item : book.state().budgets) {
-            if ((!editing || !item.id.equals(id)) && item.categoryId.equals(category) && item.month.equals(month)) {
+            if (item.archivedAt == null && (!editing || !item.id.equals(id)) && item.categoryId.equals(category) && item.month.equals(month)) {
                 Toast.makeText(this, R.string.error_duplicate_budget, Toast.LENGTH_SHORT).show();
                 return;
             }

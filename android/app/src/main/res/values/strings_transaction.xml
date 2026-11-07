@@ -34,6 +34,22 @@
     <string name="error_same_wallet_transfer">Ví đích phải khác ví nguồn</string>
     <string name="action_retry">Thử lại</string>
     <string name="transaction_saved_toast">Đã lưu giao dịch %1$s</string>
+    <string name="transaction_replay_voided">Giao dịch này đã được ghi trước đó và sau đó đã bị xóa. Bấm Lưu lần nữa sẽ tạo giao dịch mới.</string>
+    <string name="transaction_request_conflict">Lần lưu trước đã được ghi nhận với nội dung khác. Hãy kiểm tra lịch sử trước khi tạo lại.</string>
+    <string name="transaction_type_unsupported">Chuyển tiền giữa các ví chưa được hỗ trợ.</string>
+    <string name="transaction_delete_insufficient">Không thể xóa khoản thu này vì số dư ví sẽ bị âm. Hãy sửa hoặc xóa các khoản chi đã dùng tiền này trước. Giao dịch được giữ nguyên.</string>
+    <string name="transaction_wallet_archived">Ví này đã lưu trữ. Hãy chọn một ví đang hoạt động.</string>
+    <string name="transaction_category_archived">Danh mục này đã lưu trữ hoặc không đúng loại. Hãy chọn danh mục đang hoạt động.</string>
+    <string name="transaction_voided_status">Đã xóa</string>
+    <!-- %1$s = danh sách trường lỗi, ví dụ "số tiền, ví" -->
+    <string name="transaction_field_errors">Kiểm tra lại: %1$s.</string>
+    <string name="transaction_field_amount">số tiền</string>
+    <string name="transaction_field_category">danh mục</string>
+    <string name="transaction_field_wallet">ví</string>
+    <string name="transaction_field_date">thời gian</string>
+    <string name="transaction_field_note">ghi chú</string>
+    <string name="transaction_field_payee">cửa hàng</string>
+    <string name="transaction_field_type">loại giao dịch</string>
     <string name="transaction_save_failed_toast">Không lưu được. Nội dung bạn nhập vẫn được giữ.</string>
 
     <!-- Bottom navigation (643:2498) -->
