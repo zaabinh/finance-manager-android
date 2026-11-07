@@ -50,4 +50,19 @@
     <string name="label_full_name">Họ và tên</string>
     <string name="label_phone_number">Số điện thoại</string>
     <string name="hint_enter_phone">Nhập số điện thoại</string>
+    <string name="notifications_allowed">Cho phép thông báo</string>
+    <string name="notifications_allowed_subtitle">Nhận thông báo từ ứng dụng</string>
+    <string name="daily_notifications_section">NHẮC NHỞ HẰNG NGÀY</string>
+    <string name="daily_record_reminder_subtitle">Nhắc nhở ghi chép hằng ngày</string>
+    <string name="financial_alerts_section">CẢNH BÁO TÀI CHÍNH</string>
+    <string name="near_limit_alert_subtitle">Khi đã dùng từ 80% hạn mức</string>
+    <string name="over_budget_alert_subtitle">Khi chi tiêu vượt hạn mức đã đặt</string>
+    <string name="other_notifications_section">KHÁC</string>
+    <string name="other_app_notifications">Thông báo khác từ ứng dụng</string>
+    <string name="other_app_notifications_subtitle">Cập nhật tính năng, ưu đãi và thông tin quan trọng</string>
+    <string name="label_display_name">Tên hiển thị</string>
+    <string name="timezone_picker_title">Chọn múi giờ</string>
+    <string name="currency_vnd_read_only">VND (₫)</string>
+    <string name="budget_alert_threshold">Ngưỡng cảnh báo ngân sách</string>
+    <string name="notification_settings_saved">Đã lưu cài đặt thông báo</string>
 </resources>

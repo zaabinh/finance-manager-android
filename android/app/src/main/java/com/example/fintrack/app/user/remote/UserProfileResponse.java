@@ -16,8 +16,11 @@ public class UserProfileResponse {
     @SerializedName("displayName")
     private String displayName;
 
-    @SerializedName("phone")
-    private String phone;
+    @SerializedName("currencyCode")
+    private String currencyCode;
+
+    @SerializedName("timeZone")
+    private String timeZone;
 
     public String getId() {
         return id;
@@ -40,7 +43,11 @@ public class UserProfileResponse {
         return displayName;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
     }
 }

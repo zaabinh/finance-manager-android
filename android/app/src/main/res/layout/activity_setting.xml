@@ -82,19 +82,6 @@
                         android:text="@string/sample_user_email"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption" />
-
-                    <!-- Premium Badge -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_badge_in_budget"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:text="@string/setting_premium_member"
-                        android:textColor="@color/color_primary"
-                        android:textSize="@dimen/text_size_caption"
-                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <ImageButton
@@ -123,80 +110,6 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_white"
                 android:orientation="vertical">
-
-                <!-- Currency -->
-                <LinearLayout
-                    android:id="@+id/rowCurrency"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="@dimen/spacing_16">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:drawablePadding="@dimen/spacing_12"
-                        android:gravity="center_vertical"
-                        android:text="@string/currency_unit"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/text_size_body_primary"
-                        android:textStyle="bold"
-                        app:drawableStartCompat="@drawable/ic_currency" />
-
-                    <TextView
-                        android:id="@+id/tvCurrencyValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/setting_currency_val"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="@dimen/text_size_body_secondary" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider_light" />
-
-                <!-- Timezone -->
-                <LinearLayout
-                    android:id="@+id/rowTimezone"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="@dimen/spacing_16">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:drawablePadding="@dimen/spacing_12"
-                        android:gravity="center_vertical"
-                        android:text="@string/time_zone"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/text_size_body_primary"
-                        android:textStyle="bold"
-                        app:drawableStartCompat="@drawable/ic_globe" />
-
-                    <TextView
-                        android:id="@+id/tvTimezoneValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/setting_timezone_val"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="@dimen/text_size_body_secondary" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider_light" />
 
                 <!-- Notification Config -->
                 <TextView

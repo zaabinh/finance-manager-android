@@ -124,18 +124,6 @@
                         android:text="@string/sample_user_email"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_body_primary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/spacing_8"
-                        android:background="@drawable/bg_badge_in_budget"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="3dp"
-                        android:text="Thành viên FinTrack"
-                        android:textColor="@color/status_success"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <TextView
@@ -159,13 +147,13 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/label_full_name"
+                        android:text="@string/label_display_name"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
 
                     <EditText
-                        android:id="@+id/etFullName"
+                        android:id="@+id/etDisplayName"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/input_height"
                         android:layout_marginTop="@dimen/spacing_8"
@@ -209,26 +197,61 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_16"
-                        android:text="@string/label_phone_number"
+                        android:text="@string/currency_unit"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
 
-                    <EditText
-                        android:id="@+id/etPhone"
+                    <TextView
+                        android:id="@+id/tvCurrencyValue"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/input_height"
                         android:layout_marginTop="@dimen/spacing_8"
-                        android:autofillHints="phone"
                         android:background="@drawable/bg_currency_box"
-                        android:enabled="false"
-                        android:hint="@string/hint_enter_phone"
-                        android:inputType="phone"
+                        android:gravity="center_vertical"
                         android:paddingHorizontal="@dimen/spacing_16"
-                        android:singleLine="true"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_hint"
+                        android:text="@string/currency_vnd_read_only"
+                        android:textColor="@color/text_disabled"
                         android:textSize="@dimen/text_size_body_primary" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:text="@string/time_zone"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_caption"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/rowTimezone"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:background="@drawable/bg_currency_box"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="@dimen/spacing_16">
+
+                        <TextView
+                            android:id="@+id/tvTimezoneValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/setting_timezone_val"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_body_primary" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_secondary" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <androidx.appcompat.widget.AppCompatButton

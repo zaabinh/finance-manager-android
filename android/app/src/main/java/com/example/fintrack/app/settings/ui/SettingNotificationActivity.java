@@ -1,151 +1,165 @@
 package com.example.fintrack.app.settings.ui;
 
 import android.app.TimePickerDialog;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
+import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
+import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
+import com.example.fintrack.app.user.viewmodel.UserViewModel;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-
 import java.util.Locale;
 
-/**
- * Màn hình Cấu hình Thông báo (SettingNotificationActivity):
- * Tự động lưu và khôi phục trạng thái bật/tắt nhắc nhở hằng ngày, giờ nhắc, cảnh báo hạn mức.
- */
 public class SettingNotificationActivity extends AppCompatActivity {
+    private static final int[] THRESHOLDS = {50, 60, 70, 80, 90, 100};
 
-    private static final String PREF_NOTIF_SETTINGS = "fintrack_notif_config";
-    private static final String KEY_DAILY_ENABLED = "daily_reminder_enabled";
-    private static final String KEY_REMINDER_HOUR = "reminder_hour";
-    private static final String KEY_REMINDER_MINUTE = "reminder_minute";
-    private static final String KEY_NEAR_LIMIT_ENABLED = "near_limit_enabled";
-    private static final String KEY_OVER_BUDGET_ENABLED = "over_budget_enabled";
-
+    private SwitchMaterial switchNotifications;
     private SwitchMaterial switchDailyReminder;
     private SwitchMaterial switchLimitWarning;
     private SwitchMaterial switchBudgetWarning;
+    private SwitchMaterial switchOtherNotifications;
     private View layoutTimePickerRow;
+    private View rowBudgetThreshold;
+    private View btnSave;
     private TextView tvReminderTime;
-
+    private TextView tvBudgetThreshold;
+    private UserViewModel viewModel;
     private int selectedHour = 20;
-    private int selectedMinute = 0;
+    private int selectedMinute;
+    private int selectedThreshold = 80;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_notification);
-
+        viewModel = new ViewModelProvider(this).get(UserViewModel.class);
         initViews();
-        loadSavedSettings();
         setupListeners();
+        setupObservers();
+        viewModel.fetchNotificationSettings();
     }
 
     private void initViews() {
+        switchNotifications = findViewById(R.id.switchNotifications);
         switchDailyReminder = findViewById(R.id.switchDailyReminder);
         switchLimitWarning = findViewById(R.id.switchLimitWarning);
         switchBudgetWarning = findViewById(R.id.switchBudgetWarning);
+        switchOtherNotifications = findViewById(R.id.switchOtherNotifications);
         layoutTimePickerRow = findViewById(R.id.layoutTimePickerRow);
+        rowBudgetThreshold = findViewById(R.id.rowBudgetThreshold);
+        btnSave = findViewById(R.id.btnSaveNotificationSettings);
         tvReminderTime = findViewById(R.id.tvReminderTime);
-    }
-
-    private void loadSavedSettings() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE);
-
-        boolean dailyEnabled = prefs.getBoolean(KEY_DAILY_ENABLED, true);
-        boolean nearLimitEnabled = prefs.getBoolean(KEY_NEAR_LIMIT_ENABLED, true);
-        boolean overBudgetEnabled = prefs.getBoolean(KEY_OVER_BUDGET_ENABLED, true);
-
-        selectedHour = prefs.getInt(KEY_REMINDER_HOUR, 20);
-        selectedMinute = prefs.getInt(KEY_REMINDER_MINUTE, 0);
-
-        if (switchDailyReminder != null) switchDailyReminder.setChecked(dailyEnabled);
-        if (switchLimitWarning != null) switchLimitWarning.setChecked(nearLimitEnabled);
-        if (switchBudgetWarning != null) switchBudgetWarning.setChecked(overBudgetEnabled);
-
-        updateReminderTimeDisplay();
-        updateSubOptionsEnabledState(dailyEnabled);
-    }
-
-    private void updateReminderTimeDisplay() {
-        String formattedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
-        if (tvReminderTime != null) {
-            tvReminderTime.setText(formattedTime);
-        }
-    }
-
-    private void updateSubOptionsEnabledState(boolean enabled) {
-        if (layoutTimePickerRow != null) layoutTimePickerRow.setAlpha(enabled ? 1.0f : 0.4f);
-        if (tvReminderTime != null) tvReminderTime.setEnabled(enabled);
-        if (switchLimitWarning != null) switchLimitWarning.setEnabled(enabled);
-        if (switchBudgetWarning != null) switchBudgetWarning.setEnabled(enabled);
+        tvBudgetThreshold = findViewById(R.id.tvBudgetThreshold);
     }
 
     private void setupListeners() {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-
-        if (switchDailyReminder != null) {
-            switchDailyReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                updateSubOptionsEnabledState(isChecked);
-                getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                        .edit()
-                        .putBoolean(KEY_DAILY_ENABLED, isChecked)
-                        .apply();
-
-                int msgRes = isChecked ? R.string.notif_reminder_on : R.string.notif_reminder_off;
-                Toast.makeText(this, msgRes, Toast.LENGTH_SHORT).show();
-            });
-        }
-
-        if (switchLimitWarning != null) {
-            switchLimitWarning.setOnCheckedChangeListener((buttonView, isChecked) ->
-                    getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                            .edit()
-                            .putBoolean(KEY_NEAR_LIMIT_ENABLED, isChecked)
-                            .apply()
-            );
-        }
-
-        if (switchBudgetWarning != null) {
-            switchBudgetWarning.setOnCheckedChangeListener((buttonView, isChecked) ->
-                    getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                            .edit()
-                            .putBoolean(KEY_OVER_BUDGET_ENABLED, isChecked)
-                            .apply()
-            );
-        }
-
-        if (tvReminderTime != null) {
-            tvReminderTime.setOnClickListener(v -> showTimePickerDialog());
-        }
+        switchNotifications.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
+        switchDailyReminder.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
+        switchLimitWarning.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
+        layoutTimePickerRow.setOnClickListener(v -> showTimePicker());
+        rowBudgetThreshold.setOnClickListener(v -> showThresholdPicker());
+        btnSave.setOnClickListener(v -> save());
     }
 
-    private void showTimePickerDialog() {
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                this,
-                (view, hourOfDay, minute) -> {
-                    selectedHour = hourOfDay;
-                    selectedMinute = minute;
-                    updateReminderTimeDisplay();
+    private void setupObservers() {
+        viewModel.getNotificationSettingsResult().observe(this, resource -> {
+            if (resource == null) return;
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                apply(resource.getData());
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                showError(resource.getMessage());
+            }
+        });
+        viewModel.getUpdateNotificationSettingsResult().observe(this, resource -> {
+            if (resource == null) return;
+            btnSave.setEnabled(resource.getStatus() != Resource.Status.LOADING);
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                apply(resource.getData());
+                Toast.makeText(this, R.string.notification_settings_saved, Toast.LENGTH_SHORT).show();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                showError(resource.getMessage());
+            }
+        });
+    }
 
-                    getSharedPreferences(PREF_NOTIF_SETTINGS, Context.MODE_PRIVATE)
-                            .edit()
-                            .putInt(KEY_REMINDER_HOUR, selectedHour)
-                            .putInt(KEY_REMINDER_MINUTE, selectedMinute)
-                            .apply();
+    private void apply(NotificationSettingsResponse settings) {
+        switchNotifications.setChecked(settings.isNotificationsEnabled());
+        switchDailyReminder.setChecked(settings.isDailyReminderEnabled());
+        switchLimitWarning.setChecked(settings.isBudgetAlertEnabled());
+        switchBudgetWarning.setChecked(settings.isBudgetExceedAlertEnabled());
+        switchOtherNotifications.setChecked(settings.isOtherNotificationsEnabled());
+        selectedThreshold = settings.getBudgetAlertThresholdPercent();
+        String time = settings.getDailyReminderTime();
+        if (time != null && time.length() >= 5) {
+            selectedHour = Integer.parseInt(time.substring(0, 2));
+            selectedMinute = Integer.parseInt(time.substring(3, 5));
+        }
+        updateValues();
+        updateEnabledState();
+    }
 
-                    Toast.makeText(this, "Đã lưu giờ nhắc: " + tvReminderTime.getText(), Toast.LENGTH_SHORT).show();
-                },
-                selectedHour,
-                selectedMinute,
-                true
-        );
-        timePickerDialog.show();
+    private void save() {
+        viewModel.updateNotificationSettings(new UpdateNotificationSettingsRequest(
+                switchNotifications.isChecked(), switchDailyReminder.isChecked(),
+                String.format(Locale.ROOT, "%02d:%02d:00", selectedHour, selectedMinute),
+                switchLimitWarning.isChecked(), selectedThreshold, switchBudgetWarning.isChecked(),
+                switchOtherNotifications.isChecked()));
+    }
+
+    private void showTimePicker() {
+        new TimePickerDialog(this, (view, hour, minute) -> {
+            selectedHour = hour;
+            selectedMinute = minute;
+            updateValues();
+        }, selectedHour, selectedMinute, true).show();
+    }
+
+    private void showThresholdPicker() {
+        String[] labels = new String[THRESHOLDS.length];
+        int selected = 0;
+        for (int i = 0; i < THRESHOLDS.length; i++) {
+            labels[i] = THRESHOLDS[i] + "%";
+            if (THRESHOLDS[i] == selectedThreshold) selected = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.budget_alert_threshold)
+                .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                    selectedThreshold = THRESHOLDS[which];
+                    updateValues();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
+    }
+
+    private void updateValues() {
+        tvReminderTime.setText(String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute));
+        tvBudgetThreshold.setText(String.format(Locale.getDefault(), "%d%%", selectedThreshold));
+    }
+
+    private void updateEnabledState() {
+        boolean enabled = switchNotifications.isChecked();
+        switchDailyReminder.setEnabled(enabled);
+        switchLimitWarning.setEnabled(enabled);
+        switchBudgetWarning.setEnabled(enabled);
+        switchOtherNotifications.setEnabled(enabled);
+        setEnabled(layoutTimePickerRow, enabled && switchDailyReminder.isChecked());
+        setEnabled(rowBudgetThreshold, enabled && switchLimitWarning.isChecked());
+    }
+
+    private static void setEnabled(View view, boolean enabled) {
+        view.setEnabled(enabled);
+        view.setAlpha(enabled ? 1f : 0.4f);
+    }
+
+    private void showError(String message) {
+        Toast.makeText(this, message == null ? getString(R.string.error_server) : message, Toast.LENGTH_LONG).show();
     }
 }

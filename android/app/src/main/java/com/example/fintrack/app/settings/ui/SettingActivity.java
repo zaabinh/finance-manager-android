@@ -4,10 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,11 +27,6 @@ public class SettingActivity extends AppCompatActivity {
     private TextView tvProfileEmail;
     private ImageButton btnEditProfile;
 
-    private View rowCurrency;
-    private TextView tvCurrencyValue;
-    private View rowTimezone;
-    private TextView tvTimezoneValue;
-
     private TextView rowNotification;
     private TextView rowWallets;
     private TextView rowCategories;
@@ -41,12 +34,8 @@ public class SettingActivity extends AppCompatActivity {
     private View rowAboutApp;
 
     // Thanh điều hướng dưới đáy
-    private ImageView navHome;
     private SessionManager sessionManager;
     private UserViewModel userViewModel;
-
-    private String currentCurrency = "VND (₫)";
-    private String currentTimezone = "Hanoi GMT+7";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +56,7 @@ public class SettingActivity extends AppCompatActivity {
         super.onResume();
         loadUserData();
         if (userViewModel != null) {
-            userViewModel.fetchProfile();
+            userViewModel.fetchSettings();
         }
     }
 
@@ -78,18 +67,12 @@ public class SettingActivity extends AppCompatActivity {
         tvProfileEmail = findViewById(R.id.tvProfileEmail);
         btnEditProfile = findViewById(R.id.btnEditProfile);
 
-        rowCurrency = findViewById(R.id.rowCurrency);
-        tvCurrencyValue = findViewById(R.id.tvCurrencyValue);
-        rowTimezone = findViewById(R.id.rowTimezone);
-        tvTimezoneValue = findViewById(R.id.tvTimezoneValue);
-
         rowNotification = findViewById(R.id.rowNotification);
         rowWallets = findViewById(R.id.rowWallets);
         rowCategories = findViewById(R.id.rowCategories);
         rowSecurity = findViewById(R.id.rowSecurity);
         rowAboutApp = findViewById(R.id.rowAboutApp);
 
-        navHome = findViewById(R.id.navHome);
     }
 
     private void loadUserData() {
@@ -113,16 +96,17 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        userViewModel.getProfileResult().observe(this, resource -> {
-            if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                String name = resource.getData().getDisplayName();
-                String email = resource.getData().getEmail();
+        userViewModel.getSettingsResult().observe(this, resource -> {
+            if (resource != null && resource.getStatus() == Resource.Status.SUCCESS
+                    && resource.getData() != null && resource.getData().getProfile() != null) {
+                String name = resource.getData().getProfile().getDisplayName();
+                String email = resource.getData().getProfile().getEmail();
                 if (name != null) {
                     tvProfileName.setText(name);
                     tvAvatarInitials.setText(getInitials(name));
                 }
                 if (email != null) tvProfileEmail.setText(email);
-                sessionManager.saveUserProfile(resource.getData().getId(), email, name);
+                sessionManager.saveUserProfile(resource.getData().getProfile().getId(), email, name);
             }
         });
     }
@@ -135,36 +119,6 @@ public class SettingActivity extends AppCompatActivity {
 
         layoutProfile.setOnClickListener(openProfileListener);
         btnEditProfile.setOnClickListener(openProfileListener);
-
-        // Đơn vị tiền tệ
-        if (rowCurrency != null) {
-            rowCurrency.setOnClickListener(v -> {
-                String[] currencies = {"VND (₫)", "USD ($)", "EUR (€)"};
-                new AlertDialog.Builder(this)
-                        .setTitle("Chọn đơn vị tiền tệ")
-                        .setItems(currencies, (dialog, which) -> {
-                            currentCurrency = currencies[which];
-                            tvCurrencyValue.setText(currentCurrency + "  ›");
-                            Toast.makeText(this, "Đã đổi đơn vị tiền tệ: " + currentCurrency, Toast.LENGTH_SHORT).show();
-                        })
-                        .show();
-            });
-        }
-
-        // Múi giờ
-        if (rowTimezone != null) {
-            rowTimezone.setOnClickListener(v -> {
-                String[] timezones = {"Hanoi GMT+7", "Tokyo GMT+9", "London GMT+0", "New York GMT-5"};
-                new AlertDialog.Builder(this)
-                        .setTitle("Chọn múi giờ")
-                        .setItems(timezones, (dialog, which) -> {
-                            currentTimezone = timezones[which];
-                            tvTimezoneValue.setText(currentTimezone + "  ›");
-                            Toast.makeText(this, "Đã đổi múi giờ: " + currentTimezone, Toast.LENGTH_SHORT).show();
-                        })
-                        .show();
-            });
-        }
 
         // Cấu hình thông báo
         rowNotification.setOnClickListener(v -> {
