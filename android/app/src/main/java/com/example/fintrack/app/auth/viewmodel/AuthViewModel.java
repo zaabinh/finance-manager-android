@@ -25,6 +25,7 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<Resource<Void>> registerResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> verifyEmailResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resendOtpResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<Void>> resendVerificationResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> forgotPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resetPasswordResult = new MutableLiveData<>();
 
@@ -43,6 +44,10 @@ public class AuthViewModel extends AndroidViewModel {
 
     public String getRegisteredEmail() {
         return registeredEmail;
+    }
+
+    public void setRegisteredEmail(String registeredEmail) {
+        this.registeredEmail = registeredEmail;
     }
 
     public String getForgotPasswordEmail() {
@@ -73,6 +78,10 @@ public class AuthViewModel extends AndroidViewModel {
 
     public LiveData<Resource<Void>> getResendOtpResult() {
         return resendOtpResult;
+    }
+
+    public LiveData<Resource<Void>> getResendVerificationResult() {
+        return resendVerificationResult;
     }
 
     public LiveData<Resource<Void>> getForgotPasswordResult() {
@@ -108,6 +117,12 @@ public class AuthViewModel extends AndroidViewModel {
     public void resendOtp(String email) {
         resendOtpResult.setValue(Resource.loading(null));
         authRepository.resendOtp(email, resendOtpResult);
+    }
+
+    /** Gửi lại email xác nhận tài khoản (/resend-verification) */
+    public void resendVerification(String email) {
+        resendVerificationResult.setValue(Resource.loading(null));
+        authRepository.resendVerification(email, resendVerificationResult);
     }
 
     /** Yêu cầu quên mật khẩu (gửi mã OTP về email) */

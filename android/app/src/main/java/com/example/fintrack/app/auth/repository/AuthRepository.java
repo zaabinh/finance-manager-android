@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.repository;
 
+import androidx.annotation.NonNull;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -100,6 +102,25 @@ public class AuthRepository {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
+
+    /** Gọi API Gửi lại email xác nhận tài khoản (/resend-verification) */
+    public void resendVerification(String email, MutableLiveData<Resource<Void>> result) {
+        apiService.resendVerification(new ResendOtpRequest(email)).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() || response.code() == 202) {
+                    result.setValue(Resource.success(null));
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });

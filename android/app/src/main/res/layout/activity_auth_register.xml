@@ -154,6 +154,83 @@
                         android:src="@drawable/ic_eye_close" />
                 </RelativeLayout>
 
+                <!-- Password Strength Progress & Rules Checklist -->
+                <LinearLayout
+                    android:id="@+id/layoutPasswordStrength"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_8"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvPasswordStrengthLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Độ mạnh mật khẩu: 0%"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/pbPasswordStrength"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:max="100"
+                        android:progress="0"
+                        app:indicatorColor="@color/status_warning"
+                        app:trackCornerRadius="4dp"
+                        app:trackThickness="6dp" />
+
+                    <TextView
+                        android:id="@+id/ruleMinLength"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:drawablePadding="6dp"
+                        android:text="@string/rule_min_length"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        app:drawableStartCompat="@drawable/ic_circle_check"
+                        app:tint="@color/text_disabled" />
+
+                    <TextView
+                        android:id="@+id/ruleLowercase"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:drawablePadding="6dp"
+                        android:text="@string/rule_lowercase"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        app:drawableStartCompat="@drawable/ic_circle_check"
+                        app:tint="@color/text_disabled" />
+
+                    <TextView
+                        android:id="@+id/ruleUppercase"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:drawablePadding="6dp"
+                        android:text="@string/rule_uppercase"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        app:drawableStartCompat="@drawable/ic_circle_check"
+                        app:tint="@color/text_disabled" />
+
+                    <TextView
+                        android:id="@+id/ruleDigitOrSpecial"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:drawablePadding="6dp"
+                        android:text="@string/rule_digit_or_special"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        app:drawableStartCompat="@drawable/ic_circle_check"
+                        app:tint="@color/text_disabled" />
+                </LinearLayout>
+
                 <!-- Field 4: Confirm Password -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -204,7 +281,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_12"
-                    android:buttonTint="@color/color_primary"
+                    android:button="@drawable/selector_checkbox"
+                    android:checked="false"
+                    android:paddingStart="@dimen/spacing_8"
                     android:text="@string/checkbox_terms_policies"
                     android:textAppearance="@style/TextAppearance.App.BodySecondary" />
 
