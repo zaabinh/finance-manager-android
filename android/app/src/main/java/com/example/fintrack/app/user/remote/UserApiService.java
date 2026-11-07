@@ -5,19 +5,23 @@ import com.example.fintrack.app.core.network.ApiResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.PUT;
+import retrofit2.http.PATCH;
 
-/**
- * Interface định nghĩa các API endpoint liên quan đến Hồ sơ người dùng (User Profile)
- * sử dụng thư viện Retrofit.
- */
 public interface UserApiService {
 
-    /** API Lấy thông tin hồ sơ cá nhân của người dùng hiện tại */
-    @GET("api/v1/user/profile")
+    @GET("api/v1/users/me")
     Call<ApiResponse<UserProfileResponse>> getProfile();
 
-    /** API Cập nhật thông tin họ tên và số điện thoại của người dùng */
-    @PUT("api/v1/user/profile")
+    @PATCH("api/v1/users/me")
     Call<ApiResponse<UserProfileResponse>> updateProfile(@Body UpdateProfileRequest request);
+
+    @GET("api/v1/users/me/settings")
+    Call<ApiResponse<UserSettingsResponse>> getSettings();
+
+    @GET("api/v1/users/me/notification-settings")
+    Call<ApiResponse<NotificationSettingsResponse>> getNotificationSettings();
+
+    @PATCH("api/v1/users/me/notification-settings")
+    Call<ApiResponse<NotificationSettingsResponse>> updateNotificationSettings(
+            @Body UpdateNotificationSettingsRequest request);
 }

@@ -38,7 +38,7 @@ public interface AuthApiService {
 
     /** Xác thực email bằng mã OTP */
     @POST("api/v1/auth/verify-email")
-    Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
+    Call<Void> verifyEmail(@Body VerifyEmailRequest request);
 
     /** Gửi lại email xác nhận tài khoản */
     @POST("api/v1/auth/resend-verification")
