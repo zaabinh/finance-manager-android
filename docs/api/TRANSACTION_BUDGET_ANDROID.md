@@ -1,15 +1,17 @@
 # Android Transaction / Budget contract
 
-Status: **client implemented; backend endpoints proposed, not implemented or verified here** (2026-10-30).
-This supplements [CONTRACT.md](CONTRACT.md). No backend source or migration is part of this change.
+Updated 2026-11-07: [FINANCE_CRUD_CONTRACT.md](FINANCE_CRUD_CONTRACT.md) is the current agreed target.
+This document describes the existing Android implementation and its integration gaps; it does not establish
+that the finance backend APIs exist or that device/backend acceptance has passed. It supplements
+[CONTRACT.md](CONTRACT.md). No backend implementation or migration is introduced by this documentation update.
 
 ## Running Android
 
 - `mockDebug`: deterministic sample wallets, income, expense and a monthly budget; all commands persist in an atomic, per-user file under `noBackupFilesDir/finance`. This is development data, not server-synced data. Mock data is retained across logout and is isolated by the session user ID. Clearing app data removes it.
 - `devDebug`, `staging`, `prod`: use Retrofit and the configured `BASE_URL`. They never read or fall back to the mock ledger. Network failures preserve form input and offer retry. The existing API client supplies bearer authentication and clears expired sessions on 401.
 - Access: Home add button → transaction form; Home history icon → history; Home “Ngân sách” link → budget list. History and Budget share navigation. A picker can add a wallet/category without discarding the form.
-- Integer VND only: 1–999,999,999,999 per transaction/budget; opening balances allow zero. Wallet types: `CASH`, `BANK`, `SAVINGS`. Mock permits negative derived balances; server policy for insufficient funds must be explicit.
-- Calendar months use `Asia/Ho_Chi_Minh`, independent of device timezone. Transfer postings debit one wallet and credit another and are excluded from income, expense and budget spending. Edits/deletes recalculate derived balances and spending. Budgets apply to expense categories, one per category/month; warning at 80%, reached/exceeded at 100%.
+- Integer VND only: 1–999,999,999,999 per transaction/budget; opening balances allow zero. Wallet types: `CASH`, `BANK`, `SAVINGS`. Target: no negative current wallet balance after any mutation, including income deletion or opening-balance reduction. Existing mock rules must be updated; permitting negative mock balances is not the target policy.
+- Target: UTC timestamps and calendar months in the user's preference timezone, default `Asia/Ho_Chi_Minh`, independent of device timezone. The current fixed-zone client needs adaptation. Transfers are deferred; disable the create/edit transfer entry points for backends without support. Budgets apply to expense categories, one active budget per category/month; warning uses the user's notification threshold (default 80), reached/exceeded at 100%.
 
 ## HTTP shape
 
@@ -19,13 +21,21 @@ All routes below require a bearer token. Responses are direct DTO bodies, withou
 |---|---|---|---|
 | GET | `/api/v1/wallets` | — | 200, `Wallet[]` |
 | POST | `/api/v1/wallets` | `WalletRequest` | 201, `Wallet` |
+| GET/PUT | `/api/v1/wallets/{walletId}` | — / full writable fields | 200, `Wallet` |
+| PATCH | `/api/v1/wallets/{walletId}/status` | `{"active":true}` or false | 200, `Wallet` |
+| DELETE | `/api/v1/wallets/{walletId}` | — | 204, archive |
 | GET | `/api/v1/categories` | — | 200, `Category[]` |
 | POST | `/api/v1/categories` | `CategoryRequest` | 201, `Category` |
+| GET/PUT | `/api/v1/categories/{categoryId}` | — / full writable fields | 200, `Category` |
+| PATCH | `/api/v1/categories/{categoryId}/status` | active boolean | 200, `Category` |
+| DELETE | `/api/v1/categories/{categoryId}` | — | 204, archive |
 | GET | `/api/v1/transactions?page=0&size=200` | zero-based pages | 200, `TransactionPage` |
 | POST | `/api/v1/transactions` | `TransactionRequest` | 201 (or 200 idempotent replay), `Transaction` |
+| GET | `/api/v1/transactions/{transactionId}` | — | 200, `Transaction` |
 | PUT | `/api/v1/transactions/{transactionId}` | `TransactionRequest` | 200, `Transaction` |
 | DELETE | `/api/v1/transactions/{transactionId}` | — | 204 |
 | GET | `/api/v1/budgets` | — | 200, `Budget[]` |
+| GET | `/api/v1/budgets/{budgetId}` | — | 200, `Budget` with usage |
 | POST | `/api/v1/budgets` | `BudgetRequest` | 201, `Budget` |
 | PUT | `/api/v1/budgets/{budgetId}` | `BudgetRequest` | 200, `Budget` |
 | DELETE | `/api/v1/budgets/{budgetId}` | — | 204 |
@@ -37,13 +47,13 @@ All routes below require a bearer token. Responses are direct DTO bodies, withou
 }
 ```
 
-`WalletRequest` has `name`, `walletType`, `openingBalanceMinor`. Lists must include all wallets referenced by returned transactions, including archived wallets; creation pickers currently assume returned references remain usable. Backend archive filtering and picker-specific active flags require a later agreed extension.
+The existing `WalletRequest` has `name`, `walletType`, `openingBalanceMinor`. Extend it with `includeInAssets` and `sortOrder`, and extend the response with server `balanceMinor`, fixed VND currency and lifecycle/timestamps per the current contract. List defaults to `status=ALL` for history; creation pickers explicitly request/filter ACTIVE. Do not infer opening balance from current balance or reconstruct current balance from one page of transactions.
 
 ```json
 {"categoryId":"uuid","name":"Ăn uống","categoryType":"EXPENSE"}
 ```
 
-`CategoryRequest` has `name`, `categoryType` (`EXPENSE` or `INCOME`). Return all categories referenced by financial history. The server must create initial default categories or permit creation when the list is empty.
+Extend `CategoryRequest` with `iconKey`, `colorHex`, `sortOrder` and response lifecycle/timestamps. `categoryType` is EXPENSE or INCOME. Every category has an owner; initial categories are seeded once per user and are editable/archivable. Do not regenerate them when a list is empty. List defaults ALL for history, pickers use ACTIVE/type; no global ownerless categories.
 
 ```json
 {
@@ -53,15 +63,15 @@ All routes below require a bearer token. Responses are direct DTO bodies, withou
 }
 ```
 
-`TransactionRequest` has the same fields except `transactionId`, plus `clientRequestId` (stable UUID from the create form). On POST, scope this key to the authenticated user: an identical retry must return the original transaction without posting again; changed content with the same key must produce 409. On PUT, the path ID is authoritative; ignore `clientRequestId` for creation purposes. Omitted nullable values mean absent: income/expense need a matching category and one wallet; transfers omit category and require distinct source/destination wallets. Notes max 2,000 characters, payee max 160. Timestamps are ISO 8601 UTC (`Z`, optional fractional seconds).
+`TransactionRequest` has the same fields except `transactionId`, plus stable `clientRequestId` for POST. Scope it to the authenticated user; compare an immutable fingerprint of the original create payload. Identical retry returns the current record without reposting (including after edit/void); changed payload with the same key gives 409. PUT uses the path ID and does not create through this key. Income/expense require one active owned wallet and a matching active owned category; destinationWalletId must be absent/null until transfers are supported. Notes max 2,000 characters, payee max 160. Timestamps are required ISO 8601 UTC. Extend responses with POSTED/VOIDED state and timestamps; a replay returning VOIDED must not be presented as a new active transaction.
 
-`TransactionPage` is `{ "items": [Transaction], "page": 0, "totalPages": 1 }`. Return posted transactions only, in stable descending occurrence order with ID as a tie breaker. The current client reads all pages before publishing a snapshot, filters locally, and derives balances from all opening balances + all posted transactions. A failed page must not publish a partial snapshot. For large histories, replace this with server-computed balances/aggregates and paginated screen queries before production scale. Consistent pagination during concurrent edits remains a server integration requirement.
+`TransactionPage` is `{ "items": [Transaction], "page": 0, "totalPages": 1 }`; no results has totalPages=0. Return POSTED only; default descending occurrence/ID order. The current client reads all pages, filters locally and computes balances: this is an implementation gap. Target uses server filters/search/sort/pages and server wallet balances/budget usage. Count/page share a request snapshot; separate requests may change under concurrent writes, so refresh page0 after mutation and deduplicate by ID. Do not publish incomplete historical snapshots as full ledger truth.
 
 ```json
 {"budgetId":"uuid","categoryId":"uuid","month":"2026-10","limitMinor":3000000}
 ```
 
-`BudgetRequest` has `categoryId`, `month`, `limitMinor`. Map the month to local first-of-month inclusive / next-month exclusive dates in the existing budget schema. Reject overlapping active budgets with 409. Deleting a budget preserves transactions. Deleting/voiding a transaction removes its effect from balances and budget usage atomically.
+`BudgetRequest` has `categoryId`, `month`, `limitMinor`. Map month to local first-of-month inclusive / next-month exclusive dates. Reject overlapping active budgets with 409. Extend responses with server spent/remaining/usagePercent/warningThresholdPercent/status and lifecycle/timestamps. Budget deletion archives without changing transactions or wallet balance. Transaction voiding removes its contribution once: deleting an expense restores money; deleting income reduces balance and must return 409 without mutation if funds would become negative. Budget remaining may be negative; this is distinct from forbidden negative wallet balances. Full field/filter/lifecycle/locking rules are in the current contract.
 
 Errors follow `ApiErrorResponse` in the base contract. Android distinguishes 401, 404, 409, 400/422, network failures and other server failures. A successful command is acknowledged independently of the next refresh, so a refresh failure does not falsely report a completed save as failed. Fine-grained backend field errors and optimistic concurrency versions can be added when the backend contract is finalized.
 
