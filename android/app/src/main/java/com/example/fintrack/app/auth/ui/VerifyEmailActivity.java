@@ -22,32 +22,31 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import java.util.Locale;
 
 /**
- * Màn hình Nhập mã xác thực OTP (VerifyEmailActivity).
+ * Màn hình Nhập mã xác thực OTP 6 số (VerifyEmailActivity).
  * Dùng cho cả 2 trường hợp:
  * 1. Xác thực email sau khi đăng ký tài khoản mới.
  * 2. Nhận mã OTP để đặt lại mật khẩu mới khi quên mật khẩu.
  */
 public class VerifyEmailActivity extends AppCompatActivity {
 
-    // Các khóa để lưu trạng thái tạm thời khi xoay màn hình
     private static final String KEY_END_TIME_STAMP = "key_end_time_stamp";
     private static final String KEY_USER_EMAIL = "key_user_email";
     private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
-    private static final long TIMER_DURATION_MS = 60000; // Thời gian đếm ngược gửi lại OTP: 60 giây
+    private static final long TIMER_DURATION_MS = 60000;
 
-    // Các thành phần giao diện (4 ô nhập OTP, nút xác thực, chữ gửi lại mã)
-    private EditText etOtp1, etOtp2, etOtp3, etOtp4;
+    // Các thành phần giao diện (6 ô nhập OTP, nút xác thực, chữ gửi lại mã)
+    private EditText etOtp1, etOtp2, etOtp3, etOtp4, etOtp5, etOtp6;
     private Button btnVerify;
     private TextView tvResendOtp;
 
-    private CountDownTimer countDownTimer; // Bộ đếm ngược thời gian gửi lại OTP
+    private CountDownTimer countDownTimer;
     private boolean isTimerRunning = false;
     private long endTimeStamp = 0;
     private boolean isFormattingOtp = false;
-    private boolean isResetPassword = false; // Cờ phân biệt: true = Quên mật khẩu, false = Xác thực đăng ký
+    private boolean isResetPassword = false;
 
     private AuthViewModel authViewModel;
-    private String userEmail; // Email của người dùng nhận mã OTP
+    private String userEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,27 +55,25 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
-        initViews();       // Ánh xạ View
-        setupOtpInputs();  // Cài đặt hành vi thông minh cho 4 ô nhập OTP (tự nhảy ô, dán mã...)
-        setupListeners();  // Cài đặt sự kiện bấm nút
-        setupObservers();  // Lắng nghe kết quả trả về từ ViewModel
+        initViews();
+        setupOtpInputs();
+        setupListeners();
+        setupObservers();
 
-        // Khôi phục lại trạng thái cũ nếu Activity bị hủy và tạo lại (ví dụ: xoay màn hình)
         if (savedInstanceState != null) {
             isResetPassword = savedInstanceState.getBoolean(KEY_IS_RESET_PASSWORD, false);
             userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra("email"));
             endTimeStamp = savedInstanceState.getLong(KEY_END_TIME_STAMP, 0);
             long remaining = endTimeStamp - System.currentTimeMillis();
             if (remaining > 0) {
-                startResendTimer(remaining); // Tiếp tục chạy đếm ngược thời gian còn lại
+                startResendTimer(remaining);
             } else {
                 resetResendUi();
             }
         } else {
-            // Lấy dữ liệu truyền từ màn hình trước sang
             isResetPassword = getIntent().getBooleanExtra("is_reset_password", false);
             userEmail = getIntent().getStringExtra("email");
-            startResendTimer(TIMER_DURATION_MS); // Bắt đầu đếm ngược 60s lần đầu
+            startResendTimer(TIMER_DURATION_MS);
         }
 
         if (userEmail == null) {
@@ -84,25 +81,27 @@ public class VerifyEmailActivity extends AppCompatActivity {
         }
     }
 
-    /** Ánh xạ các thành phần giao diện từ XML */
     private void initViews() {
         etOtp1 = findViewById(R.id.etOtp1);
         etOtp2 = findViewById(R.id.etOtp2);
         etOtp3 = findViewById(R.id.etOtp3);
         etOtp4 = findViewById(R.id.etOtp4);
+        etOtp5 = findViewById(R.id.etOtp5);
+        etOtp6 = findViewById(R.id.etOtp6);
         btnVerify = findViewById(R.id.btnVerify);
         tvResendOtp = findViewById(R.id.tvResendOtp);
     }
 
-    /** Liên kết 4 ô nhập OTP để tự động chuyển focus qua lại khi nhập hoặc xóa */
+    /** Liên kết 6 ô nhập OTP để tự động chuyển focus qua lại khi nhập hoặc xóa */
     private void setupOtpInputs() {
         setupSingleBox(etOtp1, null, etOtp2);
         setupSingleBox(etOtp2, etOtp1, etOtp3);
         setupSingleBox(etOtp3, etOtp2, etOtp4);
-        setupSingleBox(etOtp4, etOtp3, null);
+        setupSingleBox(etOtp4, etOtp3, etOtp5);
+        setupSingleBox(etOtp5, etOtp4, etOtp6);
+        setupSingleBox(etOtp6, etOtp5, null);
     }
 
-    /** Xử lý logic thông minh cho từng ô nhập OTP (tự nhảy sang ô tiếp theo, hỗ trợ dán 4 số...) */
     private void setupSingleBox(EditText current, EditText previous, EditText next) {
         current.addTextChangedListener(new TextWatcher() {
             @Override
@@ -113,28 +112,28 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 if (isFormattingOtp) return;
 
                 String rawInput = s.toString();
-                String digits = rawInput.replaceAll("[^0-9]", ""); // Chỉ lấy số
+                String digits = rawInput.replaceAll("[^0-9]", "");
 
-                // Nếu người dùng dán (paste) nguyên một mã 4 số vào ô đầu tiên
-                if (digits.length() >= 4) {
+                // Nếu người dùng dán (paste) nguyên một mã 6 số
+                if (digits.length() >= 6) {
                     isFormattingOtp = true;
                     etOtp1.setText(String.valueOf(digits.charAt(0)));
                     etOtp2.setText(String.valueOf(digits.charAt(1)));
                     etOtp3.setText(String.valueOf(digits.charAt(2)));
                     etOtp4.setText(String.valueOf(digits.charAt(3)));
-                    etOtp4.requestFocus();
-                    etOtp4.setSelection(etOtp4.getText().length());
+                    etOtp5.setText(String.valueOf(digits.charAt(4)));
+                    etOtp6.setText(String.valueOf(digits.charAt(5)));
+                    etOtp6.requestFocus();
+                    etOtp6.setSelection(etOtp6.getText().length());
                     isFormattingOtp = false;
                     return;
                 }
 
-                // Nếu nhập 1 số -> tự động nhảy sang ô tiếp theo (next)
                 if (digits.length() == 1) {
                     if (next != null) {
                         next.requestFocus();
                     }
-                }
-                else if (digits.length() > 1) {
+                } else if (digits.length() > 1) {
                     isFormattingOtp = true;
                     char lastChar = digits.charAt(digits.length() - 1);
                     current.setText(String.valueOf(lastChar));
@@ -150,7 +149,6 @@ public class VerifyEmailActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Xử lý khi bấm nút xóa (Backspace): tự động lùi về ô trước đó nếu ô hiện tại đang trống
         current.setOnKeyListener((v, keyCode, event) -> {
             if (keyCode == KeyEvent.KEYCODE_DEL && event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (TextUtils.isEmpty(current.getText().toString()) && previous != null) {
@@ -163,15 +161,12 @@ public class VerifyEmailActivity extends AppCompatActivity {
         });
     }
 
-    /** Cài đặt sự kiện bấm nút Xác thực và nút Gửi lại mã */
     private void setupListeners() {
         btnVerify.setOnClickListener(v -> handleVerify());
         tvResendOtp.setOnClickListener(v -> handleResendOtp());
     }
 
-    /** Lắng nghe kết quả trả về từ ViewModel cho các API (Xác thực email, Gửi lại OTP) */
     private void setupObservers() {
-        // Kết quả xác thực email đăng ký
         authViewModel.getVerifyEmailResult().observe(this, resource -> {
             if (resource == null) return;
             switch (resource.getStatus()) {
@@ -180,7 +175,6 @@ public class VerifyEmailActivity extends AppCompatActivity {
                     btnVerify.setText(R.string.btn_verify);
                     Toast.makeText(this, R.string.verify_email_success, Toast.LENGTH_SHORT).show();
 
-                    // Thành công -> Chuyển về màn hình Đăng nhập và xóa sạch lịch sử màn hình cũ
                     Intent intent = new Intent(VerifyEmailActivity.this, LoginActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -201,13 +195,12 @@ public class VerifyEmailActivity extends AppCompatActivity {
             }
         });
 
-        // Kết quả gửi lại OTP (cho trường hợp đăng ký)
-        authViewModel.getResendOtpResult().observe(this, resource -> {
+        authViewModel.getResendVerificationResult().observe(this, resource -> {
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case SUCCESS:
                     Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
-                    startResendTimer(TIMER_DURATION_MS); // Chạy lại đồng hồ đếm ngược 60s
+                    startResendTimer(TIMER_DURATION_MS);
                     break;
 
                 case ERROR:
@@ -223,7 +216,27 @@ public class VerifyEmailActivity extends AppCompatActivity {
             }
         });
 
-        // Kết quả gửi lại OTP (cho trường hợp quên mật khẩu)
+        authViewModel.getResendOtpResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
+                    startResendTimer(TIMER_DURATION_MS);
+                    break;
+
+                case ERROR:
+                    resetResendUi();
+                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    break;
+
+                case LOADING:
+                    tvResendOtp.setEnabled(false);
+                    tvResendOtp.setText(R.string.loading_send_code);
+                    break;
+            }
+        });
+
         authViewModel.getForgotPasswordResult().observe(this, resource -> {
             if (resource == null) return;
             switch (resource.getStatus()) {
@@ -246,24 +259,21 @@ public class VerifyEmailActivity extends AppCompatActivity {
         });
     }
 
-    /** Xử lý hành động bấm Gửi lại mã OTP */
     private void handleResendOtp() {
-        if (isTimerRunning) return; // Nếu đang trong thời gian đếm ngược thì không cho bấm
+        if (isTimerRunning) return;
 
         if (TextUtils.isEmpty(userEmail)) {
             Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Tùy theo luồng (Quên mật khẩu hay Đăng ký) mà gọi hàm API tương ứng
         if (isResetPassword) {
             authViewModel.forgotPassword(userEmail);
         } else {
-            authViewModel.resendOtp(userEmail);
+            authViewModel.resendVerification(userEmail);
         }
     }
 
-    /** Bắt đầu chạy đồng hồ đếm ngược thời gian chờ gửi lại OTP (ví dụ: 60 giây) */
     private void startResendTimer(long durationMillis) {
         isTimerRunning = true;
         tvResendOtp.setEnabled(false);
@@ -282,12 +292,11 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                resetResendUi(); // Hết giờ -> Bật lại nút "Gửi lại mã"
+                resetResendUi();
             }
         }.start();
     }
 
-    /** Đưa giao diện nút Gửi lại mã về trạng thái ban đầu (có thể bấm được) */
     private void resetResendUi() {
         isTimerRunning = false;
         endTimeStamp = 0;
@@ -295,22 +304,22 @@ public class VerifyEmailActivity extends AppCompatActivity {
         tvResendOtp.setText(R.string.resend_otp_action);
     }
 
-    /** Xử lý khi người dùng nhập đủ 4 số OTP và bấm Xác thực */
     private void handleVerify() {
         String o1 = etOtp1.getText().toString().trim();
         String o2 = etOtp2.getText().toString().trim();
         String o3 = etOtp3.getText().toString().trim();
         String o4 = etOtp4.getText().toString().trim();
+        String o5 = etOtp5.getText().toString().trim();
+        String o6 = etOtp6.getText().toString().trim();
 
-        // Kiểm tra xem đã điền đủ 4 ô chưa
-        if (TextUtils.isEmpty(o1) || TextUtils.isEmpty(o2) || TextUtils.isEmpty(o3) || TextUtils.isEmpty(o4)) {
-            Toast.makeText(this, R.string.error_invalid_otp, Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(o1) || TextUtils.isEmpty(o2) || TextUtils.isEmpty(o3) ||
+            TextUtils.isEmpty(o4) || TextUtils.isEmpty(o5) || TextUtils.isEmpty(o6)) {
+            Toast.makeText(this, "Vui lòng nhập đủ 6 chữ số OTP", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String otp = o1 + o2 + o3 + o4; // Ghép 4 số thành mã OTP hoàn chỉnh
+        String otp = o1 + o2 + o3 + o4 + o5 + o6;
 
-        // Nếu là luồng Quên mật khẩu -> Lưu OTP và chuyển sang màn hình Đổi mật khẩu mới
         if (isResetPassword) {
             authViewModel.setResetOtp(otp);
             Intent intent = new Intent(VerifyEmailActivity.this, ChangePasswordActivity.class);
@@ -318,14 +327,11 @@ public class VerifyEmailActivity extends AppCompatActivity {
             intent.putExtra("otp", otp);
             startActivity(intent);
             finish();
-        }
-        // Nếu là luồng Đăng ký thông thường -> Gọi API xác thực email ngay
-        else {
+        } else {
             authViewModel.verifyEmail(userEmail, otp);
         }
     }
 
-    /** Lưu lại các trạng thái quan trọng khi Activity bị xoay chiều màn hình */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -334,7 +340,6 @@ public class VerifyEmailActivity extends AppCompatActivity {
         outState.putString(KEY_USER_EMAIL, userEmail);
     }
 
-    /** Hủy bộ đếm ngược khi Activity bị hủy để tránh rò rỉ bộ nhớ (Memory Leak) */
     @Override
     protected void onDestroy() {
         super.onDestroy();
