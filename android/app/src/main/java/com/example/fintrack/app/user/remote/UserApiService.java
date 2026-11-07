@@ -4,6 +4,7 @@ import com.example.fintrack.app.core.network.ApiResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.PUT;
 
@@ -20,4 +21,8 @@ public interface UserApiService {
     /** API Cập nhật thông tin họ tên và số điện thoại của người dùng */
     @PUT("api/v1/user/profile")
     Call<ApiResponse<UserProfileResponse>> updateProfile(@Body UpdateProfileRequest request);
+
+    /** API Xóa vĩnh viễn tài khoản người dùng */
+    @DELETE("api/v1/user/profile")
+    Call<ApiResponse<Void>> deleteAccount();
 }

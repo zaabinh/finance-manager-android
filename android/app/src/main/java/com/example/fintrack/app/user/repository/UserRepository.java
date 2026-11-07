@@ -80,4 +80,23 @@ public class UserRepository {
             }
         });
     }
+
+    /** Gọi API Xóa vĩnh viễn tài khoản người dùng */
+    public void deleteAccount(MutableLiveData<Resource<Void>> result) {
+        apiService.deleteAccount().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() || response.code() == 204) {
+                    result.setValue(Resource.success(null));
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
 }

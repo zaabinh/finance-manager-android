@@ -11,6 +11,7 @@ import com.example.fintrack.app.auth.remote.AuthApiService;
 import com.example.fintrack.app.auth.remote.ForgotPasswordRequest;
 import com.example.fintrack.app.auth.remote.LoginRequest;
 import com.example.fintrack.app.auth.remote.LoginResponse;
+import com.example.fintrack.app.auth.remote.RefreshTokenRequest;
 import com.example.fintrack.app.auth.remote.RegisterRequest;
 import com.example.fintrack.app.auth.remote.ResendOtpRequest;
 import com.example.fintrack.app.auth.remote.ResetPasswordRequest;
@@ -25,60 +26,51 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Repository chịu trách nhiệm xử lý các tác vụ mạng (gọi API) liên quan đến xác thực (Auth),
- * sau đó trả kết quả về cho ViewModel thông qua LiveData.
+ * Repository chịu trách nhiệm xử lý các cuộc gọi API mạng liên quan đến Xác thực (Auth),
+ * chuyển đổi kết quả về dạng LiveData Resource cho ViewModel.
  */
 public class AuthRepository {
+
     private final Context appContext;
     private final AuthApiService apiService;
 
-    // Khởi tạo Repository và tạo dịch vụ Retrofit (AuthApiService)
     public AuthRepository(Context context) {
         this.appContext = context.getApplicationContext();
         this.apiService = ApiClient.createService(appContext, AuthApiService.class);
     }
 
-    /** Gọi API Đăng nhập */
+    /** Gọi API Đăng nhập tài khoản */
     public void login(String usernameOrEmail, String password, MutableLiveData<Resource<LoginResponse>> result) {
         apiService.login(new LoginRequest(usernameOrEmail, password)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<LoginResponse>> call, @NonNull Response<ApiResponse<LoginResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<LoginResponse> apiResponse = response.body();
-                    // Kiểm tra xem API trả về thành công và có chứa Token hay không
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null && !TextUtils.isEmpty(apiResponse.getData().getAccessToken())) {
+                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
                         result.setValue(Resource.success(apiResponse.getData()));
                     } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.login_response_invalid);
+                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.login_failed);
                         result.setValue(Resource.error(msg, null));
                     }
                 } else {
-                    // Lỗi HTTP (ví dụ: 400, 401, 500)
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<LoginResponse>> call, @NonNull Throwable t) {
-                // Lỗi kết nối mạng, mất mạng, timeout,...
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
     }
 
-    /** Gọi API Đăng ký tài khoản */
+    /** Gọi API Đăng ký tài khoản mới */
     public void register(String username, String email, String password, MutableLiveData<Resource<Void>> result) {
         apiService.register(new RegisterRequest(username, email, password)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.register_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+                if (response.isSuccessful() || response.code() == 201) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
@@ -96,14 +88,8 @@ public class AuthRepository {
         apiService.verifyEmail(new VerifyEmailRequest(email, otp)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<Void> apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        result.setValue(Resource.success(null));
-                    } else {
-                        String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.verify_email_failed);
-                        result.setValue(Resource.error(msg, null));
-                    }
+                if (response.isSuccessful() || response.code() == 204) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
@@ -198,6 +184,44 @@ public class AuthRepository {
                         String msg = !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : appContext.getString(R.string.reset_password_failed);
                         result.setValue(Resource.error(msg, null));
                     }
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
+
+    /** Gọi API Đăng xuất thiết bị hiện tại (/logout) */
+    public void logout(String refreshToken, MutableLiveData<Resource<Void>> result) {
+        apiService.logout(new RefreshTokenRequest(refreshToken)).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() || response.code() == 204) {
+                    result.setValue(Resource.success(null));
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
+
+    /** Gọi API Đăng xuất tất cả thiết bị (/logout-all) */
+    public void logoutAll(MutableLiveData<Resource<Void>> result) {
+        apiService.logoutAll().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() || response.code() == 204) {
+                    result.setValue(Resource.success(null));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
