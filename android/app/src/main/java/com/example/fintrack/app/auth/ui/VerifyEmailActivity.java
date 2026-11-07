@@ -22,7 +22,7 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import java.util.Locale;
 
 /**
- * Màn hình Nhập mã xác thực OTP 6 số (VerifyEmailActivity).
+ * Màn hình Nhập mã xác thực OTP 4 số (VerifyEmailActivity).
  * Dùng cho cả 2 trường hợp:
  * 1. Xác thực email sau khi đăng ký tài khoản mới.
  * 2. Nhận mã OTP để đặt lại mật khẩu mới khi quên mật khẩu.
@@ -34,8 +34,8 @@ public class VerifyEmailActivity extends AppCompatActivity {
     private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
     private static final long TIMER_DURATION_MS = 60000;
 
-    // Các thành phần giao diện (6 ô nhập OTP, nút xác thực, chữ gửi lại mã)
-    private EditText etOtp1, etOtp2, etOtp3, etOtp4, etOtp5, etOtp6;
+    // Các thành phần giao diện (4 ô nhập OTP, nút xác thực, chữ gửi lại mã)
+    private EditText etOtp1, etOtp2, etOtp3, etOtp4;
     private Button btnVerify;
     private TextView tvResendOtp;
 
@@ -86,20 +86,16 @@ public class VerifyEmailActivity extends AppCompatActivity {
         etOtp2 = findViewById(R.id.etOtp2);
         etOtp3 = findViewById(R.id.etOtp3);
         etOtp4 = findViewById(R.id.etOtp4);
-        etOtp5 = findViewById(R.id.etOtp5);
-        etOtp6 = findViewById(R.id.etOtp6);
         btnVerify = findViewById(R.id.btnVerify);
         tvResendOtp = findViewById(R.id.tvResendOtp);
     }
 
-    /** Liên kết 6 ô nhập OTP để tự động chuyển focus qua lại khi nhập hoặc xóa */
+    /** Liên kết 4 ô nhập OTP để tự động chuyển focus qua lại khi nhập hoặc xóa */
     private void setupOtpInputs() {
         setupSingleBox(etOtp1, null, etOtp2);
         setupSingleBox(etOtp2, etOtp1, etOtp3);
         setupSingleBox(etOtp3, etOtp2, etOtp4);
-        setupSingleBox(etOtp4, etOtp3, etOtp5);
-        setupSingleBox(etOtp5, etOtp4, etOtp6);
-        setupSingleBox(etOtp6, etOtp5, null);
+        setupSingleBox(etOtp4, etOtp3, null);
     }
 
     private void setupSingleBox(EditText current, EditText previous, EditText next) {
@@ -114,17 +110,15 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 String rawInput = s.toString();
                 String digits = rawInput.replaceAll("[^0-9]", "");
 
-                // Nếu người dùng dán (paste) nguyên một mã 6 số
-                if (digits.length() >= 6) {
+                // Nếu người dùng dán (paste) nguyên một mã 4 số
+                if (digits.length() >= 4) {
                     isFormattingOtp = true;
                     etOtp1.setText(String.valueOf(digits.charAt(0)));
                     etOtp2.setText(String.valueOf(digits.charAt(1)));
                     etOtp3.setText(String.valueOf(digits.charAt(2)));
                     etOtp4.setText(String.valueOf(digits.charAt(3)));
-                    etOtp5.setText(String.valueOf(digits.charAt(4)));
-                    etOtp6.setText(String.valueOf(digits.charAt(5)));
-                    etOtp6.requestFocus();
-                    etOtp6.setSelection(etOtp6.getText().length());
+                    etOtp4.requestFocus();
+                    etOtp4.setSelection(etOtp4.getText().length());
                     isFormattingOtp = false;
                     return;
                 }
@@ -309,16 +303,13 @@ public class VerifyEmailActivity extends AppCompatActivity {
         String o2 = etOtp2.getText().toString().trim();
         String o3 = etOtp3.getText().toString().trim();
         String o4 = etOtp4.getText().toString().trim();
-        String o5 = etOtp5.getText().toString().trim();
-        String o6 = etOtp6.getText().toString().trim();
 
-        if (TextUtils.isEmpty(o1) || TextUtils.isEmpty(o2) || TextUtils.isEmpty(o3) ||
-            TextUtils.isEmpty(o4) || TextUtils.isEmpty(o5) || TextUtils.isEmpty(o6)) {
-            Toast.makeText(this, "Vui lòng nhập đủ 6 chữ số OTP", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(o1) || TextUtils.isEmpty(o2) || TextUtils.isEmpty(o3) || TextUtils.isEmpty(o4)) {
+            Toast.makeText(this, R.string.error_invalid_otp, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String otp = o1 + o2 + o3 + o4 + o5 + o6;
+        String otp = o1 + o2 + o3 + o4;
 
         if (isResetPassword) {
             authViewModel.setResetOtp(otp);
