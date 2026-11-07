@@ -1,0 +1,26 @@
+package com.example.fintrack.app.auth.remote;
+
+import com.google.gson.annotations.SerializedName;
+
+/** DTO yêu cầu đổi mật khẩu gửi lên Server */
+public class ChangePasswordRequest {
+
+    @SerializedName("currentPassword")
+    private String currentPassword;
+
+    @SerializedName("newPassword")
+    private String newPassword;
+
+    public ChangePasswordRequest(String currentPassword, String newPassword) {
+        this.currentPassword = currentPassword;
+        this.newPassword = newPassword;
+    }
+
+    public String getCurrentPassword() {
+        return currentPassword;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+}

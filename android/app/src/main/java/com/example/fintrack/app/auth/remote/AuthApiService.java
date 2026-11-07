@@ -7,48 +7,48 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 /**
- * Interface định nghĩa các API endpoint liên quan đến xác thực (Auth)
- * sử dụng thư viện Retrofit.
+ * Interface định nghĩa các API endpoint xác thực chính xác theo Backend Spring Boot:
+ * register, login, refresh, logout, change-password, verify-email, resend-verification, forgot-password, reset-password.
  */
 public interface AuthApiService {
 
-    /** API Đăng nhập tài khoản */
-    @POST("api/v1/auth/login")
-    Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
-
-    /** API Đăng ký tài khoản mới */
+    /** Đăng ký tài khoản mới */
     @POST("api/v1/auth/register")
     Call<ApiResponse<Void>> register(@Body RegisterRequest request);
 
-    /** API Xác thực email bằng mã OTP */
+    /** Đăng nhập tài khoản */
+    @POST("api/v1/auth/login")
+    Call<ApiResponse<LoginResponse>> login(@Body LoginRequest request);
+
+    /** Làm mới Access Token bằng Refresh Token */
+    @POST("api/v1/auth/refresh")
+    Call<ApiResponse<TokenResponse>> refreshToken(@Body RefreshTokenRequest request);
+
+    /** Đăng xuất thiết bị hiện tại */
+    @POST("api/v1/auth/logout")
+    Call<ApiResponse<Void>> logout(@Body RefreshTokenRequest request);
+
+    /** Đăng xuất tất cả thiết bị */
+    @POST("api/v1/auth/logout-all")
+    Call<ApiResponse<Void>> logoutAll();
+
+    /** Đổi mật khẩu tài khoản (khi đã đăng nhập) */
+    @POST("api/v1/auth/change-password")
+    Call<ApiResponse<TokenResponse>> changePassword(@Body ChangePasswordRequest request);
+
+    /** Xác thực email bằng mã OTP */
     @POST("api/v1/auth/verify-email")
     Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
 
-    /** API Yêu cầu gửi lại email xác nhận tài khoản */
+    /** Gửi lại email xác nhận tài khoản */
     @POST("api/v1/auth/resend-verification")
     Call<ApiResponse<Void>> resendVerification(@Body ResendOtpRequest request);
 
-    /** API Yêu cầu gửi lại mã OTP */
-    @POST("api/v1/auth/resend-otp")
-    Call<ApiResponse<Void>> resendOtp(@Body ResendOtpRequest request);
-
-    /** API Yêu cầu quên mật khẩu (gửi OTP về email) */
+    /** Yêu cầu quên mật khẩu (gửi OTP về email) */
     @POST("api/v1/auth/forgot-password")
-    Call<ApiResponse<Void>> forgotPassword(@Body ForgotPasswordRequest request);
+    Call<ApiResponse<Void>> forgotPassword(@Body ResendOtpRequest request);
 
-    /** API Đặt lại mật khẩu mới bằng mã OTP */
+    /** Đặt lại mật khẩu mới bằng mã OTP */
     @POST("api/v1/auth/reset-password")
     Call<ApiResponse<Void>> resetPassword(@Body ResetPasswordRequest request);
-
-    /** API Làm mới Token tự động bằng RefreshToken */
-    @POST("api/v1/auth/refresh-token")
-    Call<ApiResponse<LoginResponse>> refreshToken(@Body RefreshTokenRequest request);
-
-    /** API Đăng xuất thiết bị hiện tại */
-    @POST("api/v1/auth/logout")
-    Call<ApiResponse<Void>> logout();
-
-    /** API Đăng xuất tất cả thiết bị */
-    @POST("api/v1/auth/logout-all")
-    Call<ApiResponse<Void>> logoutAll();
 }
