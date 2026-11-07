@@ -24,6 +24,10 @@ public interface AuthApiService {
     @POST("api/v1/auth/verify-email")
     Call<ApiResponse<Void>> verifyEmail(@Body VerifyEmailRequest request);
 
+    /** API Yêu cầu gửi lại email xác nhận tài khoản */
+    @POST("api/v1/auth/resend-verification")
+    Call<ApiResponse<Void>> resendVerification(@Body ResendOtpRequest request);
+
     /** API Yêu cầu gửi lại mã OTP */
     @POST("api/v1/auth/resend-otp")
     Call<ApiResponse<Void>> resendOtp(@Body ResendOtpRequest request);
