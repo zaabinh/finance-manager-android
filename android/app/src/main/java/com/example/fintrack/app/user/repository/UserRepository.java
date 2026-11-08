@@ -9,6 +9,7 @@ import com.example.fintrack.app.core.network.ApiClient;
 import com.example.fintrack.app.core.network.ApiResponse;
 import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.user.remote.DeactivateUserRequest;
 import com.example.fintrack.app.user.remote.UpdateProfileRequest;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
@@ -79,6 +80,25 @@ public class UserRepository {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
+
+    /** Gọi API Vô hiệu hóa/Xóa tài khoản người dùng với xác nhận mật khẩu (/api/v1/users/me) */
+    public void deactivateAccount(String currentPassword, MutableLiveData<Resource<Void>> result) {
+        apiService.deactivateAccount(new DeactivateUserRequest(currentPassword)).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() || response.code() == 204) {
+                    result.setValue(Resource.success(null));
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
