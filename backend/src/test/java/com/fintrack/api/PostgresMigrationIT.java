@@ -56,7 +56,7 @@ class PostgresMigrationIT {
             }
             var flyway = Flyway.configure().dataSource(upgradeDatabase.getJdbcUrl(), upgradeDatabase.getUsername(),
                     upgradeDatabase.getPassword()).defaultSchema("fintrack").load();
-            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
+            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
             try (var connection = DriverManager.getConnection(upgradeDatabase.getJdbcUrl(),
                     upgradeDatabase.getUsername(), upgradeDatabase.getPassword());
                  var statement = connection.createStatement()) {
@@ -111,15 +111,15 @@ class PostgresMigrationIT {
                     }
                 }
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("6");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
                      var statement = connection.createStatement();
                      var result = statement.executeQuery(
-                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5') AND success")) {
+                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5', '6') AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(5);
+                    assertThat(result.getInt(1)).isEqualTo(6);
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
@@ -136,7 +136,7 @@ class PostgresMigrationIT {
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
                             "wallets", "categories", "transactions", "transaction_entries", "budgets",
-                            "verification_challenges");
+                            "verification_challenges", "notification_settings");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();
                         statement.execute(new String(script.readAllBytes(), StandardCharsets.UTF_8));

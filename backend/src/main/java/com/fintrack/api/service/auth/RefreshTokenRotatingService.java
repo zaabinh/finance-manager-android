@@ -2,6 +2,8 @@ package com.fintrack.api.service.auth;
 
 import com.fintrack.api.config.AuthProperties;
 import com.fintrack.api.dto.response.auth.TokenResponse;
+import com.fintrack.api.entity.enums.UserRole;
+import com.fintrack.api.entity.enums.UserStatus;
 import com.fintrack.api.exception.AppException;
 import com.fintrack.api.exception.ErrorCode;
 import com.fintrack.api.exception.RefreshTokenReuseException;
@@ -10,6 +12,9 @@ import com.fintrack.api.repository.RefreshSessionRepository.RevokeReason;
 import com.fintrack.api.repository.RefreshSessionRepository.Session;
 import com.fintrack.api.repository.UserRepository;
 import com.fintrack.api.repository.UserRepository.UserRecord;
+
+import lombok.RequiredArgsConstructor;
+
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -35,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Profile("!test")
+@RequiredArgsConstructor 
 public class RefreshTokenRotatingService {
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenRotatingService.class);
     private static final Logger securityLog = LoggerFactory.getLogger("com.fintrack.api.security.audit");
@@ -46,14 +52,13 @@ public class RefreshTokenRotatingService {
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
-    public RefreshTokenRotatingService(RefreshSessionRepository sessions, UserRepository users, TokenService tokens,
-            AuthProperties properties, Clock clock) {
-        this.sessions = sessions; this.users = users; this.tokens = tokens; this.properties = properties; this.clock = clock;
-    }
-
     /** Issues an access token and a new refresh token. {@code familyId == null} starts a new family (new login). */
     @Transactional
-    public TokenResponse generateTokenPair(UUID userId, String role, UUID familyId, ClientMetadata client) {
+    public TokenResponse generateTokenPair(
+        UUID userId, 
+        UserRole role, 
+        UUID familyId, 
+        ClientMetadata client) {
         return issue(userId, role, familyId == null ? UUID.randomUUID() : familyId, client).token();
     }
 
@@ -123,7 +128,11 @@ public class RefreshTokenRotatingService {
         }
     }
 
-    private Issued issue(UUID userId, String role, UUID familyId, ClientMetadata client) {
+    private Issued issue(
+        UUID userId, 
+        UserRole role, 
+        UUID familyId, 
+        ClientMetadata client) {
         byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
         random.nextBytes(bytes);
         String refresh = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -137,7 +146,7 @@ public class RefreshTokenRotatingService {
         return new TokenResponse(accessToken, refreshToken, "Bearer", properties.accessTokenTtl().toSeconds());
     }
 
-    private static boolean isUsable(UserRecord user) { return "ACTIVE".equals(user.status()) && user.emailVerified(); }
+    private static boolean isUsable(UserRecord user) { return user.status() == UserStatus.ACTIVE && user.emailVerified(); }
 
     // Client-supplied values must not be able to forge log lines.
     private static String sanitize(String value) { return value == null ? null : value.replaceAll("[\\r\\n\\t]", "_"); }

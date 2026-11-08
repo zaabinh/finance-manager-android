@@ -90,7 +90,8 @@ class AuthenticationIT {
                 .andExpect(status().isNoContent());
         mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"usernameOrEmail\":\"" + name + "\",\"password\":\"Strong@123\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.displayName").value(name))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.displayName").doesNotExist())
+                .andExpect(jsonPath("$.data.onboardingCompleted").value(false))
                 .andExpect(jsonPath("$.data.token.tokenType").value("Bearer"));
         var login = auth.login(new LoginRequest(email, "Strong@123"), client);
         assertThat(tokens.authenticate(login.token().accessToken())).isPresent();
@@ -212,7 +213,7 @@ class AuthenticationIT {
                 statement.execute("INSERT INTO fintrack.users(username,email,password_hash) VALUES ('existing','existing@example.test','old-hash')");
             }
             var upgrade = Flyway.configure().dataSource(upgradeUrl, username, password).defaultSchema("fintrack").load();
-            assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);
+            assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(3);
             assertThat(upgrade.migrate().migrationsExecuted).isZero();
             try (var connection = java.sql.DriverManager.getConnection(upgradeUrl, username, password);
                  var statement = connection.createStatement()) {
@@ -255,7 +256,7 @@ class AuthenticationIT {
             old.update("UPDATE fintrack.refresh_sessions SET replaced_by_session_id = ? WHERE id = ?", b, a);
             old.update("UPDATE fintrack.refresh_sessions SET replaced_by_session_id = ? WHERE id = ?", c, b);
             assertThat(Flyway.configure().dataSource(upgradeUrl, username, password).defaultSchema("fintrack").load()
-                    .migrate().migrationsExecuted).isEqualTo(1);
+                    .migrate().migrationsExecuted).isEqualTo(2);
             Map<UUID, UUID> family = new HashMap<>();
             Map<UUID, String> reason = new HashMap<>();
             old.query("SELECT id, family_id, revoke_reason FROM fintrack.refresh_sessions", (org.springframework.jdbc.core.RowCallbackHandler) rs -> {

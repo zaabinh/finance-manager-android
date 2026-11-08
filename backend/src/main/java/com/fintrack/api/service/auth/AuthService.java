@@ -3,6 +3,7 @@ package com.fintrack.api.service.auth;
 import com.fintrack.api.dto.request.auth.*;
 import com.fintrack.api.dto.response.auth.LoginResponse;
 import com.fintrack.api.dto.response.auth.TokenResponse;
+import com.fintrack.api.entity.enums.UserStatus;
 import com.fintrack.api.exception.*;
 import com.fintrack.api.repository.*;
 import com.fintrack.api.repository.RefreshSessionRepository.RevokeReason;
@@ -101,7 +102,7 @@ public class AuthService implements AuthOperations {
             throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.AUTH_USERNAME_NOT_EXIST, "User not found");
         }
 
-        var user = users.lockById(principal.id())
+        var user = users.lockByIdForAuthentication(principal.id())
                         .orElseThrow(() -> new AppException(
                             HttpStatus.UNAUTHORIZED, 
                             ErrorCode.AUTH_INVALID_CREDENTIALS,
@@ -114,9 +115,9 @@ public class AuthService implements AuthOperations {
         }
 
         // Check for user status
-        if (!"ACTIVE".equals(user.status())) throw new AppException(
+        if (user.status() != UserStatus.ACTIVE) throw new AppException(
             HttpStatus.FORBIDDEN,
-            "LOCKED".equals(user.status()) ? ErrorCode.AUTH_USER_LOCKED : ErrorCode.AUTH_USER_DISABLED, 
+            user.status() == UserStatus.LOCKED ? ErrorCode.AUTH_USER_LOCKED : ErrorCode.AUTH_USER_DISABLED, 
             "Account unavailable");
         
         // Check for verified email
@@ -126,8 +127,9 @@ public class AuthService implements AuthOperations {
                 ErrorCode.AUTH_EMAIL_NOT_VERIFIED, 
                 "Email is not verified"
             );
+            
         limiter.clearLoginFailures(identifier, client);
-        return LoginResponse.of(user.displayName(), user.username(), user.onboardingCompleted(), refreshTokens.generateTokenPair(user.id(), user.role(), null, client));
+        return new LoginResponse(user.onboardingCompleted(), refreshTokens.generateTokenPair(user.id(), user.role(), null, client));
     }
 
     @Override 
@@ -140,7 +142,8 @@ public class AuthService implements AuthOperations {
         refreshTokens.revokeByToken(raw); 
     }
 
-    @Override @Transactional(noRollbackFor = ChallengeRejectedException.class)
+    @Override 
+    @Transactional(noRollbackFor = ChallengeRejectedException.class)
     public void verifyEmail(VerifyEmailRequest request) {
         var user = lockEmail(request.email());
         if (user.emailVerified()) return;
@@ -148,12 +151,14 @@ public class AuthService implements AuthOperations {
         users.verify(user.id());
     }
 
-    @Override @Transactional
+    @Override 
+    @Transactional
     public void resendVerification(ResendOtpRequest request) { 
         sendIfEligible(request.email(), Purpose.EMAIL_VERIFICATION); 
     }
 
-    @Override @Transactional
+    @Override 
+    @Transactional
     public void forgotPassword(ResendOtpRequest request) { 
         sendIfEligible(request.email(), Purpose.PASSWORD_RESET); 
     }
@@ -162,7 +167,7 @@ public class AuthService implements AuthOperations {
         users.findByEmail(normalize(email))
                 .flatMap(user -> users.lockById(user.id()))
                 .ifPresent(user -> {
-            if (!"ACTIVE".equals(user.status())) return;
+            if (user.status() != UserStatus.ACTIVE) return;
             if (purpose == Purpose.EMAIL_VERIFICATION && user.emailVerified()) return;
             if (purpose == Purpose.PASSWORD_RESET && !user.emailVerified()) return;
             String name = user.displayName() == null || user.displayName().isBlank() ? user.username() : user.displayName();
@@ -173,7 +178,7 @@ public class AuthService implements AuthOperations {
     public void resetPassword(ResetPasswordRequest request) {
         policy.validate(request.newPassword());
         var user = lockEmail(request.email());
-        if (!"ACTIVE".equals(user.status()) || !user.emailVerified()) 
+        if (user.status() != UserStatus.ACTIVE || !user.emailVerified()) 
             throw rejected(HttpStatus.BAD_REQUEST, ErrorCode.AUTH_OTP_INVALID, "Invalid code");
         verification.verify(user.id(), Purpose.PASSWORD_RESET, request.otp());
         users.updatePassword(user.id(), encoder.encode(request.newPassword()));

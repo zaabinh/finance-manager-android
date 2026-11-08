@@ -10,8 +10,11 @@ import com.example.fintrack.app.core.network.ApiResponse;
 import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.UpdateProfileRequest;
+import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
+import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
 import com.example.fintrack.app.user.remote.UserApiService;
 import com.example.fintrack.app.user.remote.UserProfileResponse;
+import com.example.fintrack.app.user.remote.UserSettingsResponse;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -56,9 +59,9 @@ public class UserRepository {
         });
     }
 
-    /** Gọi API cập nhật thông tin họ tên và số điện thoại */
-    public void updateProfile(String name, String phone, MutableLiveData<Resource<UserProfileResponse>> result) {
-        apiService.updateProfile(new UpdateProfileRequest(name, phone)).enqueue(new Callback<>() {
+    public void updateProfile(String displayName, String timeZone,
+            MutableLiveData<Resource<UserProfileResponse>> result) {
+        apiService.updateProfile(new UpdateProfileRequest(displayName, timeZone)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<UserProfileResponse>> call, @NonNull Response<ApiResponse<UserProfileResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -88,15 +91,54 @@ public class UserRepository {
             public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() || response.code() == 204) {
                     result.setValue(Resource.success(null));
+                  
+    public void getSettings(MutableLiveData<Resource<UserSettingsResponse>> result) {
+        apiService.getSettings().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<UserSettingsResponse>> call,
+                    @NonNull Response<ApiResponse<UserSettingsResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()
+                        && response.body().getData() != null) {
+                    result.setValue(Resource.success(response.body().getData()));
                 } else {
                     result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<UserSettingsResponse>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         });
+    }
+
+    public void getNotificationSettings(MutableLiveData<Resource<NotificationSettingsResponse>> result) {
+        apiService.getNotificationSettings().enqueue(notificationCallback(result));
+    }
+
+    public void updateNotificationSettings(UpdateNotificationSettingsRequest request,
+            MutableLiveData<Resource<NotificationSettingsResponse>> result) {
+        apiService.updateNotificationSettings(request).enqueue(notificationCallback(result));
+    }
+
+    private Callback<ApiResponse<NotificationSettingsResponse>> notificationCallback(
+            MutableLiveData<Resource<NotificationSettingsResponse>> result) {
+        return new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<NotificationSettingsResponse>> call,
+                    @NonNull Response<ApiResponse<NotificationSettingsResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()
+                        && response.body().getData() != null) {
+                    result.setValue(Resource.success(response.body().getData()));
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<NotificationSettingsResponse>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        };
     }
 }

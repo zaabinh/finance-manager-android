@@ -75,6 +75,11 @@ Các endpoint bên dưới là public cho phương thức POST; API nghiệp v�
 Resend/forgot có cùng response cho email tồn tại và không tồn tại. Rate limit được áp dụng cho cả hai,
 trả 429 khi vượt giới hạn mà không phụ thuộc vào email có trong database hay không.
 
+Android dùng cùng tên field và endpoint như contract này. Login được parse theo cấu trúc
+`ApiResponse<LoginResponse>` với token lồng trong `data.token`; các endpoint register, verify-email,
+resend-verification, forgot-password và reset-password trả body rỗng nên client chỉ dựa vào HTTP success status.
+Sau login, client lưu token rồi gọi `GET /api/v1/users/me` để lấy `id`, `email` và `displayName`.
+
 Login thành công khi user ACTIVE, email đã verify và password hợp lệ:
 
 ```json
@@ -82,7 +87,6 @@ Login thành công khi user ACTIVE, email đã verify và password hợp lệ:
   "success": true,
   "message": "Login successful",
   "data": {
-    "displayName": "an.nguyen",
     "onboardingCompleted": false,
     "token": {
       "accessToken": "<RS256-JWT>",
@@ -95,7 +99,7 @@ Login thành công khi user ACTIVE, email đã verify và password hợp lệ:
 }
 ```
 
-`displayName` lấy từ user_preferences, fallback username khi null/blank. Không có user profile trong login.
+Login response chỉ chứa trạng thái onboarding và token; đăng nhập không truy vấn `user_preferences` để lấy `displayName`. Client điều hướng theo `onboardingCompleted`, sau đó tải dữ liệu profile hoặc home qua API tương ứng.
 Refresh trả token fields trực tiếp trong `data`. `GET /api/v1/users/me` trả `ApiResponse<UserResponse>`
 với id, username, displayName, email và yêu cầu access token hợp lệ.
 
