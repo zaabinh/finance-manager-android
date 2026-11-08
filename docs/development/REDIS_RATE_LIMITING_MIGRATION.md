@@ -268,9 +268,11 @@ mô hình check-then-authenticate hiện tại, không phải giới hạn của
 
 ## 6. Khi Redis lỗi
 
-Chọn fail closed cho auth requests cần rate limit: trả `503 AUTH_RATE_LIMIT_UNAVAILABLE`;
-không âm thầm cho qua hoặc fallback về Map riêng của mỗi instance. `GlobalExceptionHandler`
-hiện có đã xử lý AppException thành ApiErrorResponse, nên không cần thêm exception handler.
+Cập nhật 08/11/2026: khi Redis lỗi hoặc không trả kết quả, `RateLimitingService` chuyển sang bộ đếm
+in-memory (`ConcurrentHashMap`) với cùng limit/window, nên auth vẫn hoạt động. Giới hạn: đếm theo từng
+instance (N instance cho phép tối đa N × limit trong lúc Redis lỗi). Mỗi request vẫn thử Redis trước; khi
+Redis trả lời lại, bộ đếm in-memory bị xóa. Map giới hạn `MAX_FALLBACK_KEYS` key; khi đầy (sau khi dọn key
+hết hạn) thì key mới trả `503 AUTH_RATE_LIMIT_UNAVAILABLE` để không bị bypass hoặc cạn bộ nhớ.
 
 `429` nghĩa là đã vượt quota; `503` nghĩa là backend không kiểm tra được quota. Client không nên
 coi 503 là password sai hoặc tự động retry liên tục. Business API chỉ dùng JWT không tự động cần Redis,

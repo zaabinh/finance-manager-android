@@ -217,7 +217,7 @@ Resend HTTP payload và lỗi delivery. MVC contract tests mock AuthOperations; 
 `AuthenticationIT` chạy flow thật qua Spring/JDBC/PostgreSQL với sender mock, kiểm tra OTP sai được commit,
 one-time reset, old password/session invalidation, refresh đồng thời và migration idempotence.
 Mặc định dùng PostgreSQL và Redis Testcontainers; `PostgresMigrationIT` kiểm tra fresh/restart và upgrade schema cũ.
-`RedisRateLimitingIT` kiểm tra quota chia sẻ, TTL, xóa đúng key, concurrent requests và fail closed khi Redis từ chối ghi.
+`RedisRateLimitingIT` kiểm tra quota chia sẻ, TTL, xóa đúng key, concurrent requests và fallback in-memory (cùng limit, theo từng instance) khi Redis từ chối ghi.
 Có thể chạy AuthenticationIT trên PostgreSQL **test riêng có thể bỏ đi**, không dùng database ứng dụng.
 Redis test vẫn chạy bằng Docker/Testcontainers:
 
