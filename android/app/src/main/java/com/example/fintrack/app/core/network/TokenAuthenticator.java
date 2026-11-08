@@ -21,7 +21,7 @@ import okhttp3.Route;
 /**
  * Tự động gọi API refresh-token khi OkHttp nhận phản hồi 401 Unauthorized từ Server đối với các Protected API.
  * Phân biệt 401 của Access Token hết hạn với lỗi 401 của Login/Register/Refresh public endpoints.
- * Bảo vệ session không bị xóa nhầm khi gặp lỗi mạng tạm thời (transient network failure).
+ * Bảo vệ session không bị xóa nhầm khi gặp lỗi mạng tạm thời (transient network failure), 429 Rate Limit hoặc 5xx Server Error.
  */
 public class TokenAuthenticator implements Authenticator {
 
@@ -90,8 +90,14 @@ public class TokenAuthenticator implements Authenticator {
             }
         }
 
-        // 6. Nếu Server xác nhận Refresh Token thực sự hết hạn hoặc không hợp lệ -> Xóa phiên đăng nhập
-        sessionManager.clearSession();
+        // 6. Xử lý khi API refresh token không thành công:
+        // CHỈ XÓA SESSION khi Server xác nhận Refresh Token thực sự hết hạn hoặc không hợp lệ (HTTP 401 hoặc 403).
+        // Đối với các lỗi tạm thời như Rate Limit (429) hoặc Lỗi Máy chủ (500, 502, 503), BẢO TỒN SESSION để người dùng có thể thử lại sau.
+        int refreshStatusCode = refreshResponse.code();
+        if (refreshStatusCode == 401 || refreshStatusCode == 403) {
+            sessionManager.clearSession();
+        }
+
         return null;
     }
 
