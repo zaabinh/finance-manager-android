@@ -7,8 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fintrack.api.dto.request.user.UpdateNotificationSettingsRequest;
 import com.fintrack.api.dto.request.user.FirstSetupRequest;
+import com.fintrack.api.dto.request.user.UpdateNotificationSettingsRequest;
 import com.fintrack.api.dto.request.user.UpdateProfileRequest;
 import com.fintrack.api.entity.enums.UserRole;
 import com.fintrack.api.entity.enums.UserStatus;
@@ -58,6 +58,19 @@ class UserServiceTest {
         assertThat(response.profile().displayName()).isEqualTo("Minh Anh");
         assertThat(response.preferences().timeZone()).isEqualTo("Asia/Ho_Chi_Minh");
         assertThat(response.notificationSettings().budgetAlertThresholdPercent()).isEqualTo((short) 80);
+    }
+
+    @Test
+    void profileAndPreferencesFallbackToUsernameWhenDisplayNameIsUnset() {
+        when(preferences.findByUserId(userId))
+                .thenReturn(Optional.of(prefs(null, "Asia/Ho_Chi_Minh")));
+        when(notifications.findByUserId(userId)).thenReturn(Optional.of(notificationSettings(80)));
+
+        assertThat(service.getMyProfile(userId).displayName()).isEqualTo("minhanh");
+        assertThat(service.getMyPreferences(userId).displayName()).isEqualTo("minhanh");
+        var settings = service.getMySettings(userId);
+        assertThat(settings.profile().displayName()).isEqualTo("minhanh");
+        assertThat(settings.preferences().displayName()).isEqualTo("minhanh");
     }
 
     @Test

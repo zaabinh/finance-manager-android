@@ -25,8 +25,10 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<Resource<Void>> registerResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> verifyEmailResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resendOtpResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<Void>> resendVerificationResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> forgotPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resetPasswordResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<Void>> logoutResult = new MutableLiveData<>();
 
     // Biến tạm để lưu trữ thông tin email và mã OTP giữa các màn hình
     private String registeredEmail = "";
@@ -43,6 +45,10 @@ public class AuthViewModel extends AndroidViewModel {
 
     public String getRegisteredEmail() {
         return registeredEmail;
+    }
+
+    public void setRegisteredEmail(String registeredEmail) {
+        this.registeredEmail = registeredEmail;
     }
 
     public String getForgotPasswordEmail() {
@@ -75,12 +81,20 @@ public class AuthViewModel extends AndroidViewModel {
         return resendOtpResult;
     }
 
+    public LiveData<Resource<Void>> getResendVerificationResult() {
+        return resendVerificationResult;
+    }
+
     public LiveData<Resource<Void>> getForgotPasswordResult() {
         return forgotPasswordResult;
     }
 
     public LiveData<Resource<Void>> getResetPasswordResult() {
         return resetPasswordResult;
+    }
+
+    public LiveData<Resource<Void>> getLogoutResult() {
+        return logoutResult;
     }
 
     // --- Các hàm xử lý nghiệp vụ xác thực ---
@@ -110,7 +124,13 @@ public class AuthViewModel extends AndroidViewModel {
         authRepository.resendOtp(email, resendOtpResult);
     }
 
-    /** Yêu cầu quên mật khẩu (gửi mã OTP về email) */
+    /** Gửi lại email xác nhận tài khoản (/resend-verification) */
+    public void resendVerification(String email) {
+        resendVerificationResult.setValue(Resource.loading(null));
+        authRepository.resendVerification(email, resendVerificationResult);
+    }
+
+    /** Yêu cầu quên mật khẩu (gửi OTP về email) */
     public void forgotPassword(String email) {
         this.forgotPasswordEmail = email; // Lưu lại email dùng cho bước đặt lại mật khẩu
         forgotPasswordResult.setValue(Resource.loading(null));
@@ -121,5 +141,11 @@ public class AuthViewModel extends AndroidViewModel {
     public void resetPassword(String email, String otp, String newPassword) {
         resetPasswordResult.setValue(Resource.loading(null));
         authRepository.resetPassword(email, otp, newPassword, resetPasswordResult);
+    }
+
+    /** Đăng xuất khỏi thiết bị hiện tại */
+    public void logout(String refreshToken) {
+        logoutResult.setValue(Resource.loading(null));
+        authRepository.logout(refreshToken, logoutResult);
     }
 }

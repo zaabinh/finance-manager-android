@@ -204,28 +204,6 @@
                         android:layout_height="1dp"
                         android:background="@color/divider_light" />
 
-                    <!-- Logout All Devices -->
-                    <TextView
-                        android:id="@+id/btnLogoutAllDevices"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:clickable="true"
-                        android:drawablePadding="@dimen/spacing_12"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="@dimen/spacing_16"
-                        android:text="@string/logout_all_devices"
-                        android:textColor="@color/status_error"
-                        android:textSize="@dimen/text_size_body_primary"
-                        android:textStyle="bold"
-                        app:drawableStartCompat="@drawable/ic_exit_red" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/divider_light" />
-
                     <!-- Delete Account -->
                     <TextView
                         android:id="@+id/btnDeleteAccount"

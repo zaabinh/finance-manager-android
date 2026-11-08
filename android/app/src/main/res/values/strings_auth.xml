@@ -54,6 +54,11 @@
     <string name="error_password_lowercase">Mật khẩu phải chứa ít nhất 1 chữ in thường</string>
     <string name="error_password_digit">Mật khẩu phải chứa ít nhất 1 chữ số</string>
     <string name="error_password_special_char">Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt</string>
+    <string name="password_strength_format">Độ mạnh mật khẩu: %1$d%%</string>
+    <string name="rule_min_length">Ít nhất 8 ký tự</string>
+    <string name="rule_lowercase">Ít nhất 1 chữ thường</string>
+    <string name="rule_uppercase">Ít nhất 1 chữ in hoa</string>
+    <string name="rule_digit_or_special">Ít nhất 1 chữ số hoặc ký tự đặc biệt</string>
 
     <!-- Auth Toast Feedback -->
     <string name="login_success">Đăng nhập thành công!</string>

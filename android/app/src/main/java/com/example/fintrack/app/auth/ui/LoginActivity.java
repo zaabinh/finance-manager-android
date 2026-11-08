@@ -142,7 +142,18 @@ public class LoginActivity extends AppCompatActivity {
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
                     String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.login_failed);
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+
+                    if ("AUTH_EMAIL_NOT_VERIFIED".equals(errorMsg)) {
+                        String userEmail = etUsernameOrEmail.getText().toString().trim();
+                        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                                .setTitle("Tài khoản chưa xác thực Email")
+                                .setMessage("Tài khoản của bạn chưa được kích hoạt. Bạn có muốn gửi lại mã xác nhận OTP về email không?")
+                                .setPositiveButton("Gửi lại Email", (dialog, which) -> authViewModel.resendVerification(userEmail))
+                                .setNegativeButton("Để sau", null)
+                                .show();
+                    } else {
+                        Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    }
                     break;
 
                 case LOADING:
@@ -175,10 +186,31 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             }
         });
+
+        authViewModel.getResendVerificationResult().observe(this, resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case SUCCESS:
+                    Toast.makeText(this, "Mã xác nhận đã được gửi! Vui lòng kiểm tra email.", Toast.LENGTH_LONG).show();
+                    String email = etUsernameOrEmail.getText().toString().trim();
+                    authViewModel.setRegisteredEmail(email);
+                    Intent intent = new Intent(LoginActivity.this, VerifyEmailActivity.class);
+                    intent.putExtra("email", email);
+                    startActivity(intent);
+                    break;
+                case ERROR:
+                    String msg = resource.getMessage() != null ? resource.getMessage() : "Không thể gửi email xác nhận. Vui lòng thử lại.";
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                    break;
+                case LOADING:
+                    Toast.makeText(this, "Đang gửi lại email xác nhận...", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
     }
 
     /**
-     * Validate dữ liệu đầu vào và gửi yêu cầu đăng nhập
+     * Kiểm tra tính hợp lệ (validate) của dữ liệu nhập vào và gọi hàm đăng nhập trong ViewModel
      */
     private void handleLogin() {
         String usernameOrEmail = etUsernameOrEmail.getText().toString().trim();

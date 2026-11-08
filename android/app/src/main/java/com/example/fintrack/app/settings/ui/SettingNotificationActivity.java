@@ -1,13 +1,19 @@
 package com.example.fintrack.app.settings.ui;
 
+import android.Manifest;
 import android.app.TimePickerDialog;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.example.fintrack.R;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
@@ -17,6 +23,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import java.util.Locale;
 
 public class SettingNotificationActivity extends AppCompatActivity {
+    private static final int NOTIF_PERMISSION_CODE = 102;
     public static final int[] THRESHOLDS = {50, 60, 70, 80, 90, 100};
 
     private SwitchMaterial switchNotifications;
@@ -33,6 +40,8 @@ public class SettingNotificationActivity extends AppCompatActivity {
     private int selectedHour = 20;
     private int selectedMinute;
     private int selectedThreshold = 80;
+    private boolean settingsLoaded = false;
+    private boolean saving = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +49,7 @@ public class SettingNotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_setting_notification);
         viewModel = new ViewModelProvider(this).get(UserViewModel.class);
         initViews();
+        btnSave.setEnabled(false);
         setupListeners();
         setupObservers();
         viewModel.fetchNotificationSettings();
@@ -60,9 +70,24 @@ public class SettingNotificationActivity extends AppCompatActivity {
 
     private void setupListeners() {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-        switchNotifications.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
-        switchDailyReminder.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
-        switchLimitWarning.setOnCheckedChangeListener((button, checked) -> updateEnabledState());
+        switchNotifications.setOnCheckedChangeListener((button, checked) -> {
+            updateEnabledState();
+            if (button.isPressed() && checked) checkAndRequestNotificationPermission();
+        });
+        switchDailyReminder.setOnCheckedChangeListener((button, checked) -> {
+            updateEnabledState();
+            if (button.isPressed() && checked) checkAndRequestNotificationPermission();
+        });
+        switchLimitWarning.setOnCheckedChangeListener((button, checked) -> {
+            updateEnabledState();
+            if (button.isPressed() && checked) checkAndRequestNotificationPermission();
+        });
+        switchBudgetWarning.setOnCheckedChangeListener((button, checked) -> {
+            if (button.isPressed() && checked) checkAndRequestNotificationPermission();
+        });
+        switchOtherNotifications.setOnCheckedChangeListener((button, checked) -> {
+            if (button.isPressed() && checked) checkAndRequestNotificationPermission();
+        });
         layoutTimePickerRow.setOnClickListener(v -> showTimePicker());
         rowBudgetThreshold.setOnClickListener(v -> showThresholdPicker());
         btnSave.setOnClickListener(v -> save());
@@ -71,15 +96,23 @@ public class SettingNotificationActivity extends AppCompatActivity {
     private void setupObservers() {
         viewModel.getNotificationSettingsResult().observe(this, resource -> {
             if (resource == null) return;
-            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+            if (resource.getStatus() == Resource.Status.LOADING) {
+                settingsLoaded = false;
+                btnSave.setEnabled(false);
+            } else if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 apply(resource.getData());
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                showError(resource.getMessage());
+                settingsLoaded = true;
+                btnSave.setEnabled(!saving);
+            } else {
+                settingsLoaded = false;
+                btnSave.setEnabled(false);
+                if (resource.getStatus() == Resource.Status.ERROR) showError(resource.getMessage());
             }
         });
         viewModel.getUpdateNotificationSettingsResult().observe(this, resource -> {
             if (resource == null) return;
-            btnSave.setEnabled(resource.getStatus() != Resource.Status.LOADING);
+            saving = resource.getStatus() == Resource.Status.LOADING;
+            btnSave.setEnabled(settingsLoaded && !saving);
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 apply(resource.getData());
                 Toast.makeText(this, R.string.notification_settings_saved, Toast.LENGTH_SHORT).show();
@@ -106,6 +139,10 @@ public class SettingNotificationActivity extends AppCompatActivity {
     }
 
     private void save() {
+        if (!settingsLoaded || saving) return;
+        saving = true;
+        btnSave.setEnabled(false);
+        if (switchNotifications.isChecked()) checkAndRequestNotificationPermission();
         viewModel.updateNotificationSettings(new UpdateNotificationSettingsRequest(
                 switchNotifications.isChecked(), switchDailyReminder.isChecked(),
                 String.format(Locale.ROOT, "%02d:%02d:00", selectedHour, selectedMinute),
@@ -161,5 +198,26 @@ public class SettingNotificationActivity extends AppCompatActivity {
 
     private void showError(String message) {
         Toast.makeText(this, message == null ? getString(R.string.error_server) : message, Toast.LENGTH_LONG).show();
+    }
+
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIF_PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIF_PERMISSION_CODE) {
+            String message = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    ? "Đã cấp quyền Thông báo"
+                    : "Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.";
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
     }
 }
