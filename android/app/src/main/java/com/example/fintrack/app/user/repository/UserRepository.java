@@ -91,7 +91,17 @@ public class UserRepository {
             public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() || response.code() == 204) {
                     result.setValue(Resource.success(null));
-                  
+                } else {
+                    result.setValue(Resource.error(ErrorMapper.getHttpErrorMessage(appContext, response), null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
+                result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
+            }
+        });
+    }
     public void getSettings(MutableLiveData<Resource<UserSettingsResponse>> result) {
         apiService.getSettings().enqueue(new Callback<>() {
             @Override
