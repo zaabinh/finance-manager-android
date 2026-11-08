@@ -5,6 +5,11 @@ import com.fintrack.api.exception.ErrorCode;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -33,8 +38,17 @@ public class RateLimitingService {
             return 1
             """, Long.class);
 
+    /** Caps fallback memory so distinct identifiers cannot exhaust the heap while Redis is down. */
+    public static final int MAX_FALLBACK_KEYS = 100_000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RateLimitingService.class);
+
+    private record Window(long count, long expiresAtNanos) {}
+
     private final StringRedisTemplate redis;
     private final String prefix;
+    // shortcut: counts are per instance, so N instances allow up to N x limit during an outage; fine until we scale out.
+    private final Map<String, Window> fallback = new ConcurrentHashMap<>();
+    private final AtomicBoolean degraded = new AtomicBoolean();
 
     public RateLimitingService(StringRedisTemplate redis,
             @Value("${app.auth.rate-limit-key-prefix}") String prefix) {
@@ -54,10 +68,13 @@ public class RateLimitingService {
     }
 
     public void clearLoginFailures(String identifier, ClientMetadata client) {
+        String key = loginKey(identifier, client);
+        fallback.remove(key);
         try {
-            redis.delete(loginKey(identifier, client));
+            redis.delete(key);
+            recovered();
         } catch (DataAccessException exception) {
-            throw unavailable();
+            degrade(exception);
         }
     }
 
@@ -67,16 +84,55 @@ public class RateLimitingService {
 
     private void execute(String key, int limit, Duration duration, String mode) {
         if (limit < 1 || duration.toMillis() < 1) throw new IllegalArgumentException("Invalid rate limit");
-        Long result;
+        Long result = null;
         try {
             result = redis.execute(WINDOW, List.of(key), Integer.toString(limit),
                     Long.toString(duration.toMillis()), mode);
         } catch (DataAccessException exception) {
-            throw unavailable();
+            degrade(exception);
         }
-        if (result == null) throw unavailable();
+        if (result == null) {
+            degrade(null);
+            result = executeInMemory(key, limit, duration, mode) ? 1L : 0L;
+        } else {
+            recovered();
+        }
         if (result == 0L) throw new AppException(HttpStatus.TOO_MANY_REQUESTS,
                 ErrorCode.AUTH_RATE_LIMITED, "Too many requests; try again later");
+    }
+
+    /** Same fixed-window semantics as the Lua script, scoped to this JVM. */
+    private boolean executeInMemory(String key, int limit, Duration duration, String mode) {
+        long now = System.nanoTime();
+        if (fallback.size() >= MAX_FALLBACK_KEYS) fallback.values().removeIf(window -> window.expiresAtNanos() - now <= 0);
+        boolean[] allowed = {true};
+        boolean[] full = {false};
+        fallback.compute(key, (ignored, window) -> {
+            if (window != null && window.expiresAtNanos() - now <= 0) window = null;
+            long count = window == null ? 0 : window.count();
+            if (count >= limit) { allowed[0] = "bump".equals(mode); return window; }
+            if ("check".equals(mode)) return window;
+            if (window == null) {
+                if (fallback.size() >= MAX_FALLBACK_KEYS) { full[0] = true; return null; }
+                return new Window(1, now + duration.toNanos());
+            }
+            return new Window(count + 1, window.expiresAtNanos());
+        });
+        // Fail closed rather than let a flood of new identifiers bypass limiting or exhaust memory.
+        if (full[0]) throw unavailable();
+        return allowed[0];
+    }
+
+    private void degrade(DataAccessException exception) {
+        if (degraded.compareAndSet(false, true))
+            LOGGER.warn("Redis rate limiting unavailable; using in-memory per-instance fallback", exception);
+    }
+
+    private void recovered() {
+        if (degraded.compareAndSet(true, false)) {
+            fallback.clear();
+            LOGGER.info("Redis rate limiting recovered; in-memory fallback counts dropped");
+        }
     }
 
     private String loginKey(String identifier, ClientMetadata client) {
