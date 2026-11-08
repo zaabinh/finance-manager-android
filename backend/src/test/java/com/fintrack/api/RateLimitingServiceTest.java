@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import static org.assertj.core.api.Assertions.*;
@@ -56,10 +57,30 @@ class RateLimitingServiceTest {
         limiter.checkAndRecord("refresh", "ip", 1, Duration.ofMinutes(1));
         assertRateLimited(() -> limiter.checkAndRecord("refresh", "ip", 1, Duration.ofMinutes(1)));
         reset(redis);
-        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(1L);
-        limiter.checkAndRecord("refresh", "ip", 1, Duration.ofMinutes(1)); // Redis decides again
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(2L);
+        limiter.checkAndRecord("refresh", "ip", 1, Duration.ofMinutes(1)); // confirmed Redis write: recovered
         redisDown();
         assertThatCode(() -> limiter.checkAndRecord("refresh", "ip", 1, Duration.ofMinutes(1))).doesNotThrowAnyException();
+    }
+    @Test void successfulReadsWithFailedWritesKeepEnforcingFallbackCounters() {
+        // Redis answers reads (check) but rejects counter writes (bump/consume), e.g. out of memory.
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), eq("check"))).thenReturn(1L);
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), eq("bump")))
+                .thenThrow(new RedisSystemException("OOM", new RuntimeException("OOM command not allowed")));
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), eq("consume")))
+                .thenThrow(new RedisSystemException("OOM", new RuntimeException("OOM command not allowed")));
+        for (int i = 0; i < 5; i++) {
+            limiter.checkLoginAllowed("user", client);
+            limiter.recordLoginFailure("user", client);
+            limiter.checkAndRecord("login-request", "ip", 10, Duration.ofMinutes(1));
+        }
+        assertRateLimited(() -> limiter.checkLoginAllowed("user", client)); // lockout accumulated despite Redis reads
+        for (int i = 5; i < 10; i++) limiter.checkAndRecord("login-request", "ip", 10, Duration.ofMinutes(1));
+        assertRateLimited(() -> limiter.checkAndRecord("login-request", "ip", 10, Duration.ofMinutes(1)));
+        // A non-writing Redis answer (bump at limit returns 1) is not recovery either.
+        doReturn(1L).when(redis).execute(any(RedisScript.class), anyList(), anyString(), anyString(), eq("bump"));
+        limiter.recordLoginFailure("user", client);
+        assertRateLimited(() -> limiter.checkLoginAllowed("user", client));
     }
     @Test void fullFallbackRejectsNewKeysButKeepsCountingKnownOnes() {
         redisDown();

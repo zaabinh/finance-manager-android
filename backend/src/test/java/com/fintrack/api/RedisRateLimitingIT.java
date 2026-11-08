@@ -103,6 +103,13 @@ class RedisRateLimitingIT {
                 unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1));
                 unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1));
                 assertRateLimited(() -> unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1)));
+                // Reads still succeed here; they must not count as recovery and wipe the lockout.
+                var client = new ClientMetadata("203.0.113.9", null);
+                for (int i = 0; i < 5; i++) {
+                    unavailable.checkLoginAllowed("user", client);
+                    unavailable.recordLoginFailure("user", client);
+                }
+                assertRateLimited(() -> unavailable.checkLoginAllowed("user", client));
             } finally { factory.destroy(); }
         }
     }

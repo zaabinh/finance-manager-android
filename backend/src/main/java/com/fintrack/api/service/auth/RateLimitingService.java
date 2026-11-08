@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RateLimitingService {
+    /** Returns 0 = denied, 1 = allowed without writing, 2 = allowed and the counter write succeeded. */
     private static final DefaultRedisScript<Long> WINDOW = new DefaultRedisScript<>("""
             local count = tonumber(redis.call('GET', KEYS[1]) or '0')
             local limit = tonumber(ARGV[1])
@@ -35,7 +36,7 @@ public class RateLimitingService {
             else
                 redis.call('INCR', KEYS[1])
             end
-            return 1
+            return 2
             """, Long.class);
 
     /** Caps fallback memory so distinct identifiers cannot exhaust the heap while Redis is down. */
@@ -70,9 +71,9 @@ public class RateLimitingService {
     public void clearLoginFailures(String identifier, ClientMetadata client) {
         String key = loginKey(identifier, client);
         fallback.remove(key);
+        // A successful DEL is not recovery: Redis still allows DEL while it rejects writes (e.g. out of memory).
         try {
             redis.delete(key);
-            recovered();
         } catch (DataAccessException exception) {
             degrade(exception);
         }
@@ -91,12 +92,12 @@ public class RateLimitingService {
         } catch (DataAccessException exception) {
             degrade(exception);
         }
-        if (result == null) {
-            degrade(null);
+        if (result == null) degrade(null);
+        // Only a confirmed counter write proves recovery; reads succeed even while Redis rejects writes.
+        else if (result == 2L) recovered();
+        // Until writes recover, the in-memory counters hold the failures Redis could not record.
+        if (degraded.get() && (result == null || result != 0L))
             result = executeInMemory(key, limit, duration, mode) ? 1L : 0L;
-        } else {
-            recovered();
-        }
         if (result == 0L) throw new AppException(HttpStatus.TOO_MANY_REQUESTS,
                 ErrorCode.AUTH_RATE_LIMITED, "Too many requests; try again later");
     }
