@@ -9,6 +9,7 @@ import com.example.fintrack.app.core.network.ApiClient;
 import com.example.fintrack.app.core.network.ApiResponse;
 import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.user.remote.DeactivateUserRequest;
 import com.example.fintrack.app.user.remote.UpdateProfileRequest;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
@@ -84,9 +85,9 @@ public class UserRepository {
         });
     }
 
-    /** Gọi API Xóa vĩnh viễn tài khoản người dùng */
-    public void deleteAccount(MutableLiveData<Resource<Void>> result) {
-        apiService.deleteAccount().enqueue(new Callback<>() {
+    /** Gọi API Vô hiệu hóa/Xóa tài khoản người dùng với xác nhận mật khẩu (/api/v1/users/me) */
+    public void deactivateAccount(String currentPassword, MutableLiveData<Resource<Void>> result) {
+        apiService.deactivateAccount(new DeactivateUserRequest(currentPassword)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call, @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() || response.code() == 204) {
@@ -102,6 +103,7 @@ public class UserRepository {
             }
         });
     }
+
     public void getSettings(MutableLiveData<Resource<UserSettingsResponse>> result) {
         apiService.getSettings().enqueue(new Callback<>() {
             @Override

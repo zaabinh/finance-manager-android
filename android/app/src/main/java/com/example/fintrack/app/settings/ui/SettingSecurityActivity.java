@@ -2,6 +2,7 @@ package com.example.fintrack.app.settings.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +17,7 @@ import com.example.fintrack.R;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.auth.util.PasswordValidator;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
+import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -24,8 +26,8 @@ import java.util.Objects;
 
 /**
  * Màn hình Cài đặt Bảo mật & Tài khoản (SettingSecurityActivity):
- * Xử lý đổi mật khẩu và gọi API đăng xuất thiết bị hiện tại (/logout), đăng xuất tất cả thiết bị (/logout-all)
- * hoặc xóa vĩnh viễn tài khoản người dùng (/api/v1/user/profile).
+ * Xử lý đổi mật khẩu, đăng xuất thiết bị hiện tại (/logout), đăng xuất tất cả thiết bị (/logout-all)
+ * và vô hiệu hóa tài khoản (/api/v1/users/me) với xác nhận mật khẩu hiện tại.
  */
 public class SettingSecurityActivity extends AppCompatActivity {
 
@@ -59,30 +61,32 @@ public class SettingSecurityActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
+        // Quan sát kết quả Đăng xuất thiết bị hiện tại
         authViewModel.getLogoutResult().observe(this, resource -> {
             if (resource == null) return;
-            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+            if (resource.getStatus() == Resource.Status.SUCCESS) {
                 sessionManager.clearSession();
                 Toast.makeText(this, R.string.msg_logged_out_device, Toast.LENGTH_SHORT).show();
                 redirectToLogin();
-            }
-        });
-
-        authViewModel.getLogoutAllResult().observe(this, resource -> {
-            if (resource == null) return;
-            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                // Đăng xuất local vẫn được thực hiện, nhưng thông báo rõ trạng thái server
                 sessionManager.clearSession();
-                Toast.makeText(this, R.string.msg_logged_out_all, Toast.LENGTH_SHORT).show();
+                String msg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.msg_logged_out_device);
+                Toast.makeText(this, "Đã đăng xuất thiết bị local. (" + msg + ")", Toast.LENGTH_LONG).show();
                 redirectToLogin();
             }
         });
 
-        userViewModel.getDeleteAccountResult().observe(this, resource -> {
+        // Quan sát kết quả Vô hiệu hóa/Xóa tài khoản người dùng
+        userViewModel.getDeactivateAccountResult().observe(this, resource -> {
             if (resource == null) return;
-            if (resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.SUCCESS || resource.getStatus() == com.example.fintrack.app.core.network.Resource.Status.ERROR) {
+            if (resource.getStatus() == Resource.Status.SUCCESS) {
                 sessionManager.clearSession();
-                Toast.makeText(this, R.string.msg_account_deleted, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Đã vô hiệu hóa tài khoản thành công.", Toast.LENGTH_LONG).show();
                 redirectToLogin();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                String msg = resource.getMessage() != null ? resource.getMessage() : "Vô hiệu hóa tài khoản thất bại";
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -92,7 +96,6 @@ public class SettingSecurityActivity extends AppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
         TextView btnLogoutThisDevice = findViewById(R.id.btnLogoutThisDevice);
-        TextView btnLogoutAllDevices = findViewById(R.id.btnLogoutAllDevices);
         TextView btnDeleteAccount = findViewById(R.id.btnDeleteAccount);
 
         btnChangePassword.setOnClickListener(v -> handleChangePassword());
@@ -105,21 +108,34 @@ public class SettingSecurityActivity extends AppCompatActivity {
             ));
         }
 
-        if (btnLogoutAllDevices != null) {
-            btnLogoutAllDevices.setOnClickListener(v -> confirmAction(
-                    getString(R.string.logout_all_devices),
-                    getString(R.string.msg_logged_out_all),
-                    () -> authViewModel.logoutAll()
-            ));
-        }
-
         if (btnDeleteAccount != null) {
-            btnDeleteAccount.setOnClickListener(v -> confirmAction(
-                    getString(R.string.delete_account),
-                    getString(R.string.msg_account_deleted),
-                    () -> userViewModel.deleteAccount()
-            ));
+            btnDeleteAccount.setOnClickListener(v -> promptPasswordForDeactivation());
         }
+    }
+
+    /** Mở Dialog yêu cầu nhập mật khẩu hiện tại trước khi vô hiệu hóa tài khoản */
+    private void promptPasswordForDeactivation() {
+        final EditText etPasswordInput = new EditText(this);
+        etPasswordInput.setHint("Nhập mật khẩu hiện tại");
+        etPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
+        etPasswordInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Xác nhận vô hiệu hóa tài khoản")
+                .setMessage("Tài khoản của bạn sẽ bị vô hiệu hóa. Nhập mật khẩu hiện tại để xác nhận:")
+                .setView(etPasswordInput)
+                .setNegativeButton(R.string.btn_cancel, null)
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    String password = etPasswordInput.getText().toString().trim();
+                    if (TextUtils.isEmpty(password)) {
+                        Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    userViewModel.deactivateAccount(password);
+                })
+                .show();
     }
 
     private void handleChangePassword() {
@@ -127,21 +143,18 @@ public class SettingSecurityActivity extends AppCompatActivity {
         String newPass = etNewPassword.getText().toString().trim();
         String confirmPass = etConfirmPassword.getText().toString().trim();
 
-        // 1. Kiểm tra mật khẩu hiện tại không được để trống
         if (TextUtils.isEmpty(currentPass)) {
             etCurrentPassword.setError(getString(R.string.error_required_field));
             etCurrentPassword.requestFocus();
             return;
         }
 
-        // 2. Kiểm tra mật khẩu mới không được để trống
         if (TextUtils.isEmpty(newPass)) {
             etNewPassword.setError(getString(R.string.error_required_field));
             etNewPassword.requestFocus();
             return;
         }
 
-        // 3. Kiểm tra độ mạnh của mật khẩu mới (chuẩn regex)
         String passwordError = PasswordValidator.validatePassword(this, newPass);
         if (passwordError != null) {
             etNewPassword.setError(passwordError);
@@ -149,17 +162,14 @@ public class SettingSecurityActivity extends AppCompatActivity {
             return;
         }
 
-        // 4. Kiểm tra mật khẩu mới và phần xác nhận phải trùng khớp
         if (!Objects.equals(newPass, confirmPass)) {
             etConfirmPassword.setError(getString(R.string.error_password_not_match));
             etConfirmPassword.requestFocus();
             return;
         }
 
-        // Đã qua kiểm tra validation trên Android
         Toast.makeText(this, R.string.msg_password_changed, Toast.LENGTH_SHORT).show();
 
-        // Reset các ô nhập liệu
         etCurrentPassword.setText("");
         etNewPassword.setText("");
         etConfirmPassword.setText("");

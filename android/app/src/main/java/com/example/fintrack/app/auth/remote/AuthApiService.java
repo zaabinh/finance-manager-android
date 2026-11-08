@@ -28,10 +28,6 @@ public interface AuthApiService {
     @POST("api/v1/auth/logout")
     Call<ApiResponse<Void>> logout(@Body RefreshTokenRequest request);
 
-    /** Đăng xuất tất cả thiết bị */
-    @POST("api/v1/auth/logout-all")
-    Call<ApiResponse<Void>> logoutAll();
-
     /** Đổi mật khẩu tài khoản (khi đã đăng nhập) */
     @POST("api/v1/auth/change-password")
     Call<ApiResponse<TokenResponse>> changePassword(@Body ChangePasswordRequest request);

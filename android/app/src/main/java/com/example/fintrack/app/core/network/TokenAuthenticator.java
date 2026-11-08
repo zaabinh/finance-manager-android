@@ -19,8 +19,9 @@ import okhttp3.Response;
 import okhttp3.Route;
 
 /**
- * Tự động gọi API refresh-token khi OkHttp nhận phản hồi 401 Unauthorized từ Server.
- * Áp dụng cơ chế đồng bộ hóa (synchronized) và kiểm tra race condition khi nhiều request nhận 401 đồng thời.
+ * Tự động gọi API refresh-token khi OkHttp nhận phản hồi 401 Unauthorized từ Server đối với các Protected API.
+ * Phân biệt 401 của Access Token hết hạn với lỗi 401 của Login/Register/Refresh public endpoints.
+ * Bảo vệ session không bị xóa nhầm khi gặp lỗi mạng tạm thời (transient network failure).
  */
 public class TokenAuthenticator implements Authenticator {
 
@@ -34,7 +35,16 @@ public class TokenAuthenticator implements Authenticator {
     @Override
     public synchronized Request authenticate(@Nullable Route route, @NonNull Response response) throws IOException {
 
-        // 1. Chống lặp vô hạn (Infinite Loop Protection)
+        // 1. Kiểm tra URL request: Nếu 401 đến từ các API Authentication công khai (login, register, refresh, OTP, reset-password)
+        // hoặc request KHÔNG gửi kèm Bearer Access Token -> Bỏ qua không refresh và KHÔNG xóa session.
+        String path = response.request().url().encodedPath();
+        String requestAuthHeader = response.request().header("Authorization");
+
+        if (isAuthEndpoint(path) || TextUtils.isEmpty(requestAuthHeader) || !requestAuthHeader.startsWith("Bearer ")) {
+            return null;
+        }
+
+        // 2. Chống lặp vô hạn (Infinite Loop Protection)
         if (responseCount(response) >= 2) {
             SessionManager.getInstance(context).clearSession();
             return null;
@@ -43,15 +53,13 @@ public class TokenAuthenticator implements Authenticator {
         SessionManager sessionManager = SessionManager.getInstance(context);
         String currentAccessToken = sessionManager.getAccessToken();
 
-        // 2. Kiểm tra Race Condition khi nhiều request nhận 401 đồng thời
-        String requestAuthHeader = response.request().header("Authorization");
-        if (!TextUtils.isEmpty(requestAuthHeader) && requestAuthHeader.startsWith("Bearer ")) {
-            String sentToken = requestAuthHeader.substring(7);
-            if (!TextUtils.isEmpty(currentAccessToken) && !sentToken.equals(currentAccessToken)) {
-                return response.request().newBuilder()
-                        .header("Authorization", "Bearer " + currentAccessToken)
-                        .build();
-            }
+        // 3. Race Condition: Nếu token đã được một request đồng thời khác làm mới thành công trước đó
+        // -> Dùng ngay access token mới trong session để retry request.
+        String sentToken = requestAuthHeader.substring(7);
+        if (!TextUtils.isEmpty(currentAccessToken) && !sentToken.equals(currentAccessToken)) {
+            return response.request().newBuilder()
+                    .header("Authorization", "Bearer " + currentAccessToken)
+                    .build();
         }
 
         String refreshToken = sessionManager.getRefreshToken();
@@ -60,16 +68,17 @@ public class TokenAuthenticator implements Authenticator {
             return null;
         }
 
-        // 3. Gọi API làm mới token sử dụng RefreshClient riêng biệt
+        // 4. Gọi API refresh token bằng RefreshClient riêng biệt
         AuthApiService authApiService = ApiClient.getRefreshClient(context).create(AuthApiService.class);
         retrofit2.Response<ApiResponse<TokenResponse>> refreshResponse;
         try {
             refreshResponse = authApiService.refreshToken(new RefreshTokenRequest(refreshToken)).execute();
-        } catch (Exception e) {
+        } catch (IOException e) {
+            // Lỗi mạng tạm thời khi gọi refresh -> Trả null để OkHttp báo lỗi mạng cho caller, KHÔNG xóa session!
             return null;
         }
 
-        // 4. Kiểm tra kết quả gọi API làm mới token
+        // 5. Kiểm tra kết quả làm mới token
         if (refreshResponse.isSuccessful() && refreshResponse.body() != null && refreshResponse.body().isSuccess()) {
             TokenResponse newTokens = refreshResponse.body().getData();
             if (newTokens != null && !TextUtils.isEmpty(newTokens.getAccessToken())) {
@@ -81,9 +90,20 @@ public class TokenAuthenticator implements Authenticator {
             }
         }
 
-        // 5. Nếu Refresh Token thực sự hết hạn hoặc không hợp lệ -> Kết thúc phiên
+        // 6. Nếu Server xác nhận Refresh Token thực sự hết hạn hoặc không hợp lệ -> Xóa phiên đăng nhập
         sessionManager.clearSession();
         return null;
+    }
+
+    private boolean isAuthEndpoint(String path) {
+        if (TextUtils.isEmpty(path)) return false;
+        return path.contains("/api/v1/auth/login") ||
+               path.contains("/api/v1/auth/register") ||
+               path.contains("/api/v1/auth/refresh") ||
+               path.contains("/api/v1/auth/verify-email") ||
+               path.contains("/api/v1/auth/resend-verification") ||
+               path.contains("/api/v1/auth/forgot-password") ||
+               path.contains("/api/v1/auth/reset-password");
     }
 
     private int responseCount(Response response) {
