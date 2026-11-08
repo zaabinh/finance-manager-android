@@ -91,7 +91,7 @@ class RedisRateLimitingIT {
                 .checkAndRecord("cooldown", "email", 1, Duration.ofSeconds(60))).doesNotThrowAnyException();
     }
 
-    @Test void rejectedRedisWritesFailClosed() throws Exception {
+    @Test void rejectedRedisWritesFallBackToInMemoryLimits() throws Exception {
         // A dedicated, short-lived Redis rejects all writes; shared Redis data/configuration is untouched.
         try (var readOnly = new GenericContainer<>("redis:7.4-alpine").withExposedPorts(6379)
                 .withCommand("redis-server", "--maxmemory", "1", "--maxmemory-policy", "noeviction")) {
@@ -100,11 +100,9 @@ class RedisRateLimitingIT {
             factory.afterPropertiesSet();
             try {
                 var unavailable = new RateLimitingService(new StringRedisTemplate(factory), prefix);
-                assertThatThrownBy(() -> unavailable.checkAndRecord("refresh", "ip", 20, Duration.ofMinutes(1)))
-                        .isInstanceOfSatisfying(AppException.class, ex -> {
-                            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_RATE_LIMIT_UNAVAILABLE);
-                            assertThat(ex.getStatus().value()).isEqualTo(503);
-                        });
+                unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1));
+                unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1));
+                assertRateLimited(() -> unavailable.checkAndRecord("refresh", "ip", 2, Duration.ofMinutes(1)));
             } finally { factory.destroy(); }
         }
     }
