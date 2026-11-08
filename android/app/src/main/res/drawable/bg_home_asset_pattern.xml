@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exported from Figma node; do not hand-edit paths. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="168dp" android:height="168dp"
+    android:viewportWidth="240" android:viewportHeight="240"
+    android:alpha="0.08">
+    <path
+        android:pathData="M238 120C238 185.17 185.17 238 120 238C54.8304 238 2 185.17 2 120C2 54.8304 54.8304 2 120 2C185.17 2 238 54.8304 238 120Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M224 120C224 177.438 177.438 224 120 224C62.5624 224 16 177.438 16 120C16 62.5624 62.5624 16 120 16C177.438 16 224 62.5624 224 120Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M210 120H218M208.63 135.63L216.51 137.02M204.57 150.78L212.09 153.52M197.94 165L204.87 169M188.94 177.85L195.07 182.99M177.85 188.94L182.99 195.07M165 197.94L169 204.87M150.78 204.57L153.52 212.09M135.63 208.63L137.02 216.51M120 210V218M104.37 208.63L102.98 216.51M89.22 204.57L86.48 212.09M75 197.94L71 204.87M62.15 188.94L57.01 195.07M51.06 177.85L44.93 182.99M42.06 165L35.13 169M35.43 150.78L27.91 153.52M31.37 135.63L23.49 137.02M30 120H22M31.37 104.37L23.49 102.98M35.43 89.22L27.91 86.48M42.06 75L35.13 71M51.06 62.15L44.93 57.01M62.15 51.06L57.01 44.93M75 42.06L71 35.13M89.22 35.43L86.48 27.91M104.37 31.37L102.98 23.49M120 30V22M135.63 31.37L137.02 23.49M150.78 35.43L153.52 27.91M165 42.06L169 35.13M177.85 51.06L182.99 44.93M188.94 62.15L195.07 57.01M197.94 75L204.87 71M204.57 89.22L212.09 86.48M208.63 104.37L216.51 102.98"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M204 120C204 166.392 166.392 204 120 204C73.6081 204 36 166.392 36 120C36 73.6081 73.6081 36 120 36C166.392 36 204 73.6081 204 120Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M182 120C182 154.242 154.242 182 120 182C85.7583 182 58 154.242 58 120C58 85.7583 85.7583 58 120 58C154.242 58 182 85.7583 182 120Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M160 120C160 142.091 142.091 160 120 160C97.9086 160 80 142.091 80 120C80 97.9086 97.9086 80 120 80C142.091 80 160 97.9086 160 120Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5" />
+</vector>

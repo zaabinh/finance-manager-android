@@ -13,11 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.settings.ui.SettingNotificationActivity;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.Locale;
@@ -29,6 +31,9 @@ public class SetupNotificationActivity extends AppCompatActivity {
 
     public static final String EXTRA_REMINDER_TIME = "extra_reminder_time";
     public static final String EXTRA_NOTIF_ENABLED = "extra_notif_enabled";
+    public static final String EXTRA_DAILY_REMINDER = "extra_daily_reminder";
+    public static final String EXTRA_BUDGET_ALERT = "extra_budget_alert";
+    public static final String EXTRA_BUDGET_THRESHOLD = "extra_budget_threshold";
 
     private ImageView ivBack;
     private SwitchMaterial switchEnableNotif;
@@ -36,10 +41,12 @@ public class SetupNotificationActivity extends AppCompatActivity {
     private LinearLayout llTimePickerRow;
     private TextView tvReminderTime;
     private SwitchMaterial switchBudgetAlert;
+    private LinearLayout rowBudgetThreshold;
+    private TextView tvBudgetThreshold;
+    private int selectedThreshold = 80;
     private Button btnContinue;
     private TextView tvSkip;
 
-    private String displayName = "Minh Anh";
     private int selectedHour = 20;
     private int selectedMinute = 0;
 
@@ -47,10 +54,6 @@ public class SetupNotificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup_notification);
-
-        if (getIntent() != null && getIntent().hasExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME)) {
-            displayName = getIntent().getStringExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME);
-        }
 
         initViews();
         setupListeners();
@@ -63,6 +66,8 @@ public class SetupNotificationActivity extends AppCompatActivity {
         llTimePickerRow = findViewById(R.id.llTimePickerRow);
         tvReminderTime = findViewById(R.id.tvReminderTime);
         switchBudgetAlert = findViewById(R.id.switchBudgetAlert);
+        rowBudgetThreshold = findViewById(R.id.rowBudgetThreshold);
+        tvBudgetThreshold = findViewById(R.id.tvBudgetThreshold);
         btnContinue = findViewById(R.id.btnContinue);
         tvSkip = findViewById(R.id.tvSkip);
     }
@@ -110,6 +115,9 @@ public class SetupNotificationActivity extends AppCompatActivity {
         }
 
         llTimePickerRow.setOnClickListener(v -> showTimePickerDialog());
+        rowBudgetThreshold.setOnClickListener(v -> showThresholdPicker());
+        switchBudgetAlert.setOnCheckedChangeListener((b0, checked) -> rowBudgetThreshold.setEnabled(checked));
+        rowBudgetThreshold.setEnabled(switchBudgetAlert.isChecked());
         btnContinue.setOnClickListener(v -> navigateNext());
         tvSkip.setOnClickListener(v -> navigateNext());
     }
@@ -135,10 +143,33 @@ public class SetupNotificationActivity extends AppCompatActivity {
         boolean notifEnabled = switchEnableNotif != null && switchEnableNotif.isChecked();
 
         Intent intent = new Intent(SetupNotificationActivity.this, SetupWalletActivity.class);
-        intent.putExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME, displayName);
+        intent.putExtras(getIntent());
         intent.putExtra(EXTRA_REMINDER_TIME, formattedTime);
         intent.putExtra(EXTRA_NOTIF_ENABLED, notifEnabled);
+        intent.putExtra(EXTRA_DAILY_REMINDER, switchDailyReminder.isChecked());
+        intent.putExtra(EXTRA_BUDGET_ALERT, switchBudgetAlert.isChecked());
+        intent.putExtra(EXTRA_BUDGET_THRESHOLD, selectedThreshold);
 
         startActivity(intent);
+    }
+
+    // Hộp thoại chọn ngưỡng cảnh báo, dùng chung danh sách với màn Cài đặt thông báo
+    private void showThresholdPicker() {
+        int[] thresholds = SettingNotificationActivity.THRESHOLDS;
+        String[] labels = new String[thresholds.length];
+        int selected = 0;
+        for (int i = 0; i < thresholds.length; i++) {
+            labels[i] = thresholds[i] + "%";
+            if (thresholds[i] == selectedThreshold) selected = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.budget_alert_threshold)
+                .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                    selectedThreshold = thresholds[which];
+                    tvBudgetThreshold.setText(labels[which]);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
     }
 }

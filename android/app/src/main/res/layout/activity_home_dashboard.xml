@@ -86,13 +86,31 @@
             android:paddingEnd="@dimen/spacing_16">
 
             <!-- Total Assets Hero Card -->
-            <LinearLayout
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_8"
                 android:background="@drawable/bg_card_green"
-                android:orientation="vertical"
-                android:padding="@dimen/spacing_20">
+                android:clipToOutline="true">
+
+                <!-- Brand/Motif/DrumArc watermark, offset past the top-right edge as in Figma -->
+                <ImageView
+                    android:layout_width="168dp"
+                    android:layout_height="168dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="-44dp"
+                    android:layout_marginEnd="-44dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/bg_home_asset_pattern" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/spacing_16"
+                    android:paddingTop="@dimen/spacing_12"
+                    android:paddingEnd="@dimen/spacing_16"
+                    android:paddingBottom="@dimen/spacing_16">
 
                 <!-- Header Row -->
                 <RelativeLayout
@@ -109,7 +127,7 @@
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:text="@string/total_assets_label"
-                        android:textColor="#C2E8D2"
+                        android:textColor="@color/green_light_100"
                         android:textSize="@dimen/text_size_caption"
                         android:textStyle="bold" />
 
@@ -134,7 +152,7 @@
                     android:id="@+id/tvTotalBalance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_12"
+                    android:layout_marginTop="@dimen/spacing_8"
                     android:maxLines="2"
                     android:ellipsize="end"
                     android:text="@string/sample_total_assets"
@@ -143,16 +161,9 @@
                     android:textStyle="bold"
                     android:includeFontPadding="false" />
 
-                <!-- Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="@dimen/spacing_16"
-                    android:layout_marginBottom="@dimen/spacing_16"
-                    android:background="#3A8C5D" />
-
                 <!-- Sub details row -->
                 <LinearLayout
+                    android:layout_marginTop="@dimen/spacing_8"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:baselineAligned="false"
@@ -171,7 +182,7 @@
                             android:layout_height="wrap_content"
                             android:maxLines="2"
                             android:text="@string/available_balance_label"
-                            android:textColor="#C2E8D2"
+                            android:textColor="@color/green_light_100"
                             android:textSize="11sp" />
 
                         <TextView
@@ -210,7 +221,7 @@
                             android:layout_height="wrap_content"
                             android:maxLines="2"
                             android:text="@string/savings_label"
-                            android:textColor="#C2E8D2"
+                            android:textColor="@color/green_light_100"
                             android:textSize="11sp" />
 
                         <TextView
@@ -238,7 +249,9 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
+                </LinearLayout>
+
+            </FrameLayout>
 
             <!-- Quick Actions -->
             <LinearLayout

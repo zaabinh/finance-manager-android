@@ -21,10 +21,10 @@ import com.example.fintrack.app.user.viewmodel.UserViewModel;
 public class SettingUserActivity extends AppCompatActivity {
 
     private static final String DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
-    private static final String[] TIMEZONE_IDS = {
+    public static final String[] TIMEZONE_IDS = {
             "Asia/Ho_Chi_Minh", "Asia/Tokyo", "Europe/London", "America/New_York"
     };
-    private static final String[] TIMEZONE_LABELS = {
+    public static final String[] TIMEZONE_LABELS = {
             "Hà Nội · GMT+07:00", "Tokyo · GMT+09:00", "London", "New York"
     };
 

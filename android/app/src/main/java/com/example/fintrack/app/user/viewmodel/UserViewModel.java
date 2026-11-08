@@ -8,6 +8,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.user.remote.FirstSetupRequest;
+import com.example.fintrack.app.user.remote.FirstSetupResponse;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
 import com.example.fintrack.app.user.remote.UserProfileResponse;
@@ -24,6 +26,7 @@ public class UserViewModel extends AndroidViewModel {
     private final MutableLiveData<Resource<UserProfileResponse>> profileResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<UserProfileResponse>> updateProfileResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> deactivateAccountResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<FirstSetupResponse>> firstSetupResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<UserSettingsResponse>> settingsResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<NotificationSettingsResponse>> notificationSettingsResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<NotificationSettingsResponse>> updateNotificationSettingsResult = new MutableLiveData<>();
@@ -85,5 +88,12 @@ public class UserViewModel extends AndroidViewModel {
     public void updateNotificationSettings(UpdateNotificationSettingsRequest request) {
         updateNotificationSettingsResult.setValue(Resource.loading(null));
         userRepository.updateNotificationSettings(request, updateNotificationSettingsResult);
+    }
+
+    public LiveData<Resource<FirstSetupResponse>> getFirstSetupResult() { return firstSetupResult; }
+
+    public void completeFirstSetup(FirstSetupRequest request) {
+        firstSetupResult.setValue(Resource.loading(null));
+        userRepository.completeFirstSetup(request, firstSetupResult);
     }
 }

@@ -342,6 +342,37 @@
 
                     </LinearLayout>
 
+                    <!-- Row 5: Budget Alert Threshold -->
+                    <LinearLayout
+                        android:id="@+id/rowBudgetThreshold"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/budget_alert_threshold"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_body_primary" />
+
+                        <TextView
+                            android:id="@+id/tvBudgetThreshold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="80%"
+                            android:textColor="@color/color_primary"
+                            android:textSize="@dimen/text_size_body_primary"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <!-- Disclaimer -->

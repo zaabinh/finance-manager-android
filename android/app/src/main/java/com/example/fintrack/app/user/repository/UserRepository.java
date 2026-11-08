@@ -10,6 +10,8 @@ import com.example.fintrack.app.core.network.ApiResponse;
 import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.DeactivateUserRequest;
+import com.example.fintrack.app.user.remote.FirstSetupRequest;
+import com.example.fintrack.app.user.remote.FirstSetupResponse;
 import com.example.fintrack.app.user.remote.UpdateProfileRequest;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
@@ -125,20 +127,23 @@ public class UserRepository {
     }
 
     public void getNotificationSettings(MutableLiveData<Resource<NotificationSettingsResponse>> result) {
-        apiService.getNotificationSettings().enqueue(notificationCallback(result));
+        apiService.getNotificationSettings().enqueue(apiCallback(result));
     }
 
     public void updateNotificationSettings(UpdateNotificationSettingsRequest request,
             MutableLiveData<Resource<NotificationSettingsResponse>> result) {
-        apiService.updateNotificationSettings(request).enqueue(notificationCallback(result));
+        apiService.updateNotificationSettings(request).enqueue(apiCallback(result));
     }
 
-    private Callback<ApiResponse<NotificationSettingsResponse>> notificationCallback(
-            MutableLiveData<Resource<NotificationSettingsResponse>> result) {
+    public void completeFirstSetup(FirstSetupRequest request, MutableLiveData<Resource<FirstSetupResponse>> result) {
+        apiService.completeFirstSetup(request).enqueue(apiCallback(result));
+    }
+
+    private <T> Callback<ApiResponse<T>> apiCallback(MutableLiveData<Resource<T>> result) {
         return new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<NotificationSettingsResponse>> call,
-                    @NonNull Response<ApiResponse<NotificationSettingsResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<T>> call,
+                    @NonNull Response<ApiResponse<T>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()
                         && response.body().getData() != null) {
                     result.setValue(Resource.success(response.body().getData()));
@@ -148,7 +153,7 @@ public class UserRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<NotificationSettingsResponse>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<T>> call, @NonNull Throwable t) {
                 result.setValue(Resource.error(ErrorMapper.getErrorMessage(appContext, t), null));
             }
         };

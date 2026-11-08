@@ -64,6 +64,9 @@ public class UserRepository {
     public void updatePassword(UUID id, String hash) {
         jdbc.update("UPDATE fintrack.users SET password_hash = ?, updated_at = now() WHERE id = ?", hash, id);
     }
+    public void completeOnboarding(UUID id) {
+        jdbc.update("UPDATE fintrack.users SET onboarding_completed = true, updated_at = now() WHERE id = ?", id);
+    }
     public void disable(UUID id) {
         jdbc.update("UPDATE fintrack.users SET status = 'DISABLED', updated_at = now() WHERE id = ?", id);
     }
