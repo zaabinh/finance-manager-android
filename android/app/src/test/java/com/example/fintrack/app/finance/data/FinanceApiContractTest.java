@@ -54,21 +54,42 @@ public class FinanceApiContractTest {
         assertEquals(value.occurredAt, TransactionResponse.parseTimestamp(json.get("occurredAt").getAsString()));
         action.remote.send(api); assertEquals(value.id, new Gson().fromJson(body(), com.google.gson.JsonObject.class).get("clientRequestId").getAsString());
     }
-    // Was transferOmitsCategoryAndIncludesBothWallets: TRANSFER is out of scope (contract section 5), so it is never sent.
-    @Test public void transferIsRejectedBeforeAnyRequestAndInMock() {
-        FinanceBook.Transaction value = new FinanceBook.Transaction("id", FinanceBook.Type.TRANSFER, 50_000, null, "from", "to", 0, "", "");
-        FinanceApiBundle api = apiBundle(200, "{\"transactionId\":\"id\"}");
-        for (boolean editing : new boolean[]{false, true}) {
-            FinanceBook.Failure failure = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.transaction(value, editing).remote.send(api));
-            assertEquals("TRANSACTION_TYPE_UNSUPPORTED", failure.code);
-        }
-        assertNull(captured);
+    @Test public void transferSendsBothWalletsWithoutCategoryOnPostAndPut() throws Exception {
+        // A stale category on a transfer draft is never sent (backend answers 422 for a category).
+        FinanceBook.Transaction value = new FinanceBook.Transaction("id", FinanceBook.Type.TRANSFER, 50_000, "stale", "from", "to", 0, "", "");
+        value.clientRequestId = "3bef66f9-8969-447e-b0ea-aa94dd3422f3";
+        FinanceApiBundle api = apiBundle(201, "{\"transactionId\":\"id\",\"transactionType\":\"TRANSFER\",\"status\":\"POSTED\"}");
+        FinanceAction.transaction(value, false).remote.send(api);
+        assertEquals("POST", captured.method());
+        com.google.gson.JsonObject post = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
+        assertEquals("TRANSFER", post.get("transactionType").getAsString());
+        assertEquals("from", post.get("walletId").getAsString());
+        assertEquals("to", post.get("destinationWalletId").getAsString());
+        assertEquals(50_000L, post.get("amountMinor").getAsLong());
+        assertFalse(post.has("categoryId"));
+        assertEquals(value.clientRequestId, post.get("clientRequestId").getAsString());
+        FinanceAction.transaction(value, true).remote.send(api);
+        assertEquals("PUT", captured.method()); assertEquals("/api/v1/transactions/id", captured.url().encodedPath());
+        com.google.gson.JsonObject put = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
+        assertEquals("to", put.get("destinationWalletId").getAsString());
+        assertFalse(put.has("categoryId")); assertFalse(put.has("clientRequestId"));
+        // Income/expense never send a destination.
+        FinanceBook.Transaction expense = new FinanceBook.Transaction("e", FinanceBook.Type.EXPENSE, 1, "c", "from", "to", 0, "", "");
+        FinanceAction.transaction(expense, false).remote.send(api);
+        assertFalse(new Gson().fromJson(body(), com.google.gson.JsonObject.class).has("destinationWalletId"));
+    }
+    @Test public void transferResponseMapsDestinationAndMockPostsIt() {
+        TransactionResponse response = new Gson().fromJson("{\"transactionId\":\"t\",\"transactionType\":\"TRANSFER\",\"amountMinor\":1000,"
+                + "\"categoryId\":null,\"walletId\":\"a\",\"destinationWalletId\":\"b\",\"occurredAt\":\"2026-11-07T08:45:00Z\","
+                + "\"note\":\"\",\"payee\":\"\",\"status\":\"POSTED\"}", TransactionResponse.class);
+        FinanceBook.Transaction domain = response.domain();
+        assertEquals(FinanceBook.Type.TRANSFER, domain.type); assertEquals("a", domain.walletId); assertEquals("b", domain.destinationWalletId);
+        assertNull(domain.categoryId);
         FinanceBook book = new FinanceBook(FinanceBook.empty());
         String cash = book.addWallet("Tiền mặt", 100_000).id, bank = book.addWallet("Ngân hàng", 0).id;
         FinanceBook.Transaction mock = new FinanceBook.Transaction("t", FinanceBook.Type.TRANSFER, 1_000, null, cash, bank, 0, "", "");
-        assertEquals(FinanceBook.Problem.VALIDATION, assertThrows(FinanceBook.Failure.class,
-                () -> FinanceAction.transaction(mock, false).local.accept(book)).problem);
-        assertTrue(book.state().transactions.isEmpty());
+        FinanceAction.transaction(mock, false).local.accept(book);
+        assertEquals(99_000, book.balance(cash)); assertEquals(1_000, book.balance(bank));
     }
     @Test public void postUsesStableClientRequestIdSeparateFromIdAndPutOmitsIt() throws Exception {
         FinanceBook.Transaction value = new FinanceBook.Transaction("local-id", FinanceBook.Type.INCOME, 1_000, "c", "w", "ignored", 0, "", "");

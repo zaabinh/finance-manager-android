@@ -104,9 +104,9 @@ POST/PUT body, cả ba trường bắt buộc:
 - Limit nhỏ hơn spent vẫn được lưu. Delete budget không xóa/reverse transaction, không tăng số dư ví; chỉ ngừng xuất hiện trong list active và cảnh báo tương lai. PUT archived trả 409 `BUDGET_ARCHIVED`.
 - Các giá trị usage/timestamps trong một response phải lấy trên snapshot DB nhất quán; không ghép các tổng từ các thời điểm khác nhau.
 
-## 5. Transaction thu/chi và ràng buộc số dư
+## 5. Transaction thu/chi/chuyển ví và ràng buộc số dư
 
-TRANSFER triển khai sau; hiện chỉ nhận `EXPENSE|INCOME`, còn loại khác trả 422 `TRANSACTION_TYPE_UNSUPPORTED`. Android ẩn/vô hiệu thao tác chuyển ví cho tới khi backend hỗ trợ.
+Nhận `EXPENSE|INCOME|TRANSFER` (TRANSFER theo [spec 2026-11-09](../superpowers/specs/2026-11-09-budget-hierarchy-and-transfer-design.md) §2); loại khác (ADJUSTMENT, DEBT_*) trả 422 `TRANSACTION_TYPE_UNSUPPORTED`.
 
 | Method | Route | Kết quả |
 |---|---|---|
@@ -122,15 +122,19 @@ POST body:
 {"transactionType":"EXPENSE","amountMinor":95000,"categoryId":"6d2786bb-e8e8-47eb-bc5a-6b06818cfe68","walletId":"47aa3a03-023b-4e1a-a0f1-a710d1122179","occurredAt":"2026-11-07T08:45:00Z","note":"Cà phê","payee":"Quán Đồng","clientRequestId":"3bef66f9-8969-447e-b0ea-aa94dd3422f3"}
 ```
 
-- Required: type, amount, categoryId, walletId, occurredAt; POST cần UUID clientRequestId. PUT dùng cùng field nghiệp vụ, không cần clientRequestId và không dùng nó để tạo mới.
-- `destinationWalletId` chỉ được absent/null trong scope hiện tại; giữ tương thích DTO đang có. note nullable tối đa 2000, payee nullable tối đa 160, normalize null thành chuỗi rỗng ở response. FR description được ánh xạ sang note/payee, không thêm field description.
+- Required: type, amount, walletId, occurredAt; categoryId bắt buộc với EXPENSE/INCOME; POST cần UUID clientRequestId. PUT dùng cùng field nghiệp vụ, không cần clientRequestId và không dùng nó để tạo mới.
+- `destinationWalletId`: EXPENSE/INCOME phải absent/null (422). note nullable tối đa 2000, payee nullable tối đa 160, normalize null thành chuỗi rỗng ở response. FR description được ánh xạ sang note/payee, không thêm field description.
 - `occurredAt` là UTC timestamp bắt buộc; UI mặc định thời điểm hiện tại, cho đổi ngày/giờ. Không ngầm suy ra thời điểm từ một ngày thiếu timezone. Date dùng cho lọc được chuyển theo timezone user.
 - Response gồm `transactionId`, các field nghiệp vụ, `status=POSTED|VOIDED`, `voidedAt`, `createdAt`, `updatedAt`. `clientRequestId` có thể trả lại để đối chiếu; owner không lấy từ client.
+- **TRANSFER**: `walletId` = ví nguồn, `destinationWalletId` = ví đích, bắt buộc, khác nhau (422), cả hai active (409 `WALLET_ARCHIVED`) và cùng owner (404); `categoryId` phải null (422). Ghi hai entry: −amount ở ví nguồn, +amount ở ví đích. Response trả `destinationWalletId`, `categoryId=null`. Chuyển ví không phải thu/chi: không tính vào budget spent, tổng thu/chi hay báo cáo; tổng tài sản không đổi.
+  ```json
+  {"transactionType":"TRANSFER","amountMinor":2000000,"walletId":"<ví tiết kiệm>","destinationWalletId":"<ví chi tiêu>","occurredAt":"2026-11-09T02:00:00Z","note":"","payee":"","clientRequestId":"<uuid>"}
+  ```
 - POST/PUT yêu cầu ví active, category active cùng owner và type. PUT giao dịch có tham chiếu archived yêu cầu chọn lại tham chiếu active hoặc reactivate trước. DELETE giao dịch cũ không yêu cầu wallet/category còn active, nhưng vẫn kiểm tra số dư.
-- Query: page default 0 >=0, size default 50 từ 1–200; optional dateFrom/dateTo (YYYY-MM-DD, inclusive), walletId, categoryId, type, q (trim, tối đa 200 ký tự). Date năm 0001–9998; dateFrom <= dateTo. Filter ID không thuộc user trả 404, archived hợp lệ để tra lịch sử.
+- Query: page default 0 >=0, size default 50 từ 1–200; optional dateFrom/dateTo (YYYY-MM-DD, inclusive), walletId (khớp ví nguồn hoặc ví đích của TRANSFER), categoryId, type (`EXPENSE|INCOME|TRANSFER`), q (trim, tối đa 200 ký tự). Date năm 0001–9998; dateFrom <= dateTo. Filter ID không thuộc user trả 404, archived hợp lệ để tra lịch sử.
 - Sort allowlist: `occurredAt,desc` (default), `occurredAt,asc`, `amountMinor,desc`, `amountMinor,asc`; tie-breaker transactionId cùng chiều. q tìm substring literal không phân biệt hoa/thường trong note/payee, escape `%`/`_`; có thể mở rộng search sau nhưng không ngầm coi pattern SQL từ user.
 - List chỉ POSTED; page ngoài phạm vi trả items rỗng và totalPages thực. Filter/count/page trong một request có snapshot nhất quán. Không hứa snapshot cố định giữa nhiều page requests có concurrent writes; Android dedup theo ID, refresh từ page 0 sau mutation.
-- POST cùng user/key/cùng payload tạo ban đầu trả 200 bản ghi hiện tại (kể cả đã VOIDED), không repost; cùng key/khác payload trả 409 `TRANSACTION_REQUEST_CONFLICT`. Fingerprint canonical của payload tạo ban đầu bất biến qua edit/delete; retry một lệnh đã thành công ưu tiên replay trước kiểm tra active hiện tại. Android không coi replay VOIDED là giao dịch active mới.
+- POST cùng user/key/cùng payload tạo ban đầu trả 200 bản ghi hiện tại (kể cả đã VOIDED), không repost; cùng key/khác payload trả 409 `TRANSACTION_REQUEST_CONFLICT`. Fingerprint canonical của payload tạo ban đầu (gồm `destinationWalletId` với TRANSFER) bất biến qua edit/delete; retry một lệnh đã thành công ưu tiên replay trước kiểm tra active hiện tại. Android không coi replay VOIDED là giao dịch active mới.
 - PUT giao dịch VOIDED trả 409 `TRANSACTION_VOIDED`; DELETE lại cùng owner trả 204, giữ voidedAt ban đầu. Tài nguyên không tồn tại/khác owner luôn 404.
 
 ### Không cho phép số dư âm
@@ -146,6 +150,7 @@ opening update: candidate = balance - oldOpening + newOpening
 ```
 
 - Nếu bất kỳ candidate < 0: 409 `WALLET_INSUFFICIENT_FUNDS`, toàn bộ mutation rollback. Không xóa trước rồi báo lỗi, không tự đổi amount hoặc tạo adjustment bù.
+- TRANSFER: create/update kiểm tra ví nguồn (candidate ≥ 0); update được đổi amount/ví nguồn/ví đích, khóa mọi ví cũ và mới theo thứ tự UUID tăng dần và kiểm tra từng ví; DELETE (void) trả tiền về ví nguồn đúng một lần và kiểm tra **ví đích** không âm (409 `WALLET_INSUFFICIENT_FUNDS`).
 - Xóa expense 100000 hoàn lại 100000 đúng một lần. Xóa income 100000 làm giảm balance 100000; nếu balance hiện tại chỉ còn 40000 thì bị từ chối. Người dùng phải sửa/xóa chi liên quan hoặc bổ sung thu hợp lệ trước.
 - Sửa expense chuyển ví phải trả tiền ví cũ và trừ tiền ví mới trong cùng transaction; sửa/xóa income phải kiểm tra cả tiền đã chi dựa trên income đó.
 - Khóa row transaction trước khi update/delete, sau đó khóa các wallet liên quan theo UUID tăng dần (create/opening update khóa wallet trực tiếp). Tất cả writer tài chính, kể cả archive/opening changes, phải theo cùng protocol; không thêm cache để giải quyết race.

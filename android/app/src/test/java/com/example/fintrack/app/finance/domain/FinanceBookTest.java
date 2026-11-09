@@ -135,6 +135,25 @@ public class FinanceBookTest {
         corrupt.transactions.add(transaction(FinanceBook.Type.EXPENSE, 100, "food", "missing", null));
         assertThrows(FinanceBook.Failure.class, () -> new FinanceBook(corrupt));
     }
+    @Test public void transferToArchivedDestinationIsRejectedAndVoidChecksDestination() {
+        String savings = book.addWallet("Tiết kiệm", 0, FinanceBook.WalletType.SAVINGS).id;
+        book.walletStatus(savings, false);
+        problem(FinanceBook.Problem.ARCHIVED, () -> book.save(transaction(FinanceBook.Type.TRANSFER, 1, null, cash, savings), false));
+        FinanceBook.Transaction moved = transaction(FinanceBook.Type.TRANSFER, 300_000, null, cash, bank); book.save(moved, false);
+        book.save(transaction(FinanceBook.Type.EXPENSE, 2_100_000, "food", bank, null), false); // bank 2_300_000 -> 200_000
+        problem(FinanceBook.Problem.INSUFFICIENT_FUNDS, () -> book.deleteTransaction(moved.id));
+        assertEquals("POSTED", moved.status);
+        problem(FinanceBook.Problem.INSUFFICIENT_FUNDS, () -> book.save(transaction(FinanceBook.Type.TRANSFER, 700_001, null, cash, bank), false));
+    }
+    @Test public void queryWalletFilterMatchesTransferSourceOrDestination() {
+        book.save(transaction(FinanceBook.Type.TRANSFER, 100, null, cash, bank), false);
+        book.save(transaction(FinanceBook.Type.EXPENSE, 100, "food", cash, null), false);
+        assertEquals(1, book.query(new FinanceBook.Query(null, null, null, bank, null, null, null), 0, 50).items.size());
+        assertEquals(2, book.query(new FinanceBook.Query(null, null, null, cash, null, null, null), 0, 50).items.size());
+        assertEquals(1, book.query(new FinanceBook.Query(null, null, FinanceBook.Type.TRANSFER, null, null, null, null), 0, 50).items.size());
+        assertEquals(100, book.total(FinanceBook.Type.EXPENSE, "2026-10"));
+        assertEquals(0, book.total(FinanceBook.Type.INCOME, "2026-10"));
+    }
     @Test public void savingsAreSeparateFromAvailableWallets() {
         String savings = book.addWallet("Tiết kiệm", 4_000_000, FinanceBook.WalletType.SAVINGS).id;
         book.save(transaction(FinanceBook.Type.TRANSFER, 100_000, null, cash, savings), false);

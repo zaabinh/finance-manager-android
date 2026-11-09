@@ -33,13 +33,14 @@ public final class TransactionListActivity extends FinanceActivity {
             if (requested != null && requested.matches("[0-9]{4}-(0[1-9]|1[0-2])")) month = requested;
         }
         FinanceUi.navigation(this, R.id.navReport);
-        visible(R.id.chipFilterTransfer, false); visible(R.id.tvMonthSummaryNote, false); // TRANSFER not supported yet
         // No aggregate endpoint: summing one page would be a partial (wrong) total, so the real flavor hides it.
-        visible(R.id.tvMonthSummary, BuildConfig.USE_MOCK);
+        // The mock income/expense summary never includes transfers; the note says so.
+        visible(R.id.tvMonthSummary, BuildConfig.USE_MOCK); visible(R.id.tvMonthSummaryNote, BuildConfig.USE_MOCK);
         findViewById(R.id.tvChangeMonth).setOnClickListener(view -> FinanceUi.month(this, month, value -> { month = value; search(); }));
         ((ChipGroup) findViewById(R.id.chipGroupTransactionType)).setOnCheckedStateChangeListener((group, ids) -> {
             int id = ids.isEmpty() ? R.id.chipFilterAll : ids.get(0);
-            type = id == R.id.chipFilterExpense ? FinanceBook.Type.EXPENSE : id == R.id.chipFilterIncome ? FinanceBook.Type.INCOME : null;
+            type = id == R.id.chipFilterExpense ? FinanceBook.Type.EXPENSE : id == R.id.chipFilterIncome ? FinanceBook.Type.INCOME
+                    : id == R.id.chipFilterTransfer ? FinanceBook.Type.TRANSFER : null;
             search();
         });
         ((EditText) findViewById(R.id.etTransactionSearch)).addTextChangedListener(new TextWatcher() {
