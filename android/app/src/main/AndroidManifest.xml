@@ -60,6 +60,7 @@
         <activity android:name=".app.budget.ui.BudgetListActivity" android:exported="false" />
         <activity android:name=".app.budget.ui.BudgetDetailActivity" android:exported="false" />
         <activity android:name=".app.budget.ui.BudgetFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".app.budget.ui.MonthlyBudgetFormActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.receipts" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/receipt_paths" />

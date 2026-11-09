@@ -8,6 +8,7 @@ DECLARE
     bank_identifier UUID := gen_random_uuid();
     food_identifier UUID := gen_random_uuid();
     salary_identifier UUID := gen_random_uuid();
+    monthly_identifier UUID := gen_random_uuid();
     transaction_identifier UUID;
     cash_balance NUMERIC;
     bank_balance NUMERIC;
@@ -41,8 +42,9 @@ BEGIN
     VALUES (user_identifier, transaction_identifier, cash_identifier, -200000),
            (user_identifier, transaction_identifier, bank_identifier, 200000);
 
-    INSERT INTO budgets(user_id, category_id, period_start, period_end, limit_minor)
-    VALUES (user_identifier, food_identifier, DATE '2026-10-01', DATE '2026-11-01', 1000000);
+    INSERT INTO monthly_budgets(id, user_id, month) VALUES (monthly_identifier, user_identifier, DATE '2026-10-01');
+    INSERT INTO budgets(user_id, monthly_budget_id, category_id, period_start, period_end, limit_minor)
+    VALUES (user_identifier, monthly_identifier, food_identifier, DATE '2026-10-01', DATE '2026-11-01', 1000000);
 
     SELECT balance_minor INTO cash_balance FROM wallet_balances WHERE wallet_id = cash_identifier;
     SELECT balance_minor INTO bank_balance FROM wallet_balances WHERE wallet_id = bank_identifier;

@@ -30,11 +30,22 @@ public final class FinanceAction {
             }
         });
     }
+    /** Category budget under the monthly budget of its month (mock resolves the parent and applies the balance block). */
     public static FinanceAction budget(FinanceBook.Budget value, boolean editing) {
-        return new FinanceAction(book -> book.save(value, editing), api -> {
+        return new FinanceAction(book -> book.saveCategoryBudget(value, editing), api -> {
             BudgetRequest request = new BudgetRequest(value);
             required(editing ? api.budgets.updateBudget(value.id, request) : api.budgets.addBudget(request));
         });
+    }
+    /** POST /monthly-budgets: month and its category budgets in one atomic request. */
+    public static FinanceAction monthlyBudget(String id, String month, java.util.List<FinanceBook.Budget> categories) {
+        return new FinanceAction(book -> book.createMonthlyBudget(id, month, categories),
+                api -> required(api.budgets.addMonthlyBudget(new com.example.fintrack.app.budget.remote.MonthlyBudgetRequest(month, categories))));
+    }
+    /** DELETE /monthly-budgets/{id}: archives its category budgets too; rejected for the current month. */
+    public static FinanceAction deleteMonthlyBudget(String id) {
+        return new FinanceAction(book -> book.deleteMonthlyBudget(id, System.currentTimeMillis()),
+                api -> execute(api.budgets.deleteMonthlyBudget(id)));
     }
     public static FinanceAction deleteTransaction(String id) {
         return new FinanceAction(book -> book.deleteTransaction(id), api -> execute(api.transactions.deleteTransaction(id)));
@@ -80,6 +91,16 @@ public final class FinanceAction {
     public static FinanceAction categoryArchive(String id) {
         return new FinanceAction(book -> book.categoryStatus(id, false), api -> execute(api.categories.archiveCategory(id)));
     }
+    /** shortfallMinor of BUDGET_EXCEEDS_AVAILABLE_BALANCE; null when absent or not an integer. */
+    private static Long shortfall(String raw) {
+        try {
+            com.google.gson.JsonElement root = com.google.gson.JsonParser.parseString(raw);
+            if (!root.isJsonObject()) return null;
+            com.google.gson.JsonElement value = root.getAsJsonObject().get("shortfallMinor");
+            return value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber() ? null
+                    : value.getAsJsonPrimitive().getAsBigDecimal().longValueExact();
+        } catch (RuntimeException ignored) { return null; }
+    }
     public static <T> T required(Call<T> call) {
         T body = execute(call);
         if (body == null) throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
@@ -94,11 +115,14 @@ public final class FinanceAction {
                         : status == 409 ? FinanceBook.Problem.CONFLICT : status == 404 ? FinanceBook.Problem.NOT_FOUND
                         : status == 400 || status == 422 ? FinanceBook.Problem.VALIDATION : FinanceBook.Problem.SERVER;
                 String message = null, code = null;
+                Long shortfall = null;
                 java.util.List<String> fieldNames = new java.util.ArrayList<>();
                 if (response.errorBody() != null) {
                     try (okhttp3.ResponseBody body = response.errorBody()) {
+                        String raw = body.string();
                         com.example.fintrack.app.core.network.ApiErrorResponse error = new com.google.gson.Gson().fromJson(
-                                body.string(), com.example.fintrack.app.core.network.ApiErrorResponse.class);
+                                raw, com.example.fintrack.app.core.network.ApiErrorResponse.class);
+                        shortfall = shortfall(raw);
                         if (error != null) {
                             code = error.getErrorCode();
                             if ("WALLET_INSUFFICIENT_FUNDS".equals(code)) problem = FinanceBook.Problem.INSUFFICIENT_FUNDS;
@@ -120,7 +144,7 @@ public final class FinanceAction {
                     } catch (com.google.gson.JsonParseException ignored) { }
                 }
                 FinanceBook.Failure failure = new FinanceBook.Failure(problem, message);
-                failure.code = code; failure.fields = fieldNames; throw failure;
+                failure.code = code; failure.fields = fieldNames; failure.shortfallMinor = shortfall; throw failure;
             }
             return response.body();
         } catch (IOException e) { throw new FinanceBook.Failure(FinanceBook.Problem.NETWORK); }

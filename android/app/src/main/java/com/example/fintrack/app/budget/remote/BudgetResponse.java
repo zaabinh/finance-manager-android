@@ -9,6 +9,9 @@ public class BudgetResponse {
     @SerializedName("budgetId")
     public String budgetId;
 
+    @SerializedName("monthlyBudgetId")
+    public String monthlyBudgetId;
+
     @SerializedName("categoryId")
     public String categoryId;
 
@@ -32,6 +35,7 @@ public class BudgetResponse {
         value.serverSpentMinor = spentMinor;
         value.warningThresholdPercent = warningThresholdPercent;
         value.archivedAt = archivedAt;
+        value.monthlyBudgetId = monthlyBudgetId;
         return value;
     }
 }

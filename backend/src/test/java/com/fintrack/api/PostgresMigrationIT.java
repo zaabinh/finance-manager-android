@@ -121,7 +121,9 @@ class PostgresMigrationIT {
                      var result = statement.executeQuery(
                              "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IS NOT NULL AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(flyway.info().all().length);
+                    // all() also lists Flyway's unversioned schema-creation marker; compare versioned migrations only.
+                    assertThat(result.getInt(1)).isEqualTo((int) java.util.Arrays.stream(flyway.info().applied())
+                            .filter(info -> info.getVersion() != null).count());
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
@@ -137,7 +139,7 @@ class PostgresMigrationIT {
                         }
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
-                            "wallets", "categories", "transactions", "transaction_entries", "budgets",
+                            "wallets", "categories", "transactions", "transaction_entries", "budgets", "monthly_budgets",
                             "verification_challenges", "notification_settings");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();

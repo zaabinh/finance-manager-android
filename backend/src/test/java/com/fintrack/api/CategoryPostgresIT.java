@@ -53,9 +53,17 @@ class CategoryPostgresIT {
     @AfterEach void cleanup() {
         // Foreign keys preserve history; remove test fixtures in dependency order.
         jdbc.update("DELETE FROM fintrack.budgets WHERE user_id=?",owner);
+        jdbc.update("DELETE FROM fintrack.monthly_budgets WHERE user_id=?",owner);
         jdbc.update("DELETE FROM fintrack.transactions WHERE user_id=?",owner);
         jdbc.update("DELETE FROM fintrack.categories WHERE user_id=?",owner);
         jdbc.update("DELETE FROM fintrack.users WHERE id=?",owner);
+    }
+    /** Category budgets require a monthly parent (V10); reuse the owner's November container. */
+    private UUID monthly() {
+        var existing=jdbc.queryForList("SELECT id FROM fintrack.monthly_budgets WHERE user_id=? AND month='2026-11-01' AND archived_at IS NULL",UUID.class,owner);
+        if(!existing.isEmpty()) return existing.get(0);
+        UUID id=UUID.randomUUID();
+        jdbc.update("INSERT INTO fintrack.monthly_budgets(id,user_id,month) VALUES (?,?,'2026-11-01')",id,owner); return id;
     }
     private CategoryRequest request(String name,String type) {
         CategoryRequest r=new CategoryRequest(); r.name=name; r.categoryType=type; return r;
@@ -91,7 +99,7 @@ class CategoryPostgresIT {
         UUID replacement=create("Custom");
         CategoryStatusRequest restore=new CategoryStatusRequest(); restore.active=true;
         assertError(()->tx.executeWithoutResult(s->service.status(owner,id,restore)),ErrorCode.CATEGORY_NAME_CONFLICT);
-        jdbc.update("INSERT INTO fintrack.budgets(user_id,category_id,period_start,period_end,limit_minor,archived_at) VALUES (?,?,'2026-11-01','2026-12-01',100,now())",owner,replacement);
+        jdbc.update("INSERT INTO fintrack.budgets(user_id,monthly_budget_id,category_id,period_start,period_end,limit_minor,archived_at) VALUES (?,?,?,'2026-11-01','2026-12-01',100,now())",owner,monthly(),replacement);
         assertError(()->tx.executeWithoutResult(s->service.update(owner,replacement,request("Custom","INCOME"))),ErrorCode.CATEGORY_TYPE_IN_USE);
         UUID txCategory=create("Voided reference");
         jdbc.update("INSERT INTO fintrack.transactions(user_id,transaction_type,amount_minor,category_id,occurred_at,status,voided_at) VALUES (?,'EXPENSE',100,?,now(),'VOIDED',now())",owner,txCategory);
@@ -107,7 +115,7 @@ class CategoryPostgresIT {
                 locked.countDown();
                 try { if(!release.await(10,TimeUnit.SECONDS)) throw new AssertionError("Timed out"); }
                 catch(InterruptedException e) { Thread.currentThread().interrupt(); throw new RuntimeException(e); }
-                jdbc.update("INSERT INTO fintrack.budgets(user_id,category_id,period_start,period_end,limit_minor) VALUES (?,?,'2026-11-01','2026-12-01',100)",owner,id);
+                jdbc.update("INSERT INTO fintrack.budgets(user_id,monthly_budget_id,category_id,period_start,period_end,limit_minor) VALUES (?,?,?,'2026-11-01','2026-12-01',100)",owner,monthly(),id);
             }));
             assertThat(locked.await(5,TimeUnit.SECONDS)).isTrue();
             Future<?> change=executor.submit(()->assertError(()->tx.executeWithoutResult(s->

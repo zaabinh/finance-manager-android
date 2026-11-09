@@ -76,6 +76,33 @@ POST/PUT body:
 
 ## 4. Budget CRUD và usage
 
+Ngân sách phân cấp theo [thiết kế 2026-11-09](../superpowers/specs/2026-11-09-budget-hierarchy-and-transfer-design.md) §1: **ngân sách tháng** là vùng chứa của một tháng; **ngân sách danh mục** nằm dưới nó. Không có khái niệm phân bổ ("chưa phân bổ", "có thể phân bổ") trong API, DB hay UI. Budget không giữ tiền, không sửa ví hay giao dịch.
+
+### 4.1 Ngân sách tháng
+
+| Method | Route | Kết quả |
+|---|---|---|
+| POST | `/api/v1/monthly-budgets` | 201 `MonthlyBudgetResponse` + `Location` |
+| GET | `/api/v1/monthly-budgets?month=YYYY-MM&status=ACTIVE\|ARCHIVED\|ALL` | 200 `MonthlyBudgetResponse[]`; `month` optional, `status` default ACTIVE; sort `month DESC, monthlyBudgetId ASC` |
+| GET | `/api/v1/monthly-budgets/{monthlyBudgetId}` | 200, kể cả archived |
+| DELETE | `/api/v1/monthly-budgets/{monthlyBudgetId}` | 204, idempotent; 409 `BUDGET_MONTH_CURRENT` |
+
+POST body (một request, ghi nguyên tử; ít nhất một danh mục, mỗi danh mục một lần):
+
+```json
+{"month":"2026-11","categories":[{"categoryId":"6d2786bb-e8e8-47eb-bc5a-6b06818cfe68","limitMinor":3000000}]}
+```
+
+- Tối đa một ngân sách tháng active cho mỗi user/tháng (unique `(user_id, month) WHERE archived_at IS NULL`); trùng, kể cả concurrent, trả 409 `BUDGET_PERIOD_CONFLICT`.
+- Danh sách rỗng, danh mục lặp, limit sai, category không phải EXPENSE: 422 `VALIDATION_ERROR`; category archived: 409 `CATEGORY_ARCHIVED`; category khác owner: 404. Lỗi bất kỳ dòng nào rollback cả ngân sách tháng.
+- Request không có trường tổng; `totalLimitMinor` hay field lạ (kể cả trong `categories[]`) trả 400.
+- **Tổng tháng dẫn xuất và khóa**: `totalLimitMinor = SUM(limitMinor)` của các ngân sách danh mục active; không lưu, không nhập/sửa trực tiếp. Xóa danh mục cuối cùng vẫn giữ ngân sách tháng với tổng 0.
+- DELETE: tháng hiện tại theo timezone user bị từ chối (409 `BUDGET_MONTH_CURRENT`); tháng quá khứ/tương lai được phép và archive mọi ngân sách danh mục active của tháng đó trong cùng transaction. Android xác nhận trước bằng đúng câu: "Nếu bạn xóa ngân sách tháng, các ngân sách theo từng danh mục cũng sẽ bị xóa. Hãy kiểm tra trước khi xóa." Sau khi xóa, có thể tạo ngân sách tháng mới cùng tháng.
+- `MonthlyBudgetResponse`: `monthlyBudgetId`, `month`, `totalLimitMinor`, `spentMinor`, `remainingMinor`, `usagePercent`, `warningThresholdPercent`, `status`, `archivedAt`, `createdAt`, `updatedAt`, `categories: BudgetResponse[]`. Với ngân sách tháng archived, `categories` là các ngân sách danh mục đã archive cùng lúc với nó.
+- `spentMinor` tháng = tổng EXPENSE POSTED của **mọi danh mục** trong tháng (không chỉ các danh mục có ngân sách), mọi ví; TRANSFER/INCOME/VOIDED không tính. `remainingMinor = totalLimitMinor - spentMinor`, có thể âm. Tổng 0: `usagePercent` 0.00 và SAFE khi chưa chi, 100.00 và EXCEEDED khi đã chi.
+
+### 4.2 Ngân sách danh mục
+
 | Method | Route | Kết quả |
 |---|---|---|
 | GET | `/api/v1/budgets?month=2026-11&status=ACTIVE` | 200 `BudgetResponse[]` |
@@ -84,25 +111,43 @@ POST/PUT body:
 | PUT | `/api/v1/budgets/{budgetId}` | 200 `BudgetResponse`; chỉ active |
 | DELETE | `/api/v1/budgets/{budgetId}` | 204; archive idempotent |
 
-List `month=YYYY-MM` và `categoryId` optional, `status=ACTIVE|ARCHIVED|ALL` default ACTIVE; sort `month DESC, categoryId ASC, budgetId ASC`. Không có restore endpoint trong scope này; sau archive được tạo budget mới cùng category/month.
+List `month=YYYY-MM` và `categoryId` optional, `status=ACTIVE|ARCHIVED|ALL` default ACTIVE; sort `month DESC, categoryId ASC, budgetId ASC`. Không có restore endpoint; sau archive được tạo budget mới cùng category/month.
 
-POST/PUT body, cả ba trường bắt buộc:
+POST/PUT body, cả ba trường bắt buộc (không đổi shape):
 
 ```json
 {"categoryId":"6d2786bb-e8e8-47eb-bc5a-6b06818cfe68","month":"2026-11","limitMinor":3000000}
 ```
 
+- Ngân sách cha được xác định theo `month`: phải có ngân sách tháng active của tháng đó, nếu không 409 `BUDGET_MONTH_MISSING`. PUT đổi tháng chuyển ngân sách sang ngân sách tháng của tháng mới (cũng phải tồn tại). DB ràng buộc `budgets.monthly_budget_id NOT NULL` cùng owner và cùng tháng với cha.
 - Chỉ category EXPENSE của user. Create/đổi category cần category active; PUT giữ nguyên category archived được phép đổi limit/month, vẫn kiểm tra uniqueness.
 - `month` chính xác YYYY-MM, năm 0001–9998. Persist `period_start=ngày 1 tháng`, `period_end=ngày 1 tháng sau`, không nhận kỳ tùy ý từ client; không rollover.
-- Một budget active cho mỗi user/category/month. Duplicate/overlap, kể cả concurrent create/update, trả 409 `BUDGET_PERIOD_CONFLICT`. Giữ PostgreSQL exclusion constraint hiện có.
-- Response gồm `budgetId`, `categoryId`, `month`, `limitMinor`, `spentMinor`, `remainingMinor`, `usagePercent`, `warningThresholdPercent`, `status`, `archivedAt`, `createdAt`, `updatedAt`. `status` trong response là usage `SAFE|WARNING|EXCEEDED`; lifecycle xem `archivedAt`, không nhầm với query `status`.
+- Một budget active cho mỗi user/category/month. Duplicate/overlap, kể cả concurrent create/update, trả 409 `BUDGET_PERIOD_CONFLICT`. Giữ PostgreSQL exclusion constraint `budgets_no_overlap`.
+- Response gồm `budgetId`, `monthlyBudgetId`, `categoryId`, `month`, `limitMinor`, `spentMinor`, `remainingMinor`, `usagePercent`, `warningThresholdPercent`, `status`, `archivedAt`, `createdAt`, `updatedAt`. `status` trong response là usage `SAFE|WARNING|EXCEEDED`; lifecycle xem `archivedAt`, không nhầm với query `status`.
 - `spentMinor`: tổng amount EXPENSE, POSTED, cùng owner/category, mọi ví (kể cả archived hoặc excluded from assets), trong tháng theo timezone preferences hiện tại. Không gồm thu/chuyển ví/VOIDED; chưa có transaction thì bằng 0.
-- `remainingMinor=limitMinor-spentMinor` có thể âm khi vượt budget. Đây không phải số dư ví; budget không giữ tiền và không chặn chi khi vẫn đủ số dư ví.
+- `remainingMinor=limitMinor-spentMinor` có thể âm khi vượt budget. Đây không phải số dư ví; budget không chặn chi khi vẫn đủ số dư ví.
+- Limit nhỏ hơn spent vẫn được lưu. Delete không xóa/reverse transaction, không tăng số dư ví. PUT archived trả 409 `BUDGET_ARCHIVED`.
+
+### 4.3 Chặn theo số dư khả dụng
+
+- `availableMinor` = Σ số dư các ví active có `include_in_assets = true` và `wallet_type <> 'SAVINGS'`.
+- `stillToSpendMinor = max(0, totalLimitMinor - spentMinor)` của tháng **sau** thay đổi.
+- Khi tạo ngân sách tháng và mọi thay đổi ngân sách danh mục làm **tăng** tổng tháng (POST, PUT tăng limit hoặc chuyển sang tháng khác): nếu `stillToSpendMinor > availableMinor` → 409 `BUDGET_EXCEEDS_AVAILABLE_BALANCE`, không lưu gì. Body là `ApiErrorResponse` thêm `shortfallMinor = stillToSpendMinor - availableMinor`:
+
+```json
+{"timestamp":"2026-11-09T10:00:00Z","status":409,"errorCode":"BUDGET_EXCEEDS_AVAILABLE_BALANCE","message":"...","path":"/api/v1/budgets","fieldErrors":[],"shortfallMinor":30000}
+```
+
+- Giảm limit và xóa không bao giờ bị chặn. Đây là kiểm tra tại thời điểm ghi; chi tiêu sau đó làm vượt chỉ là overspending, không kiểm tra lại. Android giữ form, hiện số thiếu và nút "Chuyển từ tiết kiệm" mở form chuyển ví (nguồn là ví SAVINGS, số tiền = shortfall).
+
+### 4.4 Usage, đồng thời và snapshot
+
 - `usagePercent` là JSON decimal làm tròn 2 chữ số HALF_UP, không cap 100. Tiền vẫn integer. Status so sánh chính xác trước khi làm tròn: spent >= limit → EXCEEDED; còn lại spent*100 >= limit*warningThresholdPercent → WARNING; còn lại SAFE.
-- `warningThresholdPercent` lấy từ notification settings của user, mặc định 80; không có field threshold riêng trong request Budget. Tắt cảnh báo không đổi công thức status. Notification delivery/dedup làm sau CRUD.
-- Đổi timezone không đổi month đã lưu nhưng tính lại biên UTC và usage theo timezone mới; đây là hành vi đã chọn. Khoảng thời gian là `[đầu tháng local, đầu tháng kế tiếp local)`; không cộng cố định số giờ/ngày.
-- Limit nhỏ hơn spent vẫn được lưu. Delete budget không xóa/reverse transaction, không tăng số dư ví; chỉ ngừng xuất hiện trong list active và cảnh báo tương lai. PUT archived trả 409 `BUDGET_ARCHIVED`.
-- Các giá trị usage/timestamps trong một response phải lấy trên snapshot DB nhất quán; không ghép các tổng từ các thời điểm khác nhau.
+- `warningThresholdPercent` lấy từ notification settings của user, mặc định 80; không có field threshold trong request. Tắt cảnh báo không đổi công thức status. Notification delivery/dedup làm sau CRUD.
+- Đổi timezone không đổi month đã lưu nhưng tính lại biên UTC và usage theo timezone mới. Khoảng thời gian là `[đầu tháng local, đầu tháng kế tiếp local)`; không cộng cố định số giờ/ngày.
+- Mọi ghi dưới một ngân sách tháng khóa dòng `monthly_budgets` của nó `FOR UPDATE` trước (thứ tự khóa: ngân sách tháng → ngân sách danh mục → category; PUT đổi tháng khóa hai ngân sách tháng theo tháng tăng dần), nên hai thao tác tăng đồng thời không thể cùng vượt qua kiểm tra số dư.
+- Các giá trị usage/tổng/timestamps trong một response lấy trên snapshot DB nhất quán (một câu lệnh, hoặc transaction REPEATABLE READ cho ngân sách tháng kèm danh mục).
+- Migration V10 không chuyển dữ liệu cũ: nếu còn ngân sách danh mục chưa có ngân sách tháng, migration dừng với thông báo rõ ràng, không tự sinh ngân sách tháng.
 
 ## 5. Transaction thu/chi/chuyển ví và ràng buộc số dư
 

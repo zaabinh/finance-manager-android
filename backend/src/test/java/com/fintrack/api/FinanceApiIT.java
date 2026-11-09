@@ -127,8 +127,14 @@ class FinanceApiIT {
 
     @Test void expenseEditVoidAndBudgetUsageReconcileThroughHttp() throws Exception {
         String wallet = wallet(1_000_000);
-        JsonNode budget = ok(call("POST", "/api/v1/budgets", token, json.writeValueAsString(Map.of(
-                "categoryId", expense, "month", "2026-11", "limitMinor", 100_000))), 201);
+        // Hierarchy: a category budget needs its month's monthly budget first.
+        assertThat(ok(call("POST", "/api/v1/budgets", token, json.writeValueAsString(Map.of(
+                "categoryId", expense, "month", "2026-11", "limitMinor", 100_000))), 409).get("errorCode").asText())
+                .isEqualTo("BUDGET_MONTH_MISSING");
+        JsonNode monthly = ok(call("POST", "/api/v1/monthly-budgets", token, json.writeValueAsString(Map.of("month", "2026-11",
+                "categories", List.of(Map.of("categoryId", expense, "limitMinor", 100_000))))), 201);
+        assertThat(monthly.get("totalLimitMinor").asLong()).isEqualTo(100_000);
+        JsonNode budget = monthly.get("categories").get(0);
         String body = posting(wallet, expense, "EXPENSE", 100_000);
         String transaction = ok(call("POST", "/api/v1/transactions", token, body), 201).get("transactionId").asText();
         assertThat(balance(wallet)).isEqualTo(900_000);

@@ -134,6 +134,30 @@ public class FinanceApiContractTest {
         FinanceBook.Transaction value = response.domain();
         assertEquals("VOIDED", value.status); assertEquals("k", value.clientRequestId); assertEquals(95_000, value.amount);
     }
+    @Test public void monthlyBudgetCreateAndDeleteUseTheMonthlyRoutes() throws Exception {
+        java.util.List<FinanceBook.Budget> lines = java.util.Collections.singletonList(new FinanceBook.Budget("x", "food", "2026-11", 300_000));
+        FinanceAction.monthlyBudget("m", "2026-11", lines).remote.send(apiBundle(201,
+                "{\"monthlyBudgetId\":\"m\",\"month\":\"2026-11\",\"totalLimitMinor\":300000,\"spentMinor\":0,\"categories\":[]}"));
+        assertEquals("POST", captured.method()); assertEquals("/api/v1/monthly-budgets", captured.url().encodedPath());
+        com.google.gson.JsonObject json = new Gson().fromJson(body(), com.google.gson.JsonObject.class);
+        assertEquals("2026-11", json.get("month").getAsString());
+        assertFalse(json.has("totalLimitMinor"));
+        assertEquals(300_000, json.getAsJsonArray("categories").get(0).getAsJsonObject().get("limitMinor").getAsLong());
+        FinanceAction.deleteMonthlyBudget("m").remote.send(apiBundle(204, ""));
+        assertEquals("DELETE", captured.method()); assertEquals("/api/v1/monthly-budgets/m", captured.url().encodedPath());
+    }
+    @Test public void shortfallAndBudgetCodesAreKeptOnTheFailure() {
+        FinanceBook.Failure shortfall = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.budget(
+                new FinanceBook.Budget("b", "food", "2026-11", 1), false).remote.send(apiBundle(409,
+                "{\"status\":409,\"errorCode\":\"BUDGET_EXCEEDS_AVAILABLE_BALANCE\",\"message\":\"x\",\"shortfallMinor\":30000}")));
+        assertEquals(FinanceBook.Problem.CONFLICT, shortfall.problem);
+        assertEquals(FinanceBook.BUDGET_EXCEEDS_AVAILABLE_BALANCE, shortfall.code);
+        assertEquals(Long.valueOf(30_000), shortfall.shortfallMinor);
+        FinanceBook.Failure current = assertThrows(FinanceBook.Failure.class, () -> FinanceAction.deleteMonthlyBudget("m").remote.send(
+                apiBundle(409, "{\"status\":409,\"errorCode\":\"BUDGET_MONTH_CURRENT\",\"message\":\"x\"}")));
+        assertEquals(FinanceBook.BUDGET_MONTH_CURRENT, current.code);
+        assertNull(current.shortfallMinor);
+    }
     @Test public void budgetRequestUsesMonthAndLimitAndSupports204Delete() throws Exception {
         FinanceAction.budget(new FinanceBook.Budget("b", "food", "2026-10", 1_500_000), true).remote.send(apiBundle(200, "{\"budgetId\":\"b\"}"));
         assertEquals("PUT", captured.method());

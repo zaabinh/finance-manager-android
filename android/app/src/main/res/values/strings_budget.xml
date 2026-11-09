@@ -4,4 +4,37 @@
     <string name="budget_view_history">Xem giao dịch trong tháng</string>
     <string name="budget_period_label">Tháng áp dụng</string>
     <string name="error_duplicate_budget">Danh mục này đã được thiết lập ngân sách trong tháng</string>
+
+    <!-- Ngân sách tháng (tổng = tổng hạn mức các danh mục, không nhập trực tiếp) -->
+    <string name="monthly_budget_create_title">Tạo ngân sách tháng</string>
+    <string name="monthly_budget_empty">Chưa có ngân sách tháng</string>
+    <string name="monthly_budget_empty_body">Tạo ngân sách tháng với các danh mục chi tiêu để theo dõi số tiền còn lại.</string>
+    <string name="monthly_budget_categories_title">Ngân sách theo danh mục</string>
+    <string name="monthly_budget_categories_empty">Chưa có ngân sách danh mục. Tổng ngân sách tháng đang là 0 đ.</string>
+    <string name="monthly_budget_add_category">Thêm danh mục</string>
+    <string name="monthly_budget_total">Tổng ngân sách: %1$s</string>
+    <string name="monthly_budget_live_total">Tổng ngân sách tháng: %1$s</string>
+    <string name="monthly_budget_total_hint">Tổng được tính tự động từ hạn mức các danh mục.</string>
+    <plurals name="monthly_budget_category_count">
+        <item quantity="other">%1$d danh mục</item>
+    </plurals>
+    <string name="monthly_budget_limit_hint">Hạn mức (đ)</string>
+    <string name="monthly_budget_remove_row">Bỏ danh mục này</string>
+    <string name="monthly_budget_category_required">Hãy thêm ít nhất một danh mục chi tiêu</string>
+    <string name="monthly_budget_all_categories_used">Tất cả danh mục chi tiêu đang hoạt động đã được thêm</string>
+    <string name="monthly_budget_exists">Tháng này đã có ngân sách tháng</string>
+    <string name="monthly_budget_delete">Xóa ngân sách tháng</string>
+    <string name="monthly_budget_delete_title">Xóa ngân sách tháng?</string>
+    <string name="monthly_budget_delete_warning">Nếu bạn xóa ngân sách tháng, các ngân sách theo từng danh mục cũng sẽ bị xóa. Hãy kiểm tra trước khi xóa.</string>
+    <string name="monthly_budget_current_locked">Không thể xóa ngân sách của tháng hiện tại</string>
+    <string name="budget_month_missing">Tháng này chưa có ngân sách tháng. Hãy tạo ngân sách tháng trước.</string>
+    <string name="budget_category_edit_limit">Sửa hạn mức</string>
+    <string name="budget_category_remove">Xóa khỏi ngân sách tháng</string>
+    <string name="budget_category_remove_title">Xóa ngân sách danh mục này?</string>
+    <string name="budget_category_remove_body">Tổng ngân sách tháng sẽ giảm theo. Lịch sử giao dịch vẫn được giữ nguyên.</string>
+
+    <!-- Chặn theo số dư khả dụng -->
+    <string name="budget_shortfall">Ngân sách cần chi vượt số dư khả dụng %1$s. Hãy chuyển thêm tiền vào ví chi tiêu hoặc giảm hạn mức.</string>
+    <string name="budget_transfer_from_savings">Chuyển từ tiết kiệm</string>
+    <string name="budget_no_savings_wallet">Chưa có ví tiết kiệm đang hoạt động để chuyển tiền</string>
 </resources>

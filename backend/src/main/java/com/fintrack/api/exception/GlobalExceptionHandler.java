@@ -58,6 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             ErrorCode code = detail.contains("ux_wallets_user_name_active") ? ErrorCode.WALLET_NAME_CONFLICT
                     : detail.contains("ux_categories_user_type_name_active") ? ErrorCode.CATEGORY_NAME_CONFLICT
                     : detail.contains("budgets_no_overlap") ? ErrorCode.BUDGET_PERIOD_CONFLICT
+                    : detail.contains("ux_monthly_budgets_user_month_active") ? ErrorCode.BUDGET_PERIOD_CONFLICT
                     : detail.contains("ux_transactions_idempotency") ? ErrorCode.TRANSACTION_REQUEST_CONFLICT : null;
             if (code != null) return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiErrorResponse.of(
                     409, code, "Dữ liệu bị trùng với bản ghi đang hoạt động", path(request)));
@@ -79,7 +80,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private boolean isFinance(WebRequest request) {
-        return path(request).matches("/api/v1/(wallets|categories|budgets|transactions)(/.*)?");
+        return path(request).matches("/api/v1/(wallets|categories|budgets|monthly-budgets|transactions)(/.*)?");
     }
 
     @Override
@@ -98,6 +99,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException exception, WebRequest request) {
         return ResponseEntity.badRequest().body(ApiErrorResponse.of(400, ErrorCode.VALIDATION_ERROR,
                 "Request validation failed", path(request)));
+    }
+
+    @ExceptionHandler(BudgetShortfallException.class)
+    ResponseEntity<com.fintrack.api.dto.response.budget.BudgetShortfallErrorResponse> handleBudgetShortfall(
+            BudgetShortfallException exception, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(com.fintrack.api.dto.response.budget.BudgetShortfallErrorResponse.of(
+                exception.getErrorCode(), exception.getMessage(), path(request), exception.getShortfallMinor()));
     }
 
     @ExceptionHandler(AppException.class)
