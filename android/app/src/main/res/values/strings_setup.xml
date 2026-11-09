@@ -54,6 +54,11 @@
     <string name="wallet_default_badge">Mặc định</string>
     <string name="wallet_initial_balance">0 đ</string>
     <string name="wallet_default_desc">Ví mặc định</string>
+    <string name="setup_cash_set_balance">Nhập số dư</string>
+    <string name="setup_cash_dialog_title">Số dư tiền mặt</string>
+    <string name="setup_cash_dialog_hint">Số tiền bạn đang có trong ví</string>
+    <string name="setup_cash_confirmed">Đã xác nhận, lưu khi hoàn tất</string>
+    <string name="setup_wallet_pending_desc">%1$s, lưu khi hoàn tất</string>
     <string name="btn_add_other_wallet">+ Thêm ví khác (không bắt buộc)</string>
     <string name="category_default_section">Danh mục mặc định</string>
     <string name="category_expense">Chi tiêu</string>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Amount suggestion chips; MoneyInput fills chipGroupAmountSuggestions and toggles this view. -->
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollAmountSuggestions"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/spacing_8"
+    android:scrollbars="none"
+    android:visibility="gone">
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupAmountSuggestions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:singleLine="true" />
+</HorizontalScrollView>

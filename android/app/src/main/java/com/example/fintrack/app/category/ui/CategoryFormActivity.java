@@ -114,6 +114,7 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if(editing()) findViewById(R.id.btnDeleteCategory).setEnabled(active && !model.busy());
     }
     @Override protected void loading(boolean busy) {
+        if (save != null) FinanceUi.progress(save, busy);
         if (save != null) save.setEnabled(!busy && initialized && (!editing() || book != null && book.category(id) != null && book.category(id).archivedAt == null));
         if (status != null) status.setEnabled(!busy && initialized);
     }

@@ -33,6 +33,34 @@ public final class FinanceUi {
     public static String money(long centsOrUnits) {
         return String.format(Locale.ROOT, "%,d đ", centsOrUnits).replace(',', '.');
     }
+    /** Shared button loading state: disabled with a leading circular progress indicator; enabled and clean otherwise. */
+    public static void progress(android.widget.Button button, boolean loading) {
+        if (button == null) return;
+        int color = button.getCurrentTextColor();
+        button.setEnabled(!loading);
+        button.setClickable(!loading);
+        android.content.Context context = button.getContext();
+        android.graphics.drawable.Drawable drawable = null;
+        if (loading) {
+            com.google.android.material.progressindicator.CircularProgressIndicatorSpec spec =
+                    new com.google.android.material.progressindicator.CircularProgressIndicatorSpec(context, null, 0,
+                            com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall);
+            spec.indicatorColors = new int[] {color};
+            drawable = com.google.android.material.progressindicator.IndeterminateDrawable.createCircularDrawable(context, spec);
+        }
+        if (button instanceof com.google.android.material.button.MaterialButton) {
+            com.google.android.material.button.MaterialButton material = (com.google.android.material.button.MaterialButton) button;
+            if (loading) {
+                material.setIconTint(null);
+                material.setIconGravity(com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START);
+            }
+            material.setIcon(drawable);
+        } else {
+            if (drawable != null) drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+            button.setCompoundDrawablesRelative(drawable, null, null, null);
+            button.setCompoundDrawablePadding(loading ? context.getResources().getDimensionPixelSize(R.dimen.spacing_8) : 0);
+        }
+    }
     public static String date(long millis) {
         return date(millis, "Asia/Ho_Chi_Minh");
     }

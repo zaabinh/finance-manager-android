@@ -38,6 +38,7 @@ public final class TransactionFormActivity extends FinanceActivity {
     @Override protected String detailId() { return getIntent().getStringExtra(EXTRA_ID); }
     @Override protected void bind(Bundle saved) {
         toolbar(R.id.toolbarTransactionForm);
+        com.example.fintrack.app.core.ui.MoneyInput.attach(findViewById(R.id.etAmount), findViewById(R.id.chipGroupAmountSuggestions));
         editing = getIntent().hasExtra(EXTRA_ID);
         id = editing ? getIntent().getStringExtra(EXTRA_ID) : UUID.randomUUID().toString();
         // Idempotency key: survives rotation/process death so a timeout retry replays instead of double-posting.
@@ -198,7 +199,7 @@ public final class TransactionFormActivity extends FinanceActivity {
         if (!labels.isEmpty()) return context.getString(R.string.transaction_field_errors, android.text.TextUtils.join(", ", labels));
         return context.getString(FinanceUi.error(command.error));
     }
-    @Override protected void loading(boolean loading) { findViewById(R.id.btnSaveTransaction).setEnabled(!loading); }
+    @Override protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveTransaction), loading); }
     @Override protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out); out.putString("id", id); out.putString("requestId", requestId); out.putString("type", type.name()); out.putString("category", category);
         out.putString("wallet", wallet); out.putString("destination", destination); out.putLong("date", occurredAt); out.putBoolean("initialized", initialized);
