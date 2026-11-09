@@ -12,6 +12,7 @@ import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.transaction.domain.TransactionPrefill;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import java.util.UUID;
@@ -19,7 +20,13 @@ import java.util.UUID;
 public final class TransactionFormActivity extends FinanceActivity {
     public static final String EXTRA_ID = "transaction_id";
     public static final String EXTRA_AMOUNT = "receipt_amount", EXTRA_PAYEE = "receipt_payee";
+    /** Optional prefill for a new transaction (spec 2026-11-09 §3); it only fills the form, the user still saves. */
+    public static final String EXTRA_PREFILL_TYPE = "prefillType";
+    public static final String EXTRA_PREFILL_WALLET_ID = "prefillWalletId";
+    public static final String EXTRA_PREFILL_DESTINATION_WALLET_ID = "prefillDestinationWalletId";
+    public static final String EXTRA_PREFILL_AMOUNT_MINOR = "prefillAmountMinor";
     private String id, requestId, category, wallet, destination;
+    private TransactionPrefill prefill;
     private long occurredAt = System.currentTimeMillis();
     private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
     private boolean initialized, editing;
@@ -43,7 +50,7 @@ public final class TransactionFormActivity extends FinanceActivity {
         }
         findViewById(R.id.btnTypeExpense).setOnClickListener(view -> selectType(FinanceBook.Type.EXPENSE));
         findViewById(R.id.btnTypeIncome).setOnClickListener(view -> selectType(FinanceBook.Type.INCOME));
-        visible(R.id.btnTypeTransfer, false); // TRANSFER is not supported by the backend yet
+        findViewById(R.id.btnTypeTransfer).setOnClickListener(view -> selectType(FinanceBook.Type.TRANSFER));
         findViewById(R.id.fieldCategory).setOnClickListener(view -> FinanceUi.category(this, type, value -> { category = value; render(); }));
         findViewById(R.id.fieldWallet).setOnClickListener(view -> chooseWallet(false));
         findViewById(R.id.fieldSourceWallet).setOnClickListener(view -> chooseWallet(false));
@@ -55,6 +62,10 @@ public final class TransactionFormActivity extends FinanceActivity {
             if (amount > 0) text(R.id.etAmount, Long.toString(amount));
             text(R.id.etTransactionPayee, getIntent().getStringExtra(EXTRA_PAYEE));
         }
+        // Wallet IDs are checked against the loaded references in render(); after rotation the form state wins.
+        if (saved == null && !editing) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
+                getIntent().getStringExtra(EXTRA_PREFILL_WALLET_ID), getIntent().getStringExtra(EXTRA_PREFILL_DESTINATION_WALLET_ID),
+                getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null);
     }
     private void selectType(FinanceBook.Type value) {
         if (model.busy()) return;
@@ -70,13 +81,17 @@ public final class TransactionFormActivity extends FinanceActivity {
             if (editing) {
                 FinanceBook.Transaction existing = book.transaction(id);
                 if (existing == null) { if (model.busy()) return; Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); return; }
-                if (!"POSTED".equals(existing.status) || existing.type == FinanceBook.Type.TRANSFER) {
-                    Toast.makeText(this, existing.type == FinanceBook.Type.TRANSFER ? R.string.transaction_type_unsupported
-                            : R.string.finance_transaction_voided, Toast.LENGTH_LONG).show(); finish(); return;
+                if (!"POSTED".equals(existing.status)) {
+                    Toast.makeText(this, R.string.finance_transaction_voided, Toast.LENGTH_LONG).show(); finish(); return;
                 }
                 type = existing.type; category = existing.categoryId; wallet = existing.walletId; destination = existing.destinationWalletId;
                 occurredAt = existing.occurredAt;
                 text(R.id.etAmount, Long.toString(existing.amount)); text(R.id.etTransactionNote, existing.note); text(R.id.etTransactionPayee, existing.payee);
+            } else if (prefill != null) {
+                TransactionPrefill resolved = prefill.resolve(book);
+                type = resolved.type; wallet = resolved.walletId; destination = resolved.destinationWalletId;
+                if (resolved.amountMinor != null) text(R.id.etAmount, Long.toString(resolved.amountMinor));
+                prefill = null;
             }
             initialized = true;
         }
@@ -97,35 +112,38 @@ public final class TransactionFormActivity extends FinanceActivity {
                 + (selectedCategory.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix)));
         text(R.id.tvWalletValue, selectedWallet == null ? "" : selectedWallet.name
                 + (selectedWallet.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix)));
-        text(R.id.tvSourceWalletValue, book.wallet(wallet) == null ? "" : book.wallet(wallet).name);
-        text(R.id.tvDestinationWalletValue, book.wallet(destination) == null ? "" : book.wallet(destination).name);
+        text(R.id.tvSourceWalletValue, walletName(wallet));
+        text(R.id.tvDestinationWalletValue, walletName(destination));
         text(R.id.tvDateValue, FinanceUi.date(occurredAt, book.state().timeZone));
         boolean same = transfer && wallet != null && wallet.equals(destination);
         visible(R.id.feedbackSameWallet, same); visible(R.id.feedbackTransferInfo, !same);
     }
     private void save() {
         if (book == null || model.busy()) return;
-        if (type == FinanceBook.Type.TRANSFER) { Toast.makeText(this, R.string.transaction_type_unsupported, Toast.LENGTH_SHORT).show(); return; }
-        if (category == null || category.isEmpty()) {
+        boolean transfer = type == FinanceBook.Type.TRANSFER;
+        if (!transfer && (category == null || category.isEmpty())) {
             Toast.makeText(this, R.string.error_required_category, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (wallet == null || wallet.isEmpty()) {
-            Toast.makeText(this, R.string.error_required_wallet, Toast.LENGTH_SHORT).show();
+        if (wallet == null || wallet.isEmpty() || (transfer && (destination == null || destination.isEmpty()))) {
+            Toast.makeText(this, transfer ? R.string.transfer_required_wallets : R.string.error_required_wallet, Toast.LENGTH_SHORT).show();
             return;
         }
-        // Contract: POST/PUT need an active wallet and an active category of the same type.
-        FinanceBook.Wallet selectedWallet = book.wallet(wallet);
-        if (selectedWallet == null || selectedWallet.archivedAt != null) {
-            Toast.makeText(this, R.string.transaction_wallet_archived, Toast.LENGTH_LONG).show(); return;
-        }
-        FinanceBook.Category selectedCategory = book.category(category);
-        if (selectedCategory == null || selectedCategory.archivedAt != null || selectedCategory.type != type) {
-            Toast.makeText(this, R.string.transaction_category_archived, Toast.LENGTH_LONG).show(); return;
-        }
-        if (type == FinanceBook.Type.TRANSFER && wallet != null && wallet.equals(destination)) {
+        if (transfer && wallet.equals(destination)) {
             Toast.makeText(this, R.string.error_same_wallet_transfer, Toast.LENGTH_SHORT).show();
             return;
+        }
+        // Contract: POST/PUT need active wallets (both for a transfer) and, for income/expense, an active category of the same type.
+        FinanceBook.Wallet selectedWallet = book.wallet(wallet), selectedDestination = transfer ? book.wallet(destination) : null;
+        if (selectedWallet == null || selectedWallet.archivedAt != null
+                || (transfer && (selectedDestination == null || selectedDestination.archivedAt != null))) {
+            Toast.makeText(this, R.string.transaction_wallet_archived, Toast.LENGTH_LONG).show(); return;
+        }
+        if (!transfer) {
+            FinanceBook.Category selectedCategory = book.category(category);
+            if (selectedCategory == null || selectedCategory.archivedAt != null || selectedCategory.type != type) {
+                Toast.makeText(this, R.string.transaction_category_archived, Toast.LENGTH_LONG).show(); return;
+            }
         }
         long amount;
         try { amount = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
@@ -136,9 +154,20 @@ public final class TransactionFormActivity extends FinanceActivity {
         visible(R.id.tvAmountError, false);
         String note = ((EditText) findViewById(R.id.etTransactionNote)).getText().toString();
         String payee = ((EditText) findViewById(R.id.etTransactionPayee)).getText().toString();
-        FinanceBook.Transaction value = new FinanceBook.Transaction(id, type, amount, category, wallet, null, occurredAt, note, payee);
+        FinanceBook.Transaction value = draft(id, type, amount, category, wallet, destination, occurredAt, note, payee);
         value.clientRequestId = requestId;
         model.change(FinanceAction.transaction(value, editing), true);
+    }
+    /** Form → domain value: a transfer never carries a category, income/expense never a destination. */
+    static FinanceBook.Transaction draft(String id, FinanceBook.Type type, long amount, String category, String wallet,
+            String destination, long occurredAt, String note, String payee) {
+        boolean transfer = type == FinanceBook.Type.TRANSFER;
+        return new FinanceBook.Transaction(id, type, amount, transfer ? null : category, wallet, transfer ? destination : null,
+                occurredAt, note, payee);
+    }
+    private String walletName(String walletId) {
+        FinanceBook.Wallet value = book.wallet(walletId);
+        return value == null ? "" : value.name + (value.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix));
     }
     @Override protected CharSequence failure(FinanceViewModel.Command command) {
         // The server answered definitively: the key is spent, so a fresh save must not replay the voided record.
@@ -160,7 +189,8 @@ public final class TransactionFormActivity extends FinanceActivity {
         java.util.List<String> labels = new java.util.ArrayList<>();
         if (failure != null) for (String field : failure.fields) {
             int label = "amountMinor".equals(field) ? R.string.transaction_field_amount : "categoryId".equals(field) ? R.string.transaction_field_category
-                    : "walletId".equals(field) ? R.string.transaction_field_wallet : "occurredAt".equals(field) ? R.string.transaction_field_date
+                    : "walletId".equals(field) ? R.string.transaction_field_wallet
+                    : "destinationWalletId".equals(field) ? R.string.transaction_field_destination_wallet : "occurredAt".equals(field) ? R.string.transaction_field_date
                     : "note".equals(field) ? R.string.transaction_field_note : "payee".equals(field) ? R.string.transaction_field_payee
                     : "transactionType".equals(field) ? R.string.transaction_field_type : 0;
             if (label != 0 && !labels.contains(context.getString(label))) labels.add(context.getString(label));

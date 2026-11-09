@@ -251,6 +251,92 @@ class TransactionPostgresIT {
         assertThat(service.list(user, 0, 50, null, null, null, null, "INCOME", null, null).items()).isEmpty();
     }
 
+    @Test void transferRacingAnExpenseOnTheSameSourceNeverGoesNegative() throws Exception {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        UUID savings = wallet(user, 0);
+        var outcomes = race(() -> outcome(() -> create(transfer(wallet, savings, 70_000))),
+                () -> outcome(() -> create(expense(70_000))));
+        assertThat(outcomes).containsExactlyInAnyOrder("CREATED", "WALLET_INSUFFICIENT_FUNDS");
+        assertThat(balance(wallet)).isEqualTo(30_000);
+        assertThat(balance(wallet) + balance(savings)).isIn(30_000L, 100_000L);
+    }
+
+    @Test void transferMovesMoneyEditsAndVoidsExactlyOnce() {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        UUID savings = wallet(user, 0), third = wallet(user, 0);
+        var created = create(transfer(wallet, savings, 60_000));
+        assertThat(created.destinationWalletId()).isEqualTo(savings);
+        assertThat(created.categoryId()).isNull();
+        assertThat(entries(created.transactionId())).isEqualTo(2);
+        assertThat(balance(wallet)).isEqualTo(40_000);
+        assertThat(balance(savings)).isEqualTo(60_000);
+        // Edit: change amount and destination; the old destination gives the money back.
+        tx.execute(s -> service.update(user, created.transactionId(), transfer(wallet, third, 90_000)));
+        assertThat(List.of(balance(wallet), balance(savings), balance(third))).containsExactly(10_000L, 0L, 90_000L);
+        // Edit into a transfer that would empty the source below zero is rejected and changes nothing.
+        assertCode(() -> tx.execute(s -> service.update(user, created.transactionId(), transfer(wallet, third, 100_001))),
+                "WALLET_INSUFFICIENT_FUNDS");
+        // Spend from the destination, then voiding the transfer would make it negative.
+        TransactionRequest spend = expense(1); spend.walletId = third; var spent = create(spend);
+        assertCode(() -> tx.executeWithoutResult(s -> service.delete(user, created.transactionId())), "WALLET_INSUFFICIENT_FUNDS");
+        assertThat(service.detail(user, created.transactionId()).status()).isEqualTo("POSTED");
+        tx.executeWithoutResult(s -> service.delete(user, spent.transactionId()));
+        tx.executeWithoutResult(s -> service.delete(user, created.transactionId()));
+        tx.executeWithoutResult(s -> service.delete(user, created.transactionId()));
+        assertThat(List.of(balance(wallet), balance(savings), balance(third))).containsExactly(100_000L, 0L, 0L);
+        assertThat(entries(created.transactionId())).isEqualTo(2);
+        var voided = service.detail(user, created.transactionId());
+        assertThat(voided.status()).isEqualTo("VOIDED");
+        assertThat(voided.walletId()).isEqualTo(wallet);
+        assertThat(voided.destinationWalletId()).isEqualTo(third);
+    }
+
+    @Test void expenseCanBecomeATransferAndBack() {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        UUID savings = wallet(user, 0);
+        var created = create(expense(30_000));
+        tx.execute(s -> service.update(user, created.transactionId(), transfer(wallet, savings, 30_000)));
+        assertThat(List.of(balance(wallet), balance(savings))).containsExactly(70_000L, 30_000L);
+        assertThat(entries(created.transactionId())).isEqualTo(2);
+        tx.execute(s -> service.update(user, created.transactionId(), expense(30_000)));
+        assertThat(List.of(balance(wallet), balance(savings))).containsExactly(70_000L, 0L);
+        assertThat(entries(created.transactionId())).isEqualTo(1);
+    }
+
+    @Test void transferFiltersAndReplay() {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        UUID savings = wallet(user, 0), unrelated = wallet(user, 0);
+        TransactionRequest original = transfer(wallet, savings, 10_000);
+        var first = tx.execute(s -> service.create(user, original));
+        assertThat(tx.execute(s -> service.create(user, original)).created()).isFalse();
+        TransactionRequest otherDestination = transfer(wallet, unrelated, 10_000);
+        otherDestination.clientRequestId = original.clientRequestId;
+        assertCode(() -> tx.execute(s -> service.create(user, otherDestination)), "TRANSACTION_REQUEST_CONFLICT");
+        create(expense(1_000));
+        assertThat(service.list(user, 0, 50, null, null, null, null, "TRANSFER", null, null).items())
+                .extracting(TransactionResponse::transactionId).containsExactly(first.body().transactionId());
+        assertThat(service.list(user, 0, 50, null, null, savings, null, null, null, null).items()).hasSize(1);
+        assertThat(service.list(user, 0, 50, null, null, wallet, null, null, null, null).items()).hasSize(2);
+        assertThat(service.list(user, 0, 50, null, null, unrelated, null, null, null, null).items()).isEmpty();
+        assertThat(service.list(user, 0, 50, null, null, null, expenseCategory, null, null, null).items()).hasSize(1);
+    }
+
+    @Test void transferRejectsForeignArchivedAndCategory() {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        UUID foreign = wallet(otherUser, 0), archived = wallet(user, 0);
+        jdbc.update("UPDATE fintrack.wallets SET archived_at = now() WHERE id = ?", archived);
+        assertCode(() -> create(transfer(wallet, foreign, 1)), "NOT_FOUND");
+        assertCode(() -> create(transfer(wallet, archived, 1)), "WALLET_ARCHIVED");
+        TransactionRequest withCategory = transfer(wallet, wallet(user, 0), 1); withCategory.categoryId = expenseCategory;
+        assertCode(() -> create(withCategory), "VALIDATION_ERROR");
+        assertThat(balance(wallet)).isEqualTo(100_000);
+    }
+
+    private TransactionRequest transfer(UUID source, UUID destination, long amount) {
+        TransactionRequest r = request("TRANSFER", null, amount);
+        r.walletId = source; r.destinationWalletId = destination;
+        return r;
+    }
     private List<String> search(String q) {
         return service.list(user, 0, 50, null, null, null, null, null, q, null).items().stream().map(TransactionResponse::note).toList();
     }

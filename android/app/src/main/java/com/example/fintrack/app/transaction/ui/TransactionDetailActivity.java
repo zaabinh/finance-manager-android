@@ -33,7 +33,7 @@ public final class TransactionDetailActivity extends FinanceActivity {
         ((MaterialToolbar) findViewById(R.id.toolbarTransactionDetail)).setTitle(transfer ? R.string.transfer_detail_title : R.string.transaction_detail_title);
         text(R.id.tvDetailTypeBadge, getString(FinanceUi.typeName(value.type)) + (voided ? " · " + getString(R.string.transaction_voided_status) : ""));
         // A VOIDED record is read-only audit history (contract section 5).
-        visible(R.id.btnEditTransaction, !voided && !transfer); visible(R.id.btnDeleteTransaction, !voided);
+        visible(R.id.btnEditTransaction, !voided); visible(R.id.btnDeleteTransaction, !voided);
         text(R.id.tvDetailAmount, (value.type == FinanceBook.Type.INCOME ? "+" : transfer ? "" : "−") + FinanceUi.money(value.amount));
         ((TextView) findViewById(R.id.tvDetailAmount)).setTextColor(getColor(value.type == FinanceBook.Type.INCOME ? R.color.amount_income
                 : transfer ? R.color.amount_transfer : R.color.amount_expense));
@@ -46,7 +46,8 @@ public final class TransactionDetailActivity extends FinanceActivity {
         visible(R.id.rowNote, !value.note.isEmpty()); visible(R.id.rowTransferFrom, transfer); visible(R.id.rowTransferTo, transfer); visible(R.id.rowImpact, transfer);
         if (transfer) {
             text(R.id.tvDetailTransferFrom, walletName(value.walletId)); text(R.id.tvDetailTransferTo, walletName(value.destinationWalletId));
-            text(R.id.tvDetailImpact, getString(R.string.transfer_info_note));
+            text(R.id.tvDetailImpact, getString(R.string.transfer_impact_value, walletName(value.walletId),
+                    FinanceUi.money(value.amount), walletName(value.destinationWalletId)));
         }
     }
     /** History shows archived names; a missing reference renders empty instead of crashing. */
@@ -55,8 +56,12 @@ public final class TransactionDetailActivity extends FinanceActivity {
         return wallet == null ? "" : wallet.name + (wallet.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix));
     }
     @Override protected CharSequence failure(FinanceViewModel.Command command) {
-        // Only deleting an income can make a wallet negative; keep the screen and explain.
-        if (command.error == FinanceBook.Problem.INSUFFICIENT_FUNDS) return getString(R.string.transaction_delete_insufficient);
+        // Only deleting an income (or a transfer, on its destination) can make a wallet negative; keep the screen and explain.
+        if (command.error == FinanceBook.Problem.INSUFFICIENT_FUNDS) {
+            FinanceBook.Transaction value = book == null ? null : book.transaction(id);
+            return getString(value != null && value.type == FinanceBook.Type.TRANSFER
+                    ? R.string.transfer_delete_insufficient : R.string.transaction_delete_insufficient);
+        }
         return TransactionFormActivity.message(this, command);
     }
     @Override protected void loading(boolean loading) {

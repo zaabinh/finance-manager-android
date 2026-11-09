@@ -200,6 +200,7 @@ public final class FinanceBook {
         if (value.type == Type.TRANSFER) {
             if (wallet(value.destinationWalletId) == null) throw new Failure(Problem.WALLET);
             if (value.walletId.equals(value.destinationWalletId)) throw new Failure(Problem.SAME_WALLET);
+            if (!restoring && wallet(value.destinationWalletId).archivedAt != null) throw new Failure(Problem.ARCHIVED);
             value.categoryId = null;
         } else {
             Category category = category(value.categoryId);
@@ -444,7 +445,8 @@ public final class FinanceBook {
             if ("VOIDED".equals(item.status) || (query.type != null && item.type != query.type)) continue;
             String day = days.format(new java.util.Date(item.occurredAt));
             if ((query.dateFrom != null && day.compareTo(query.dateFrom) < 0) || (query.dateTo != null && day.compareTo(query.dateTo) > 0)) continue;
-            if (query.walletId != null && !query.walletId.equals(item.walletId)) continue;
+            // A transfer matches its source or its destination wallet (contract section 5).
+            if (query.walletId != null && !query.walletId.equals(item.walletId) && !query.walletId.equals(item.destinationWalletId)) continue;
             if (query.categoryId != null && !query.categoryId.equals(item.categoryId)) continue;
             if (search != null && !item.note.toLowerCase(Locale.ROOT).contains(search)
                     && !item.payee.toLowerCase(Locale.ROOT).contains(search)) continue;

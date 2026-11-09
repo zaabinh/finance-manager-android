@@ -72,8 +72,11 @@ class TransactionControllerTest {
     }
 
     @Test void malformedFinanceJsonAndUnownedIdsHaveTheirContractStatus() throws Exception {
-        for (String json : List.of("{\"amountMinor\":1.5}", "{\"amountMinor\":\"100\"}", "{\"status\":\"VOIDED\"}", "{\"walletId\":\"bad-id\"}"))
+        // Contract: malformed structure (unknown field, bad UUID) = 400; valid JSON breaking a rule (non-integer money) = 422.
+        for (String json : List.of("{\"status\":\"VOIDED\"}", "{\"walletId\":\"bad-id\"}"))
             mvc.perform(post("/api/v1/transactions").contentType(MediaType.APPLICATION_JSON).content(json)).andExpect(status().isBadRequest());
+        for (String json : List.of("{\"amountMinor\":1.5}", "{\"amountMinor\":\"100\"}"))
+            mvc.perform(post("/api/v1/transactions").contentType(MediaType.APPLICATION_JSON).content(json)).andExpect(status().isUnprocessableEntity());
         verify(service, never()).create(any(), any(TransactionRequest.class));
         when(service.detail(user, id)).thenThrow(FinanceSupport.notFound());
         mvc.perform(get("/api/v1/transactions/" + id)).andExpect(status().isNotFound()).andExpect(jsonPath("errorCode").value("NOT_FOUND"));

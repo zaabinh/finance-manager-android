@@ -19,8 +19,7 @@ public final class FinanceAction {
     final Remote remote;
     private FinanceAction(Consumer<FinanceBook> local, Remote remote) { this.local = local; this.remote = remote; }
     public static FinanceAction transaction(FinanceBook.Transaction value, boolean editing) {
-        return new FinanceAction(book -> { supported(value); book.save(value, editing); }, api -> {
-            supported(value);
+        return new FinanceAction(book -> book.save(value, editing), api -> {
             TransactionRequest request = new TransactionRequest(value, editing);
             com.example.fintrack.app.transaction.remote.TransactionResponse response = required(editing
                     ? api.transactions.updateTransaction(value.id, request) : api.transactions.addTransaction(request));
@@ -30,13 +29,6 @@ public final class FinanceAction {
                 failure.code = editing ? "TRANSACTION_VOIDED" : "TRANSACTION_REPLAY_VOIDED"; throw failure;
             }
         });
-    }
-    /** TRANSFER is out of scope until the backend supports it (contract section 5). */
-    private static void supported(FinanceBook.Transaction value) {
-        if (value.type == FinanceBook.Type.TRANSFER) {
-            FinanceBook.Failure failure = new FinanceBook.Failure(FinanceBook.Problem.VALIDATION);
-            failure.code = "TRANSACTION_TYPE_UNSUPPORTED"; throw failure;
-        }
     }
     public static FinanceAction budget(FinanceBook.Budget value, boolean editing) {
         return new FinanceAction(book -> book.save(value, editing), api -> {

@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.springframework.context.annotation.Profile;
@@ -29,12 +30,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Income/expense ledger writer. Lock protocol (contract §5): transaction row, then wallets in
- * {@link FinanceSupport#LOCK_ORDER}, then category; balances are read in a fresh statement after the wallet locks.
+ * Income/expense/transfer ledger writer. Lock protocol (contract §5): transaction row, then every involved wallet
+ * (old and new source/destination) in {@link FinanceSupport#LOCK_ORDER}, then category; balances are read in a fresh
+ * statement after the wallet locks. Every wallet's candidate balance must stay >= 0.
  */
 @Service
 @Profile("!test")
 public class TransactionService {
+    public static final List<String> TYPES = List.of("EXPENSE", "INCOME", "TRANSFER");
     public static final List<String> SORTS = List.of("occurredAt,desc", "occurredAt,asc", "amountMinor,desc", "amountMinor,asc");
     private final TransactionRepository transactions;
     private final FinanceSupport finance;
@@ -56,7 +59,7 @@ public class TransactionService {
         if (size < 1 || size > 200) throw FinanceSupport.badRequest("size must be 1-200");
         LocalDate from = date(dateFrom, "dateFrom"), to = date(dateTo, "dateTo");
         if (from != null && to != null && from.isAfter(to)) throw FinanceSupport.badRequest("dateFrom must not be after dateTo");
-        if (type != null && !List.of("EXPENSE", "INCOME").contains(type)) throw FinanceSupport.badRequest("type không hợp lệ");
+        if (type != null && !TYPES.contains(type)) throw FinanceSupport.badRequest("type không hợp lệ");
         String search = q == null ? null : q.strip();
         if (search != null && (search.codePointCount(0, search.length()) > 200 || search.indexOf('\0') >= 0))
             throw FinanceSupport.badRequest("q must be at most 200 characters");
@@ -80,10 +83,13 @@ public class TransactionService {
         transactions.lockRequest(user, request.clientRequestId);
         Result replay = replay(user, request.clientRequestId, fingerprint);
         if (replay != null) return replay;
-        var wallet = finance.wallet(user, fields.walletId(), true);
-        if (!wallet.active()) throw FinanceSupport.conflict(ErrorCode.WALLET_ARCHIVED, "Ví đã lưu trữ");
+        Map<UUID, Long> deltas = fields.deltas();
+        List<FinanceSupport.WalletRef> wallets = deltas.keySet().stream().sorted(FinanceSupport.LOCK_ORDER)
+                .map(wallet -> finance.wallet(user, wallet, true)).toList();
+        if (wallets.stream().anyMatch(wallet -> !wallet.active()))
+            throw FinanceSupport.conflict(ErrorCode.WALLET_ARCHIVED, "Ví đã lưu trữ");
         category(user, fields);
-        ensureFunds(user, fields.walletId(), fields.delta());
+        for (var wallet : wallets) ensureFunds(user, wallet.id(), deltas.get(wallet.id()));
         UUID id = UUID.randomUUID();
         if (!transactions.create(user, id, fields, request.clientRequestId, fingerprint))
             // key committed concurrently on another wallet; the row cannot vanish short of a user cascade delete
@@ -96,17 +102,17 @@ public class TransactionService {
         Fields fields = fields(request);
         var old = transactions.lock(user, id);
         if (!old.posted()) throw FinanceSupport.conflict(ErrorCode.TRANSACTION_VOIDED, "Giao dịch đã bị xóa");
-        List<UUID> wallets = Stream.of(old.walletId(), fields.walletId()).distinct().sorted(FinanceSupport.LOCK_ORDER).toList();
+        Map<UUID, Long> before = old.deltas(), after = fields.deltas();
+        List<UUID> wallets = Stream.concat(before.keySet().stream(), after.keySet().stream())
+                .distinct().sorted(FinanceSupport.LOCK_ORDER).toList();
         for (UUID wallet : wallets) {
             var ref = finance.wallet(user, wallet, true);
-            if (wallet.equals(fields.walletId()) && !ref.active())
+            if (after.containsKey(wallet) && !ref.active())
                 throw FinanceSupport.conflict(ErrorCode.WALLET_ARCHIVED, "Ví đã lưu trữ");
         }
         category(user, fields);
-        for (UUID wallet : wallets) {
-            long change = (wallet.equals(fields.walletId()) ? fields.delta() : 0) - (wallet.equals(old.walletId()) ? old.delta() : 0);
-            ensureFunds(user, wallet, change);
-        }
+        for (UUID wallet : wallets)
+            ensureFunds(user, wallet, after.getOrDefault(wallet, 0L) - before.getOrDefault(wallet, 0L));
         transactions.update(user, id, fields);
         return transactions.detail(user, id);
     }
@@ -115,8 +121,11 @@ public class TransactionService {
     public void delete(UUID user, UUID id) {
         var old = transactions.lock(user, id);
         if (!old.posted()) return; // repeated void keeps the first voidedAt and reverses nothing
-        finance.wallet(user, old.walletId(), true); // archived wallet is fine; funds still checked
-        ensureFunds(user, old.walletId(), -old.delta());
+        Map<UUID, Long> before = old.deltas();
+        List<UUID> wallets = before.keySet().stream().sorted(FinanceSupport.LOCK_ORDER).toList();
+        for (UUID wallet : wallets) finance.wallet(user, wallet, true); // archived wallets are fine; funds still checked
+        // A voided transfer takes the amount back from its destination, which must not go negative.
+        for (UUID wallet : wallets) ensureFunds(user, wallet, -before.get(wallet));
         transactions.voidPosted(user, id);
     }
 
@@ -129,6 +138,7 @@ public class TransactionService {
     }
 
     private void category(UUID user, Fields fields) {
+        if (fields.categoryId() == null) return; // TRANSFER has no category
         var category = finance.category(user, fields.categoryId(), true);
         if (!category.active()) throw FinanceSupport.conflict(ErrorCode.CATEGORY_ARCHIVED, "Danh mục đã lưu trữ");
         if (!fields.type().equals(category.categoryType())) throw FinanceSupport.invalid("Danh mục không cùng loại giao dịch");
@@ -143,14 +153,23 @@ public class TransactionService {
 
     static Fields fields(TransactionRequest request) {
         if (request.transactionType == null) throw FinanceSupport.invalid("transactionType is required");
-        if (!List.of("EXPENSE", "INCOME").contains(request.transactionType))
-            throw new AppException(HttpStatus.UNPROCESSABLE_ENTITY, ErrorCode.TRANSACTION_TYPE_UNSUPPORTED, "Chỉ hỗ trợ thu/chi");
-        if (request.destinationWalletId != null) throw FinanceSupport.invalid("destinationWalletId must be null");
+        if (!TYPES.contains(request.transactionType))
+            throw new AppException(HttpStatus.UNPROCESSABLE_ENTITY, ErrorCode.TRANSACTION_TYPE_UNSUPPORTED, "Chỉ hỗ trợ thu/chi/chuyển ví");
+        boolean transfer = "TRANSFER".equals(request.transactionType);
         long amount = FinanceSupport.money(request.amountMinor, false);
-        if (request.categoryId == null) throw FinanceSupport.invalid("categoryId is required");
+        if (transfer) {
+            if (request.categoryId != null) throw FinanceSupport.invalid("categoryId must be null for TRANSFER");
+            if (request.destinationWalletId == null) throw FinanceSupport.invalid("destinationWalletId is required");
+        } else {
+            if (request.destinationWalletId != null) throw FinanceSupport.invalid("destinationWalletId must be null");
+            if (request.categoryId == null) throw FinanceSupport.invalid("categoryId is required");
+        }
         if (request.walletId == null) throw FinanceSupport.invalid("walletId is required");
+        if (transfer && request.walletId.equals(request.destinationWalletId))
+            throw FinanceSupport.invalid("Ví nguồn và ví đích phải khác nhau");
         return new Fields(request.transactionType, amount, request.categoryId, request.walletId,
-                occurredAt(request.occurredAt), text(request.note, 2000, "note"), text(request.payee, 160, "payee"));
+                occurredAt(request.occurredAt), text(request.note, 2000, "note"), text(request.payee, 160, "payee"),
+                request.destinationWalletId);
     }
 
     private static Instant occurredAt(String value) {
@@ -181,11 +200,18 @@ public class TransactionService {
         } catch (DateTimeException error) { throw FinanceSupport.badRequest(field + " must be YYYY-MM-DD, year 0001-9998"); }
     }
 
-    /** SHA-256 over length-prefixed canonical fields of the original POST; clientRequestId is the key, not part of it. */
+    /**
+     * SHA-256 over length-prefixed canonical fields of the original POST; clientRequestId is the key, not part of it.
+     * A transfer has no category ("") and appends its destination; income/expense keep the original 7-part form so
+     * fingerprints stored before transfers existed still match.
+     */
     static String fingerprint(Fields f) {
         StringBuilder canonical = new StringBuilder("v1");
-        for (String part : new String[]{f.type(), Long.toString(f.amount()), f.categoryId().toString(), f.walletId().toString(),
-                f.occurredAt().toString(), f.note() == null ? "" : f.note(), f.payee() == null ? "" : f.payee()})
+        List<String> parts = new java.util.ArrayList<>(List.of(f.type(), Long.toString(f.amount()),
+                f.categoryId() == null ? "" : f.categoryId().toString(), f.walletId().toString(),
+                f.occurredAt().toString(), f.note() == null ? "" : f.note(), f.payee() == null ? "" : f.payee()));
+        if (f.destinationWalletId() != null) parts.add(f.destinationWalletId().toString());
+        for (String part : parts)
             canonical.append('|').append(part.length()).append(':').append(part);
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(canonical.toString().getBytes(StandardCharsets.UTF_8)));
