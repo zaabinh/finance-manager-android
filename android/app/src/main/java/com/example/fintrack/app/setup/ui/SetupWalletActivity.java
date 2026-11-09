@@ -11,8 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.fintrack.app.core.ui.MoneyFormat;
 import com.example.fintrack.app.core.ui.MoneyInput;
@@ -20,8 +18,7 @@ import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.setup.model.PendingWallet;
 import com.example.fintrack.app.setup.model.PendingWalletList;
-import com.example.fintrack.app.wallet.ui.WalletAddActivity;
-import com.example.fintrack.app.wallet.ui.WalletFormActivity;
+import com.example.fintrack.app.wallet.ui.WalletSheet;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -49,7 +46,6 @@ public class SetupWalletActivity extends AppCompatActivity {
     private static final String STATE_PENDING = "pendingWallets";
     // Wallets collected in this step; kept across rotation and passed on via EXTRA_PENDING_WALLETS.
     private PendingWalletList pending = new PendingWalletList();
-    private ActivityResultLauncher<Intent> addWallet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,14 +67,6 @@ public class SetupWalletActivity extends AppCompatActivity {
         } else if (getIntent().getSerializableExtra(EXTRA_PENDING_WALLETS) instanceof PendingWalletList) {
             pending = (PendingWalletList) getIntent().getSerializableExtra(EXTRA_PENDING_WALLETS);
         }
-        addWallet = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            Intent data = result.getData();
-            if (result.getResultCode() == RESULT_OK && data != null
-                    && data.getSerializableExtra(WalletFormActivity.EXTRA_RESULT_WALLET) instanceof PendingWallet) {
-                pending.add((PendingWallet) data.getSerializableExtra(WalletFormActivity.EXTRA_RESULT_WALLET));
-                renderWallets();
-            }
-        });
         userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
         initViews();       // Ánh xạ các thành phần giao diện
         setupListeners();  // Gán sự kiện bấm cho các nút
@@ -144,11 +132,12 @@ public class SetupWalletActivity extends AppCompatActivity {
         ivBack.setOnClickListener(v -> finish());
 
         // Bấm vào nút Thêm ví: Mở màn hình Thêm ví mới
-        tvAddWallet.setOnClickListener(v -> {
-            // Trả về ví qua result thay vì lưu ngay; ví được thêm vào danh sách chờ
-            addWallet.launch(new Intent(SetupWalletActivity.this, WalletAddActivity.class)
-                    .putExtra(WalletFormActivity.EXTRA_RETURN_RESULT, true));
-        });
+        tvAddWallet.setOnClickListener(v -> WalletSheet.show(this, (sheet, wallet) -> {
+            // Chỉ lưu vào danh sách chờ, chưa gửi lên server
+            pending.add(wallet);
+            renderWallets();
+            sheet.dismiss();
+        }));
         findViewById(R.id.cardCashWallet).setOnClickListener(v -> showCashDialog());
 
         // Nút Hoàn tất: gửi toàn bộ input của 3 bước trong một request

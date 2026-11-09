@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Sheet/Category 718:11596 (Mode=Add 718:11421) for BottomSheetDialog. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/spacing_24"
+    android:paddingEnd="@dimen/spacing_24">
+
+    <include layout="@layout/sheet_header" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_16"
+        android:overScrollMode="ifContentScrolls">
+
+        <include layout="@layout/form_category_fields" />
+    </ScrollView>
+
+    <include
+        layout="@layout/sheet_form_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_16"
+        android:layout_marginBottom="@dimen/spacing_24" />
+</LinearLayout>
