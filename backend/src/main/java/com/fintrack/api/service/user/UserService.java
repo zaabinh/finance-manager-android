@@ -51,7 +51,7 @@ public class UserService {
         UserRecord user = getActiveUser(userId);
         UserPreferencesRecord prefs = getOrCreatePreferences(user);
         NotificationSettingsRecord notifications = getOrCreateNotificationSettings(user.id());
-        return new UserSettingsResponse(toProfile(user, prefs), toPreferences(prefs), toNotifications(notifications));
+        return new UserSettingsResponse(toProfile(user, prefs), toPreferences(user, prefs), toNotifications(notifications));
     }
 
     @Transactional
@@ -69,7 +69,8 @@ public class UserService {
 
     @Transactional
     public UserPreferencesResponse getMyPreferences(UUID userId) {
-        return toPreferences(getOrCreatePreferences(getActiveUser(userId)));
+        UserRecord user = getActiveUser(userId);
+        return toPreferences(user, getOrCreatePreferences(user));
     }
 
     @Transactional
@@ -79,7 +80,7 @@ public class UserService {
         UserPreferencesRecord current = getOrCreatePreferences(user);
         preferences.upsert(userId, current.displayName(), current.currencyCode(),
                 validTimeZone(request.timeZone()), current.weekStartsOn());
-        return toPreferences(requirePreferences(userId));
+        return toPreferences(user, requirePreferences(userId));
     }
 
     @Transactional
@@ -157,13 +158,18 @@ public class UserService {
     }
 
     private static UserProfileResponse toProfile(UserRecord user, UserPreferencesRecord prefs) {
-        return new UserProfileResponse(user.id(), user.username(), user.email(), prefs.displayName(), user.role(),
+        return new UserProfileResponse(user.id(), user.username(), user.email(), displayNameOrUsername(user, prefs), user.role(),
                 user.status(), prefs.currencyCode(), prefs.timeZone(), prefs.weekStartsOn(), user.createdAt(), user.updatedAt());
     }
 
-    private static UserPreferencesResponse toPreferences(UserPreferencesRecord prefs) {
-        return new UserPreferencesResponse(prefs.userId(), prefs.displayName(), prefs.currencyCode(),
+    private static UserPreferencesResponse toPreferences(UserRecord user, UserPreferencesRecord prefs) {
+        return new UserPreferencesResponse(prefs.userId(), displayNameOrUsername(user, prefs), prefs.currencyCode(),
                 prefs.timeZone(), prefs.weekStartsOn(), prefs.updatedAt());
+    }
+
+    private static String displayNameOrUsername(UserRecord user, UserPreferencesRecord prefs) {
+        return prefs.displayName() == null || prefs.displayName().isBlank()
+                ? user.username() : prefs.displayName();
     }
 
     private static NotificationSettingsResponse toNotifications(NotificationSettingsRecord settings) {

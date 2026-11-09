@@ -37,7 +37,7 @@ public class MockInterceptor implements Interceptor {
 
         // Tạo và trả về một Response giả lập chứa dữ liệu JSON mẫu với mã thành công 200 (OK)
         int status = statusFor(path);
-        ResponseBody body = isEmptySuccess(path) ? null : ResponseBody.create(jsonResponse, MEDIA_TYPE_JSON);
+        ResponseBody body = ResponseBody.create(isEmptySuccess(path) ? "" : jsonResponse, MEDIA_TYPE_JSON);
         return new Response.Builder()
                 .code(status)
                 .message(status == 204 ? "No Content" : "OK")

@@ -40,6 +40,8 @@ public class SettingNotificationActivity extends AppCompatActivity {
     private int selectedHour = 20;
     private int selectedMinute;
     private int selectedThreshold = 80;
+    private boolean settingsLoaded = false;
+    private boolean saving = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class SettingNotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_setting_notification);
         viewModel = new ViewModelProvider(this).get(UserViewModel.class);
         initViews();
+        btnSave.setEnabled(false);
         setupListeners();
         setupObservers();
         viewModel.fetchNotificationSettings();
@@ -93,15 +96,23 @@ public class SettingNotificationActivity extends AppCompatActivity {
     private void setupObservers() {
         viewModel.getNotificationSettingsResult().observe(this, resource -> {
             if (resource == null) return;
-            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+            if (resource.getStatus() == Resource.Status.LOADING) {
+                settingsLoaded = false;
+                btnSave.setEnabled(false);
+            } else if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 apply(resource.getData());
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                showError(resource.getMessage());
+                settingsLoaded = true;
+                btnSave.setEnabled(!saving);
+            } else {
+                settingsLoaded = false;
+                btnSave.setEnabled(false);
+                if (resource.getStatus() == Resource.Status.ERROR) showError(resource.getMessage());
             }
         });
         viewModel.getUpdateNotificationSettingsResult().observe(this, resource -> {
             if (resource == null) return;
-            btnSave.setEnabled(resource.getStatus() != Resource.Status.LOADING);
+            saving = resource.getStatus() == Resource.Status.LOADING;
+            btnSave.setEnabled(settingsLoaded && !saving);
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 apply(resource.getData());
                 Toast.makeText(this, R.string.notification_settings_saved, Toast.LENGTH_SHORT).show();
@@ -128,6 +139,9 @@ public class SettingNotificationActivity extends AppCompatActivity {
     }
 
     private void save() {
+        if (!settingsLoaded || saving) return;
+        saving = true;
+        btnSave.setEnabled(false);
         if (switchNotifications.isChecked()) checkAndRequestNotificationPermission();
         viewModel.updateNotificationSettings(new UpdateNotificationSettingsRequest(
                 switchNotifications.isChecked(), switchDailyReminder.isChecked(),
