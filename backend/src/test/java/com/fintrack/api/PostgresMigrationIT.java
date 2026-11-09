@@ -135,7 +135,7 @@ class PostgresMigrationIT {
                         }
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
-                            "wallets", "categories", "transactions", "transaction_entries", "budgets",
+                            "wallets", "categories", "transactions", "transaction_entries", "budgets", "monthly_budgets",
                             "verification_challenges", "notification_settings");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();
