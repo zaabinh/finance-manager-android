@@ -74,4 +74,12 @@
     <string name="forgot_password_failed">Gửi yêu cầu đặt lại mật khẩu thất bại</string>
     <string name="reset_password_success">Đổi mật khẩu thành công! Vui lòng đăng nhập lại.</string>
     <string name="reset_password_failed">Đổi mật khẩu thất bại</string>
+    <string name="verify_required_title">Tài khoản chưa xác thực Email</string>
+    <string name="verify_required_message">Tài khoản của bạn chưa được kích hoạt. Bạn có muốn gửi lại mã xác nhận OTP về email không?</string>
+    <string name="verify_required_message_username">Tài khoản của bạn chưa được kích hoạt. Nhập email đã đăng ký để nhận lại mã xác nhận OTP.</string>
+    <string name="verify_resend">Gửi lại Email</string>
+    <string name="verify_later">Để sau</string>
+    <string name="verify_resend_sending">Đang gửi lại email xác nhận...</string>
+    <string name="verify_resend_sent">Mã xác nhận đã được gửi! Vui lòng kiểm tra email.</string>
+    <string name="verify_resend_failed">Không thể gửi email xác nhận. Vui lòng thử lại.</string>
 </resources>
