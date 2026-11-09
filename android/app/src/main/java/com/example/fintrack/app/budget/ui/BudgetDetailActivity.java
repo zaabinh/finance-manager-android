@@ -2,79 +2,102 @@ package com.example.fintrack.app.budget.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.budget.adapter.BudgetAdapter;
 import com.example.fintrack.app.finance.data.FinanceAction;
+import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.transaction.ui.TransactionListActivity;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import java.util.List;
 
 /**
- * Màn hình Chi tiết Ngân sách (BudgetDetailActivity):
- * Hiển thị chi tiết khoản ngân sách, số tiền đã chi, số tiền còn lại,
- * cờ cảnh báo rủi ro và danh sách tất cả các giao dịch liên quan trong tháng.
+ * Chi tiết Ngân sách tháng: tổng (dẫn xuất) / đã chi / còn lại và các ngân sách danh mục với hạn mức, đã chi,
+ * còn lại, tiến độ. Thêm, sửa, xóa ngân sách danh mục; xóa ngân sách tháng (ẩn với tháng hiện tại).
  */
 public final class BudgetDetailActivity extends FinanceActivity {
+    public static final String EXTRA_MONTHLY_ID = "monthly_budget_id";
+
+    private String id;
 
     @Override protected com.example.fintrack.app.finance.data.FinanceRepository.Scope readScope() {
         return com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS;
     }
 
-    @Override protected String detailId() { return getIntent().getStringExtra(BudgetFormActivity.EXTRA_ID); }
+    @Override protected String detailId() { return getIntent().getStringExtra(EXTRA_MONTHLY_ID); }
 
-    private String id;
-
-    @Override 
+    @Override
     protected int layout() { return R.layout.activity_budget_detail; }
 
-    @Override 
+    @Override
     protected void bind(Bundle saved) {
-        id = getIntent().getStringExtra(BudgetFormActivity.EXTRA_ID); toolbar(R.id.toolbarBudgetDetail);
-        
-        // Sự kiện bấm nút Sửa hoặc Xóa ngân sách
-        findViewById(R.id.btnEditBudget).setOnClickListener(view -> startActivity(new Intent(this, BudgetFormActivity.class).putExtra(BudgetFormActivity.EXTRA_ID, id)));
-        findViewById(R.id.btnDeleteBudget).setOnClickListener(view -> confirmDelete(() -> model.change(FinanceAction.deleteBudget(id), true)));
+        id = getIntent().getStringExtra(EXTRA_MONTHLY_ID); toolbar(R.id.toolbarBudgetDetail);
+        findViewById(R.id.btnAddCategoryBudget).setOnClickListener(view -> startActivity(new Intent(this, BudgetFormActivity.class)
+                .putExtra(BudgetFormActivity.EXTRA_MONTHLY_ID, id)));
+        findViewById(R.id.btnDeleteBudget).setOnClickListener(view -> new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.monthly_budget_delete_title).setMessage(R.string.monthly_budget_delete_warning)
+                .setNegativeButton(R.string.btn_cancel, null)
+                .setPositiveButton(R.string.btn_delete, (dialog, which) -> model.change(FinanceAction.deleteMonthlyBudget(id), true)).show());
         findViewById(R.id.btnBudgetHistory).setOnClickListener(view -> {
-            FinanceBook.Budget budget = book == null ? null : book.budget(id);
-            if (budget != null) startActivity(new Intent(this, TransactionListActivity.class)
-                    .putExtra("category_id", budget.categoryId).putExtra("month", budget.month));
+            FinanceBook.MonthlyBudget monthly = book == null ? null : book.monthlyBudget(id);
+            if (monthly != null) startActivity(new Intent(this, TransactionListActivity.class).putExtra("month", monthly.month));
         });
     }
 
-    @Override 
+    @Override
     protected void render() {
         if (book == null) return;
-        FinanceBook.Budget value = book.budget(id);
-        if (value == null) { if (!model.busy()) finish(); return; }
-        
-        // Tính toán mức độ sử dụng ngân sách từ FinanceBook
-        FinanceBook.BudgetUsage usage = book.usage(value);
-        
-        ((MaterialToolbar) findViewById(R.id.toolbarBudgetDetail)).setSubtitle(FinanceUi.monthLabel(value.month));
-        text(R.id.tvDetailCategoryName, book.category(value.categoryId) == null ? getString(R.string.transaction_category_placeholder) : book.category(value.categoryId).name); text(R.id.tvDetailPercentage, usage.percentage + "%");
-        text(R.id.tvDetailSpentAmount, FinanceUi.money(usage.spent)); text(R.id.tvDetailLimitAmount, getString(R.string.finance_budget_limit, FinanceUi.money(value.limit)));
-        
-        // Hiển thị thông điệp trạng thái (Vượt hạn mức / Cảnh báo / Còn lại)
+        FinanceBook.MonthlyBudget monthly = book.monthlyBudget(id);
+        if (monthly == null) { if (!model.busy()) finish(); return; }
+        FinanceBook.BudgetUsage usage = book.monthlyUsage(monthly);
+        long total = book.monthlyTotal(monthly);
+        boolean active = monthly.archivedAt == null;
+
+        ((MaterialToolbar) findViewById(R.id.toolbarBudgetDetail)).setSubtitle(FinanceUi.monthLabel(monthly.month));
+        text(R.id.tvDetailCategoryName, FinanceUi.monthLabel(monthly.month));
+        text(R.id.tvDetailPercentage, usage.percentage + "%");
+        text(R.id.tvDetailSpentAmount, FinanceUi.money(usage.spent));
+        text(R.id.tvDetailLimitAmount, getString(R.string.monthly_budget_total, FinanceUi.money(total)));
         text(R.id.tvDetailStatusMessage, getString(usage.exceeded ? R.string.finance_budget_exceeded : usage.warning
                 ? R.string.finance_budget_warning : R.string.finance_budget_remaining, FinanceUi.money(Math.abs(usage.remaining))));
-        
-        // Cập nhật thanh tiến độ và màu sắc chỉ báo
         LinearProgressIndicator progress = findViewById(R.id.progressDetailBudget); progress.setProgress(usage.progress);
         progress.setIndicatorColor(getColor(usage.exceeded ? R.color.status_error : usage.warning ? R.color.status_warning : R.color.color_primary));
-        
-        // Hiển thị danh sách các giao dịch thuộc ngân sách này trong tháng
-        visible(R.id.btnEditBudget, value.archivedAt == null);
-        visible(R.id.btnDeleteBudget, value.archivedAt == null);
-        // Budget reads only references and authoritative server usage, never a partial ledger.
-        visible(R.id.rvBudgetTransactions, false);
-        visible(R.id.tvBudgetTransactionsEmpty, true);
-        text(R.id.tvBudgetTransactionsEmpty, getString(R.string.budget_history_hint));
+
+        List<FinanceBook.Budget> children = book.categoryBudgets(monthly);
+        ((RecyclerView) findViewById(R.id.rvCategoryBudgets)).setAdapter(new BudgetAdapter(book, children,
+                active ? this::categoryActions : null));
+        visible(R.id.rvCategoryBudgets, !children.isEmpty());
+        visible(R.id.tvCategoryBudgetsEmpty, children.isEmpty());
+        visible(R.id.btnAddCategoryBudget, active);
+        // The current month (user timezone) cannot be deleted: hide the action instead of failing later.
+        visible(R.id.btnDeleteBudget, active && !monthly.month.equals(book.monthAt(System.currentTimeMillis())));
     }
 
-    @Override 
+    /** Sửa hạn mức hoặc xóa một ngân sách danh mục khỏi ngân sách tháng. */
+    private void categoryActions(FinanceBook.Budget budget) {
+        CharSequence[] actions = {getString(R.string.budget_category_edit_limit), getString(R.string.budget_category_remove)};
+        new MaterialAlertDialogBuilder(this).setItems(actions, (dialog, which) -> {
+            if (which == 0) startActivity(new Intent(this, BudgetFormActivity.class)
+                    .putExtra(BudgetFormActivity.EXTRA_MONTHLY_ID, id).putExtra(BudgetFormActivity.EXTRA_ID, budget.id));
+            else new MaterialAlertDialogBuilder(this).setTitle(R.string.budget_category_remove_title)
+                    .setMessage(R.string.budget_category_remove_body).setNegativeButton(R.string.btn_cancel, null)
+                    .setPositiveButton(R.string.btn_delete, (d, w) -> model.change(FinanceAction.deleteBudget(budget.id), false)).show();
+        }).show();
+    }
+
+    @Override
+    protected CharSequence failure(FinanceViewModel.Command command) {
+        CharSequence text = BudgetUi.failure(this, book, command);
+        return text != null ? text : super.failure(command);
+    }
+
+    @Override
     protected void loading(boolean loading) {
-        findViewById(R.id.btnEditBudget).setEnabled(!loading); findViewById(R.id.btnDeleteBudget).setEnabled(!loading);
+        findViewById(R.id.btnAddCategoryBudget).setEnabled(!loading); findViewById(R.id.btnDeleteBudget).setEnabled(!loading);
     }
 }

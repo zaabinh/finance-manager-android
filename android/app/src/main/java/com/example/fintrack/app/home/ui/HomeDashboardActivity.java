@@ -13,7 +13,8 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
 import com.example.fintrack.app.analytics.ui.AnalyticsActivity;
 import com.example.fintrack.app.auth.ui.LoginActivity;
-import com.example.fintrack.app.budget.ui.BudgetFormActivity;
+import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
+import com.example.fintrack.app.budget.ui.MonthlyBudgetFormActivity;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionManager;
@@ -59,6 +60,8 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private long totalAssetsCents;
     private long availableCents;
     private long savingsCents;
+    // Ngân sách tháng hiện tại (null nếu chưa tạo) để nút tắt "Ngân sách" mở đúng màn hình
+    private String currentMonthlyBudgetId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,9 +146,11 @@ public class HomeDashboardActivity extends AppCompatActivity {
             // Cập nhật lên giao diện hiển thị số dư
             updateBalanceDisplay();
 
-            // Tính toán và hiển thị thông tin Ngân sách trong tháng
-            long spent = book.budgetSpent(month);
-            long limit = book.budgetLimit(month);
+            // Ngân sách tháng hiện tại: tổng (dẫn xuất) và đã chi lấy từ server (mock tính cùng công thức)
+            FinanceBook.MonthlyBudget currentBudget = book.monthlyBudgetFor(month);
+            currentMonthlyBudgetId = currentBudget == null ? null : currentBudget.id;
+            long spent = currentBudget == null ? book.budgetSpent(month) : book.monthlySpent(currentBudget);
+            long limit = currentBudget == null ? 0 : book.monthlyTotal(currentBudget);
 
             if (tvBudgetUsage != null && tvBudgetRemaining != null && pbBudgetProgress != null) {
                 if (limit > 0) {
@@ -216,7 +221,9 @@ public class HomeDashboardActivity extends AppCompatActivity {
         }
 
         if (btnActionBudget != null) {
-            btnActionBudget.setOnClickListener(v -> startActivity(new Intent(this, BudgetFormActivity.class)));
+            btnActionBudget.setOnClickListener(v -> startActivity(currentMonthlyBudgetId == null
+                    ? new Intent(this, MonthlyBudgetFormActivity.class)
+                    : new Intent(this, BudgetDetailActivity.class).putExtra(BudgetDetailActivity.EXTRA_MONTHLY_ID, currentMonthlyBudgetId)));
         }
 
         if (btnActionScan != null) {

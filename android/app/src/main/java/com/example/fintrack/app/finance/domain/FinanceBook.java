@@ -37,6 +37,8 @@ public final class FinanceBook {
         /** Backend errorCode and fieldErrors[].field when the server supplied them; for client-side localisation. */
         public String code;
         public List<String> fields = Collections.emptyList();
+        /** BUDGET_EXCEEDS_AVAILABLE_BALANCE: spendable money missing for the requested budget. */
+        public Long shortfallMinor;
         public Failure(Problem problem) { this(problem, null); }
         public Failure(Problem problem, String message) { super(problem.name()); this.problem = problem; this.userMessage = message; }
     }
@@ -87,9 +89,20 @@ public final class FinanceBook {
         public Long serverSpentMinor;
         public int warningThresholdPercent = 80;
         public String archivedAt;
+        /** Parent monthly budget; null only for legacy rows restored before hierarchical budgets. */
+        public String monthlyBudgetId;
         public Budget(String id, String categoryId, String month, long limit) {
             this.id = id; this.categoryId = categoryId; this.month = month; this.limit = limit;
         }
+    }
+
+    /** Container for one month. Its total is derived from the category budgets and never entered or stored. */
+    public static final class MonthlyBudget {
+        public String id, month, archivedAt;
+        /** Authoritative server aggregates; null in the mock flavor, which derives the same values locally. */
+        public Long serverTotalMinor, serverSpentMinor;
+        public int warningThresholdPercent = 80;
+        public MonthlyBudget(String id, String month) { this.id = id; this.month = month; }
     }
 
     /** Trạng thái lưu trữ dữ liệu (State), có phiên bản để tránh ghi đè dữ liệu bị lỗi/hỏng. */
@@ -101,6 +114,7 @@ public final class FinanceBook {
         public List<Category> categories = new ArrayList<>();
         public List<Transaction> transactions = new ArrayList<>();
         public List<Budget> budgets = new ArrayList<>();
+        public List<MonthlyBudget> monthlyBudgets = new ArrayList<>();
     }
 
     // Khởi tạo sổ tài chính mặc định với các danh mục cơ bản sẵn có
@@ -144,6 +158,14 @@ public final class FinanceBook {
             if (category == null || category.id == null || category.id.isEmpty() || !categoryIds.add(category.id)
                     || category.type == null || category.type == Type.TRANSFER) throw new Failure(Problem.STORAGE);
             validName(category.name); this.state.categories.add(category);
+        }
+
+        // Kiểm tra ngân sách tháng: mỗi tháng tối đa một ngân sách đang hoạt động
+        java.util.Set<String> monthlyIds = new java.util.HashSet<>(), activeMonths = new java.util.HashSet<>();
+        if (state.monthlyBudgets != null) for (MonthlyBudget monthly : state.monthlyBudgets) {
+            if (monthly == null || monthly.id == null || monthly.id.isEmpty() || !monthlyIds.add(monthly.id)
+                    || (monthly.archivedAt == null && !activeMonths.add(String.valueOf(monthly.month)))) throw new Failure(Problem.STORAGE);
+            validateMonth(monthly.month); this.state.monthlyBudgets.add(monthly);
         }
 
         for (Transaction transaction : state.transactions) save(transaction, false);
@@ -228,6 +250,10 @@ public final class FinanceBook {
         validateMonth(value.month);
         Category category = category(value.categoryId);
         if (category == null || category.type != Type.EXPENSE) throw new Failure(Problem.CATEGORY);
+        if (value.monthlyBudgetId != null) {
+            MonthlyBudget parent = monthlyBudget(value.monthlyBudgetId);
+            if (parent == null || !parent.month.equals(value.month)) throw new Failure(restoring ? Problem.STORAGE : Problem.NOT_FOUND);
+        }
         Budget old = budget(value.id);
         if ((editing && old == null) || (!editing && old != null)) throw new Failure(Problem.NOT_FOUND);
         if (!restoring && old != null && old.archivedAt != null) throw new Failure(Problem.ARCHIVED);
@@ -348,6 +374,11 @@ public final class FinanceBook {
         public final boolean warning, exceeded;
         BudgetUsage(long spent, long limit, int threshold) {
             this.spent = spent; remaining = Math.subtractExact(limit, spent);
+            if (limit == 0) {
+                // Empty monthly budget (total 0): SAFE until something is spent, like the backend.
+                percentage = spent > 0 ? "100" : "0"; progress = spent > 0 ? 100 : 0;
+                warning = spent > 0; exceeded = spent > 0; return;
+            }
             java.math.BigInteger percent = java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
                     .divide(java.math.BigInteger.valueOf(limit));
             percentage = percent.toString(); progress = percent.min(java.math.BigInteger.valueOf(100)).intValue();
@@ -376,6 +407,148 @@ public final class FinanceBook {
         List<Budget> result = new ArrayList<>();
         for (Budget item : state.budgets) if (item.archivedAt == null && item.month.equals(month)) result.add(item);
         return Collections.unmodifiableList(result);
+    }
+
+    // ===== Ngân sách tháng (hierarchical budgets, spec 2026-11-09 §1) =====
+
+    public static final String BUDGET_MONTH_MISSING = "BUDGET_MONTH_MISSING";
+    public static final String BUDGET_MONTH_CURRENT = "BUDGET_MONTH_CURRENT";
+    public static final String BUDGET_EXCEEDS_AVAILABLE_BALANCE = "BUDGET_EXCEEDS_AVAILABLE_BALANCE";
+    public static final String BUDGET_PERIOD_CONFLICT = "BUDGET_PERIOD_CONFLICT";
+
+    public MonthlyBudget monthlyBudget(String id) {
+        for (MonthlyBudget item : state.monthlyBudgets) if (item.id.equals(id)) return item;
+        return null;
+    }
+
+    /** The active monthly budget of a month, or null. */
+    public MonthlyBudget monthlyBudgetFor(String month) {
+        for (MonthlyBudget item : state.monthlyBudgets) if (item.archivedAt == null && item.month.equals(month)) return item;
+        return null;
+    }
+
+    /** Active monthly budgets, newest month first. */
+    public List<MonthlyBudget> monthlyBudgets() {
+        List<MonthlyBudget> result = new ArrayList<>();
+        for (MonthlyBudget item : state.monthlyBudgets) if (item.archivedAt == null) result.add(item);
+        result.sort(Comparator.comparing((MonthlyBudget item) -> item.month).reversed().thenComparing(item -> item.id));
+        return Collections.unmodifiableList(result);
+    }
+
+    /** Category budgets of a monthly budget in its lifecycle: active children, or those archived together with it. */
+    public List<Budget> categoryBudgets(MonthlyBudget monthly) {
+        List<Budget> result = new ArrayList<>();
+        for (Budget item : state.budgets)
+            if (monthly.id.equals(item.monthlyBudgetId) && java.util.Objects.equals(item.archivedAt, monthly.archivedAt)) result.add(item);
+        result.sort(Comparator.comparing((Budget item) -> item.categoryId).thenComparing(item -> item.id));
+        return Collections.unmodifiableList(result);
+    }
+
+    /** Derived total = sum of the category limits; the server value wins when present. */
+    public long monthlyTotal(MonthlyBudget monthly) {
+        if (monthly.serverTotalMinor != null) return monthly.serverTotalMinor;
+        long result = 0;
+        for (Budget item : categoryBudgets(monthly)) result = Math.addExact(result, item.limit);
+        return result;
+    }
+
+    /** All POSTED EXPENSE of the month in any category; TRANSFER never counts. */
+    public long monthlySpent(MonthlyBudget monthly) {
+        if (monthly.serverSpentMinor != null) return monthly.serverSpentMinor;
+        return total(Type.EXPENSE, monthly.month);
+    }
+
+    public BudgetUsage monthlyUsage(MonthlyBudget monthly) {
+        return new BudgetUsage(monthlySpent(monthly), monthlyTotal(monthly), monthly.warningThresholdPercent);
+    }
+
+    /** Spendable money: active wallets counted in assets, savings excluded. */
+    public long spendable() {
+        long result = 0;
+        for (Wallet wallet : state.wallets) if (wallet.archivedAt == null && wallet.includeInAssets && wallet.walletType != WalletType.SAVINGS)
+            result = Math.addExact(result, balance(wallet.id));
+        return result;
+    }
+
+    /** Mock of POST /monthly-budgets: month + at least one category, validated fully before anything is written. */
+    public MonthlyBudget createMonthlyBudget(String id, String month, List<Budget> categories) {
+        validateMonth(month);
+        if (id == null || id.isEmpty() || monthlyBudget(id) != null) throw new Failure(Problem.NOT_FOUND);
+        if (categories == null || categories.isEmpty()) throw new Failure(Problem.VALIDATION);
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        long total = 0;
+        for (Budget line : categories) {
+            if (line == null || line.categoryId == null || !seen.add(line.categoryId)) throw new Failure(Problem.VALIDATION);
+            amount(line.limit);
+            Category category = category(line.categoryId);
+            if (category == null || category.type != Type.EXPENSE) throw new Failure(Problem.CATEGORY);
+            if (category.archivedAt != null) throw new Failure(Problem.ARCHIVED);
+            total = Math.addExact(total, line.limit);
+        }
+        if (monthlyBudgetFor(month) != null) throw conflict(BUDGET_PERIOD_CONFLICT);
+        requireBalance(month, 0, total);
+        MonthlyBudget monthly = new MonthlyBudget(id, month);
+        state.monthlyBudgets.add(monthly);
+        try {
+            for (Budget line : categories) {
+                Budget value = new Budget(line.id == null ? UUID.randomUUID().toString() : line.id, line.categoryId, month, line.limit);
+                value.monthlyBudgetId = id;
+                save(value, false);
+            }
+        } catch (RuntimeException error) {
+            // Keep the book unchanged on failure (atomic like the server transaction).
+            state.monthlyBudgets.remove(monthly);
+            for (java.util.Iterator<Budget> it = state.budgets.iterator(); it.hasNext(); ) if (id.equals(it.next().monthlyBudgetId)) it.remove();
+            throw error;
+        }
+        return monthly;
+    }
+
+    /** Mock of POST/PUT /budgets under a monthly budget: parent resolved by month, balance block on increases. */
+    public void saveCategoryBudget(Budget value, boolean editing) {
+        if (value == null) throw new Failure(Problem.NOT_FOUND);
+        validateMonth(value.month);
+        MonthlyBudget target = monthlyBudgetFor(value.month);
+        if (target == null) throw conflict(BUDGET_MONTH_MISSING);
+        Budget old = budget(value.id);
+        long before = monthlyTotal(target);
+        boolean sameParent = editing && old != null && old.archivedAt == null && target.id.equals(old.monthlyBudgetId);
+        long after = sameParent ? Math.addExact(Math.subtractExact(before, old.limit), value.limit) : Math.addExact(before, value.limit);
+        value.monthlyBudgetId = target.id;
+        save(value, editing);
+        try { requireBalance(value.month, before, after); }
+        catch (Failure error) {
+            state.budgets.remove(value);
+            if (old != null) state.budgets.add(old);
+            throw error;
+        }
+    }
+
+    /** Mock of DELETE /monthly-budgets/{id}: idempotent, not for the current month, archives children too. */
+    public void deleteMonthlyBudget(String id, long nowMillis) {
+        MonthlyBudget monthly = monthlyBudget(id);
+        if (monthly == null) throw new Failure(Problem.NOT_FOUND);
+        if (monthly.archivedAt != null) return;
+        if (monthly.month.equals(monthAt(nowMillis))) throw conflict(BUDGET_MONTH_CURRENT);
+        String at = now();
+        for (Budget item : state.budgets) if (id.equals(item.monthlyBudgetId) && item.archivedAt == null) item.archivedAt = at;
+        monthly.archivedAt = at;
+    }
+
+    /** Balance block: only when the total increases; still-to-spend must be covered by spendable wallets. */
+    private void requireBalance(String month, long before, long after) {
+        if (after <= before) return;
+        long stillToSpend = Math.max(0, Math.subtractExact(after, total(Type.EXPENSE, month)));
+        long available = spendable();
+        if (stillToSpend > available) {
+            Failure failure = conflict(BUDGET_EXCEEDS_AVAILABLE_BALANCE);
+            failure.shortfallMinor = Math.subtractExact(stillToSpend, available);
+            throw failure;
+        }
+    }
+
+    private static Failure conflict(String code) {
+        Failure failure = new Failure(Problem.CONFLICT); failure.code = code; return failure;
     }
 
     // Tìm kiếm và lọc danh sách giao dịch theo tháng, loại, từ khóa, ví hoặc danh mục

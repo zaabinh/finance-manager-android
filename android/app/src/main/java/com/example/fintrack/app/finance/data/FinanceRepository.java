@@ -10,7 +10,6 @@ import com.example.fintrack.app.wallet.remote.WalletResponse;
 import com.example.fintrack.app.category.remote.CategoryApiService;
 import com.example.fintrack.app.category.remote.CategoryResponse;
 import com.example.fintrack.app.budget.remote.BudgetApiService;
-import com.example.fintrack.app.budget.remote.BudgetResponse;
 import com.example.fintrack.app.transaction.remote.TransactionApiService;
 import com.example.fintrack.app.transaction.remote.TransactionResponse;
 import com.example.fintrack.app.transaction.remote.TransactionPageResponse;
@@ -62,8 +61,14 @@ public final class FinanceRepository {
         if (scope != Scope.WALLETS)
             for (CategoryResponse category : FinanceAction.required(api.categories.categories())) state.categories.add(category.domain());
         if (scope == Scope.ALL || scope == Scope.BUDGETS) {
-            if (detailId == null) for (BudgetResponse budget : FinanceAction.required(api.budgets.budgets())) state.budgets.add(budget.domain());
-            else state.budgets.add(FinanceAction.required(api.budgets.budget(detailId)).domain());
+            // Budgets are read as monthly budgets with their category budgets; detailId is a monthlyBudgetId.
+            java.util.List<com.example.fintrack.app.budget.remote.MonthlyBudgetResponse> monthly = detailId == null
+                    ? FinanceAction.required(api.budgets.monthlyBudgets(null, "ACTIVE"))
+                    : java.util.Collections.singletonList(FinanceAction.required(api.budgets.monthlyBudget(detailId)));
+            for (com.example.fintrack.app.budget.remote.MonthlyBudgetResponse item : monthly) {
+                if (item == null) throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
+                item.into(state);
+            }
         }
         if (scope == Scope.TRANSACTION_DETAIL && detailId != null) {
             state.transactions.add(FinanceAction.required(api.transactions.transaction(detailId)).domain());

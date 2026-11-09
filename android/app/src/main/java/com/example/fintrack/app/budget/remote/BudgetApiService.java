@@ -29,6 +29,21 @@ public interface BudgetApiService {
     @PUT("api/v1/budgets/{id}")
     Call<BudgetResponse> updateBudget(@Path("id") String id, @Body BudgetRequest request);
 
+    /** Ngân sách tháng: danh sách (status ACTIVE|ARCHIVED|ALL), kèm các ngân sách danh mục */
+    @GET("api/v1/monthly-budgets")
+    Call<List<MonthlyBudgetResponse>> monthlyBudgets(@Query("month") String month, @Query("status") String status);
+
+    @GET("api/v1/monthly-budgets/{id}")
+    Call<MonthlyBudgetResponse> monthlyBudget(@Path("id") String id);
+
+    /** Tạo ngân sách tháng cùng ít nhất một ngân sách danh mục (một request, nguyên tử) */
+    @POST("api/v1/monthly-budgets")
+    Call<MonthlyBudgetResponse> addMonthlyBudget(@Body MonthlyBudgetRequest request);
+
+    /** Xóa ngân sách tháng (không cho tháng hiện tại); các ngân sách danh mục bị xóa theo */
+    @DELETE("api/v1/monthly-budgets/{id}")
+    Call<Void> deleteMonthlyBudget(@Path("id") String id);
+
     /** API Xóa một khoản ngân sách theo ID */
     @DELETE("api/v1/budgets/{id}")
     Call<Void> deleteBudget(@Path("id") String id);
