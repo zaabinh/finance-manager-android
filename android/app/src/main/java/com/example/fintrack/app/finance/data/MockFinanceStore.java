@@ -35,6 +35,9 @@ public final class MockFinanceStore {
             com.google.gson.JsonObject object = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
             for (String key : new String[]{"version", "wallets", "categories", "transactions", "budgets"})
                 if (!object.has(key)) throw new IllegalStateException("Incomplete file");
+            // Old mock snapshots predate inclusion flags; preserve their previous behavior.
+            for (com.google.gson.JsonElement wallet : object.getAsJsonArray("wallets"))
+                if (!wallet.getAsJsonObject().has("includeInAssets")) wallet.getAsJsonObject().addProperty("includeInAssets", true);
             return new FinanceBook(gson.fromJson(object, FinanceBook.State.class));
         } catch (Exception e) { throw new FinanceBook.Failure(FinanceBook.Problem.STORAGE); }
     }
@@ -44,7 +47,8 @@ public final class MockFinanceStore {
         action.accept(candidate);
         candidate.validateTotals();
         // Validate aggregate arithmetic before committing any change.
-        for (FinanceBook.Wallet wallet : candidate.state().wallets) candidate.balance(wallet.id);
+        for (FinanceBook.Wallet wallet : candidate.state().wallets)
+            if (candidate.balance(wallet.id) < 0) throw new FinanceBook.Failure(FinanceBook.Problem.INSUFFICIENT_FUNDS);
         FileOutputStream output = null;
         try {
             byte[] data = gson.toJson(candidate.state()).getBytes(StandardCharsets.UTF_8);

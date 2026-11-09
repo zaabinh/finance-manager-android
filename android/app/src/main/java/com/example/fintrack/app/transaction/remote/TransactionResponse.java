@@ -48,7 +48,8 @@ public class TransactionResponse {
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
     public FinanceBook.Transaction domain() {
         FinanceBook.Transaction value = new FinanceBook.Transaction(transactionId, transactionType, amountMinor, categoryId, walletId,
-                destinationWalletId, parseTimestamp(occurredAt), note, payee);
+                destinationWalletId, parseTimestamp(occurredAt),
+                note == null ? "" : note, payee == null ? "" : payee);
         value.status = status == null ? "POSTED" : status;
         value.voidedAt = voidedAt;
         value.clientRequestId = clientRequestId;

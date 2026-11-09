@@ -54,8 +54,11 @@ public class CategoryListActivity extends FinanceActivity {
         String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);
         List<CategoryItem> items=new ArrayList<>();
         for (FinanceBook.Category c:book.state().categories) {
-            if(c.type==type && c.name.toLowerCase(Locale.ROOT).contains(query))
-                items.add(new CategoryItem(c.id,c.name,c.type.name(),CategoryIcons.resource(c.iconKey),"",c.archivedAt==null));
+            if(c.type==type && c.name.toLowerCase(Locale.ROOT).contains(query)) {
+                CategoryItem item = new CategoryItem(c.id,c.name,c.type.name(),CategoryIcons.resource(c.iconKey),"",c.archivedAt==null);
+                item.setColorHex(c.colorHex);
+                items.add(item);
+            }
         }
         adapter.setCategories(items);
         visible(R.id.layoutEmptyCategories,items.isEmpty()); visible(R.id.rvCategories,!items.isEmpty());

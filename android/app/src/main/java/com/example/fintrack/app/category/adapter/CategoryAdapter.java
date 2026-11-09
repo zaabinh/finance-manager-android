@@ -126,6 +126,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
             if (category.getIconResId() != 0) {
                 ivCategoryIcon.setImageResource(category.getIconResId());
             }
+            if (category.getColorHex() != null && category.getColorHex().matches("#[0-9a-fA-F]{6}")) {
+                ivCategoryIcon.setColorFilter(android.graphics.Color.parseColor(category.getColorHex()));
+            }
 
             // Lắng nghe sự kiện khi người dùng gạt công tắc bật/tắt trạng thái
             switchStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {

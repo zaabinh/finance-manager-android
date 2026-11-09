@@ -99,7 +99,7 @@ public final class TransactionFormActivity extends FinanceActivity {
                 + (selectedWallet.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix)));
         text(R.id.tvSourceWalletValue, book.wallet(wallet) == null ? "" : book.wallet(wallet).name);
         text(R.id.tvDestinationWalletValue, book.wallet(destination) == null ? "" : book.wallet(destination).name);
-        text(R.id.tvDateValue, FinanceUi.date(occurredAt));
+        text(R.id.tvDateValue, FinanceUi.date(occurredAt, book.state().timeZone));
         boolean same = transfer && wallet != null && wallet.equals(destination);
         visible(R.id.feedbackSameWallet, same); visible(R.id.feedbackTransferInfo, !same);
     }

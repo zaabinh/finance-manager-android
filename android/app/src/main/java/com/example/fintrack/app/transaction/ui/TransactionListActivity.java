@@ -22,21 +22,28 @@ public final class TransactionListActivity extends FinanceActivity {
     private String month = FinanceBook.month(System.currentTimeMillis()), walletFilter, categoryFilter;
     private FinanceBook.Type type;
     private TransactionAdapter adapter;
+    private boolean explicitMonth;
     @Override protected int layout() { return R.layout.activity_transaction_list; }
     @Override protected void bind(Bundle saved) {
         if (saved != null) {
             month = saved.getString("month", month); walletFilter = saved.getString("wallet"); categoryFilter = saved.getString("category");
+            explicitMonth = saved.getBoolean("explicitMonth");
+            String savedType = saved.getString("type");
+            type = savedType == null ? null : FinanceBook.Type.valueOf(savedType);
+            ((EditText) findViewById(R.id.etTransactionSearch)).setText(saved.getString("search", ""));
         } else {
             // Entry points from wallet/budget detail.
             walletFilter = getIntent().getStringExtra("WALLET_ID"); categoryFilter = getIntent().getStringExtra("category_id");
             String requested = getIntent().getStringExtra("month");
-            if (requested != null && requested.matches("[0-9]{4}-(0[1-9]|1[0-2])")) month = requested;
+            if (requested != null && requested.matches("[0-9]{4}-(0[1-9]|1[0-2])")) { month = requested; explicitMonth = true; }
         }
         FinanceUi.navigation(this, R.id.navReport);
         visible(R.id.chipFilterTransfer, false); visible(R.id.tvMonthSummaryNote, false); // TRANSFER not supported yet
         // No aggregate endpoint: summing one page would be a partial (wrong) total, so the real flavor hides it.
         visible(R.id.tvMonthSummary, BuildConfig.USE_MOCK);
-        findViewById(R.id.tvChangeMonth).setOnClickListener(view -> FinanceUi.month(this, month, value -> { month = value; search(); }));
+        findViewById(R.id.tvChangeMonth).setOnClickListener(view -> FinanceUi.month(this, month, value -> { month = value; explicitMonth = true; search(); }));
+        ((ChipGroup) findViewById(R.id.chipGroupTransactionType)).check(type == FinanceBook.Type.INCOME ? R.id.chipFilterIncome
+                : type == FinanceBook.Type.EXPENSE ? R.id.chipFilterExpense : R.id.chipFilterAll);
         ((ChipGroup) findViewById(R.id.chipGroupTransactionType)).setOnCheckedStateChangeListener((group, ids) -> {
             int id = ids.isEmpty() ? R.id.chipFilterAll : ids.get(0);
             type = id == R.id.chipFilterExpense ? FinanceBook.Type.EXPENSE : id == R.id.chipFilterIncome ? FinanceBook.Type.INCOME : null;
@@ -83,6 +90,10 @@ public final class TransactionListActivity extends FinanceActivity {
     }
     @Override protected void render() {
         if (book == null) return;
+        if (!explicitMonth) {
+            String currentMonth = book.monthAt(System.currentTimeMillis());
+            if (!currentMonth.equals(month)) { month = currentMonth; search(); return; }
+        }
         List<FinanceBook.Transaction> rows = model.rows();
         if (adapter == null) { adapter = new TransactionAdapter(book, rows); ((RecyclerView) findViewById(R.id.rvTransactions)).setAdapter(adapter); }
         else adapter.submit(book, rows);
@@ -103,5 +114,7 @@ public final class TransactionListActivity extends FinanceActivity {
     @Override protected void loading(boolean loading) { visible(R.id.stateLoadingList, loading && model.rows().isEmpty()); }
     @Override protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out); out.putString("month", month); out.putString("wallet", walletFilter); out.putString("category", categoryFilter);
+        out.putBoolean("explicitMonth", explicitMonth); out.putString("type", type == null ? null : type.name());
+        out.putString("search", ((EditText) findViewById(R.id.etTransactionSearch)).getText().toString());
     }
 }

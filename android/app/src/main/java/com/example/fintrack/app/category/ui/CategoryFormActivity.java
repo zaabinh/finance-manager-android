@@ -19,14 +19,14 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /** Uses the same repository, session checks and command lifecycle as finance pickers. */
 abstract class CategoryFormActivity extends FinanceActivity {
-    private EditText name;
+    private EditText name, color, order;
     private SwitchMaterial status;
     private Button save;
     private RecyclerView icons;
     private String id, iconKey = "coffee", colorHex;
     private int sortOrder;
     private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
-    private boolean initialized, restoredForm;
+    private boolean initialized, restoredForm, bindingStatus;
     protected abstract boolean editing();
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.CATEGORIES; }
 
@@ -37,9 +37,11 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if (saved != null) {
             type = FinanceBook.Type.valueOf(saved.getString("categoryType", "EXPENSE"));
             iconKey = saved.getString("iconKey");
-            restoredForm = true;
+            restoredForm = saved.getBoolean("categoryLoaded");
         }
         name = findViewById(R.id.etCategoryName);
+        color = findViewById(R.id.etCategoryColor);
+        order = findViewById(R.id.etCategorySortOrder);
         status = findViewById(R.id.switchStatus);
         icons = findViewById(R.id.rvIconPicker);
         save = findViewById(editing() ? R.id.btnSaveChanges : R.id.btnCreateCategory);
@@ -53,7 +55,7 @@ abstract class CategoryFormActivity extends FinanceActivity {
                     confirmDelete(() -> model.change(FinanceAction.categoryArchive(id), true)));
         }
         status.setOnCheckedChangeListener((button, active) -> {
-            if (button.isPressed() && initialized && !model.busy())
+            if (!bindingStatus && initialized && !model.busy())
                 model.change(FinanceAction.categoryStatus(id, active), false);
         });
         findViewById(R.id.btnSelectCategoryType).setOnClickListener(v ->
@@ -66,6 +68,14 @@ abstract class CategoryFormActivity extends FinanceActivity {
             if (value.isEmpty() || value.codePointCount(0,value.length()) > 100) {
                 name.setError(getString(R.string.category_name_invalid)); return;
             }
+            String colorValue = color.getText().toString().trim();
+            if (!colorValue.isEmpty() && !colorValue.matches("#[0-9a-fA-F]{6}")) {
+                color.setError(getString(R.string.category_color_invalid)); return;
+            }
+            try { sortOrder = order.getText().toString().trim().isEmpty() ? 0 : Integer.parseInt(order.getText().toString().trim()); }
+            catch (NumberFormatException exception) { order.setError(getString(R.string.category_sort_invalid)); return; }
+            if (sortOrder < 0) { order.setError(getString(R.string.category_sort_invalid)); return; }
+            colorHex = colorValue.isEmpty() ? null : colorValue.toUpperCase(java.util.Locale.ROOT);
             model.change(editing() ? FinanceAction.categoryUpdate(id,value,type,iconKey,colorHex,sortOrder)
                     : FinanceAction.category(value,type,iconKey,colorHex,sortOrder),true);
         });
@@ -88,12 +98,16 @@ abstract class CategoryFormActivity extends FinanceActivity {
                 colorHex = current.colorHex; sortOrder = current.sortOrder;
                 if (!restoredForm) { name.setText(current.name); type = current.type; iconKey = current.iconKey; }
             }
+            if (!restoredForm) { color.setText(colorHex == null ? "" : colorHex); order.setText(String.valueOf(sortOrder)); }
             initialized = true; showType(); showIcons();
         }
         boolean active = current == null || current.archivedAt == null;
+        bindingStatus = true;
         status.setChecked(active);
+        bindingStatus = false;
         text(R.id.tvStatusLabel,getString(active ? R.string.status_active : R.string.status_disabled));
         name.setEnabled(active);
+        color.setEnabled(active); order.setEnabled(active);
         findViewById(R.id.btnSelectCategoryType).setEnabled(active);
         icons.setVisibility(active ? View.VISIBLE : View.GONE);
         save.setEnabled(active && !model.busy());
@@ -105,6 +119,7 @@ abstract class CategoryFormActivity extends FinanceActivity {
     }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("categoryType",type.name()); state.putString("iconKey",iconKey);
+        state.putBoolean("categoryLoaded", initialized);
         super.onSaveInstanceState(state);
     }
 }

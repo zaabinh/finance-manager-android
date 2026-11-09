@@ -8,6 +8,10 @@
     <string name="category_name_label">Tên danh mục</string>
     <string name="category_name_hint">Nhập tên danh mục...</string>
     <string name="category_name_invalid">Tên danh mục phải có từ 1 đến 100 ký tự</string>
+    <string name="category_color_label">Màu biểu tượng (#RRGGBB, không bắt buộc)</string>
+    <string name="category_color_invalid">Nhập màu theo định dạng #RRGGBB</string>
+    <string name="category_sort_label">Thứ tự hiển thị (mặc định 0)</string>
+    <string name="category_sort_invalid">Nhập số nguyên từ 0 đến 2147483647</string>
     <string name="category_type_label">Loại danh mục</string>
     <string name="category_icon_label">Icon</string>
     <string name="category_description_label">Mô tả</string>
