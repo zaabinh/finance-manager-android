@@ -40,7 +40,8 @@ Develop already ships the v2 palette (same hex as Figma P1). There is one token 
 | Section/Header | 639:2181 | `layout/view_section_header.xml` (S0-F4) | Foundation | PROPOSED |
 | State/Empty, State/Loading | 629:2939, 629:2970 | `layout/view_state_empty.xml`, `view_state_loading_*.xml` (S0-F5) | Foundation | PROPOSED |
 | Feedback/Toast, Dialog/Confirm | 628:2706, 628:2734 | Snackbar style, `layout/dialog_confirm.xml` (S0-F5) | Foundation | PROPOSED |
-| Sheet/Container, List/Option | 629:2895, 628:2749 | `layout/sheet_container.xml`, `item_option.xml` (S0-F5) | Foundation | PROPOSED |
+| Sheet/Container | 629:2895 | `layout/sheet_picker.xml` + `item_picker_option.xml`, `drawable/bg_sheet*.xml` (BottomSheetDialog content; approved by product owner 2026-11-09) | Foundation | IMPLEMENTED |
+| List/Option | 628:2749 | `item_option.xml` (S0-F5) | Foundation | PROPOSED |
 | Input/Amount | 628:2576 | `layout/view_amount_input.xml` | B | PROPOSED |
 | Card/Transaction | 429:2230 | `layout/item_transaction.xml` | B | PROPOSED |
 | Card/Wallet | 643:2369 | `layout/item_wallet.xml` | B | PROPOSED |
