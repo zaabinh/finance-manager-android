@@ -127,6 +127,9 @@ public class MockInterceptor implements Interceptor {
                     "  },\n" +
                     "  \"code\": 200\n" +
                     "}";
+        } else if (path.endsWith("/users/me/first-setup")) {
+            return "{\"success\": true, \"message\": \"First setup completed\", "
+                    + "\"data\": {\"onboardingCompleted\": true}, \"code\": 200}";
         } else if (path.endsWith("/users/me")) {
             return "{\n" +
                     "  \"success\": true,\n" +

@@ -1,106 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Figma 02_SetupWelcome — v2 (679:10557) -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_app_canvas"
-    android:fillViewport="true"
-    android:overScrollMode="never"
     android:fitsSystemWindows="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:minHeight="400dp"
-        android:paddingHorizontal="@dimen/spacing_24"
-        android:paddingVertical="@dimen/spacing_16">
+    <!-- Decoration/Landscape (717:10398): low-contrast band behind the lower half -->
+    <ImageView
+        android:id="@+id/ivLandscape"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/bg_setup_landscape"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Main welcome content -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
         <LinearLayout
             android:id="@+id/llCenterContent"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/spacing_16"
-            android:paddingVertical="@dimen/spacing_16"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/btnStart"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintVertical_bias="0.45"
-            app:layout_constraintWidth_max="440dp">
+            android:paddingStart="@dimen/spacing_24"
+            android:paddingTop="88dp"
+            android:paddingEnd="@dimen/spacing_24"
+            android:paddingBottom="@dimen/spacing_16">
 
-            <!-- App logo -->
+            <!-- Brand/Logo/Mark (625:1950) -->
             <ImageView
                 android:id="@+id/ivLogo"
-                android:layout_width="@dimen/welcome_logo_size"
-                android:layout_height="@dimen/welcome_logo_size"
+                android:layout_width="112dp"
+                android:layout_height="112dp"
                 android:contentDescription="@string/app_name"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_logo" />
 
-            <!-- Brand name -->
             <TextView
                 android:id="@+id/tvBrand"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_16"
-                android:gravity="center"
+                android:layout_marginTop="@dimen/spacing_12"
+                android:fontFamily="sans-serif-black"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.02"
                 android:text="@string/setup_welcome_brand"
                 android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_size_amount_hero"
-                android:textStyle="bold" />
+                android:textSize="44sp" />
 
-            <!-- Welcome title -->
+            <!-- Slogan: styled string bolds each "Đồng" in brand green -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_8"
+                android:layout_marginTop="@dimen/spacing_12"
                 android:gravity="center"
-                android:lineSpacingExtra="@dimen/spacing_4"
                 android:text="@string/setup_welcome_title"
                 android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_size_body_primary"
-                android:textStyle="bold" />
+                android:textSize="16sp" />
 
-            <!-- Subtitle -->
             <TextView
                 android:id="@+id/tvSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_8"
+                android:layout_marginTop="@dimen/spacing_12"
                 android:gravity="center"
-                android:lineSpacingExtra="@dimen/spacing_4"
+                android:lineSpacingExtra="2sp"
                 android:text="@string/setup_welcome_subtitle"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_body_primary" />
+                android:textSize="14sp" />
 
         </LinearLayout>
+    </ScrollView>
 
-        <!-- Bottom action button -->
-        <androidx.appcompat.widget.AppCompatButton
+    <!-- Footer (fixed CTA) 718:12399 -->
+    <FrameLayout
+        android:id="@+id/footer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_24"
+        android:paddingTop="@dimen/spacing_8"
+        android:paddingEnd="@dimen/spacing_24"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStart"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/button_height_large"
-            android:layout_marginTop="@dimen/spacing_24"
-            android:layout_marginBottom="@dimen/spacing_12"
-            android:background="@drawable/bg_button_primary"
-            android:gravity="center"
-            android:minHeight="48dp"
-            android:text="@string/btn_start"
-            android:textAllCaps="false"
-            android:textColor="@color/text_on_primary"
-            android:textSize="@dimen/text_size_button"
-            android:textStyle="bold"
-            android:stateListAnimator="@null"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintWidth_max="320dp" />
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_start" />
+    </FrameLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

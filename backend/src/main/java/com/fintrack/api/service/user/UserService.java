@@ -1,9 +1,11 @@
 package com.fintrack.api.service.user;
 
 import com.fintrack.api.dto.request.user.DeactivateUserRequest;
+import com.fintrack.api.dto.request.user.FirstSetupRequest;
 import com.fintrack.api.dto.request.user.UpdateNotificationSettingsRequest;
 import com.fintrack.api.dto.request.user.UpdatePreferencesRequest;
 import com.fintrack.api.dto.request.user.UpdateProfileRequest;
+import com.fintrack.api.dto.response.user.FirstSetupResponse;
 import com.fintrack.api.dto.response.user.NotificationSettingsResponse;
 import com.fintrack.api.dto.response.user.UserPreferencesResponse;
 import com.fintrack.api.dto.response.user.UserProfileResponse;
@@ -52,6 +54,19 @@ public class UserService {
         UserPreferencesRecord prefs = getOrCreatePreferences(user);
         NotificationSettingsRecord notifications = getOrCreateNotificationSettings(user.id());
         return new UserSettingsResponse(toProfile(user, prefs), toPreferences(user, prefs), toNotifications(notifications));
+    }
+
+    @Transactional
+    public FirstSetupResponse completeFirstSetup(UUID userId, FirstSetupRequest request) {
+        if (request.profile().displayName() == null || request.profile().displayName().isBlank()) {
+            throw badRequest("Display name is required");
+        }
+        UserProfileResponse profile = updateMyProfile(userId, request.profile());
+        NotificationSettingsResponse notifications = request.notificationSettings() == null
+                ? toNotifications(getOrCreateNotificationSettings(userId))
+                : updateMyNotificationSettings(userId, request.notificationSettings());
+        users.completeOnboarding(userId);
+        return new FirstSetupResponse(profile, notifications, true);
     }
 
     @Transactional

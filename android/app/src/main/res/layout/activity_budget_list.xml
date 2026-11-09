@@ -102,7 +102,8 @@
                 android:layout_margin="@dimen/spacing_16"
                 android:contentDescription="@string/budget_add_title"
                 app:srcCompat="@drawable/ic_plus"
-                app:tint="@color/white" />
+                app:tint="@color/white"
+                app:backgroundTint="@color/green_brand_700"/>
         </FrameLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
