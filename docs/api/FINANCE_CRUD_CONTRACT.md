@@ -65,7 +65,7 @@ POST/PUT body:
 {"name":"Ăn uống","categoryType":"EXPENSE","iconKey":"coffee","colorHex":"#F59E0B","sortOrder":0}
 ```
 
-- `name`, `categoryType` bắt buộc; icon/color nullable, mặc định null. `iconKey` là key do app quy ước, không phải Android resource integer; 1–80 ký tự khi có giá trị. `colorHex` đúng `#RRGGBB` và normalize uppercase.
+- `name`, `categoryType` bắt buộc; icon/color nullable, mặc định null. `iconKey` là key do app quy ước, không phải Android resource integer; khi có giá trị phải thuộc danh mục icon chung `coffee, car, ticket, shopping_bag, receipt, heart, briefcase, gift, school, more_horiz, image_placeholder` (backend `CategoryService.ICON_KEYS` = Android `CategoryIcons.KEYS`), key khác trả 422. `colorHex` đúng `#RRGGBB` và normalize uppercase; null thì app hiển thị màu mặc định theo loại (chi tiêu đỏ `#B73E36`, thu nhập xanh `#287B47`).
 - Response gồm `categoryId`, `name`, `categoryType`, `iconKey`, `colorHex`, `sortOrder`, `archivedAt`, `createdAt`, `updatedAt`. Không có global/default-ownerless category hoặc `isDefault` dùng để chặn sửa.
 - Tất cả category có `user_id NOT NULL`, kể cả danh mục tạo sẵn. Seed ban đầu: EXPENSE = Ăn uống, Đi lại, Mua sắm, Hóa đơn, Khác; INCOME = Lương, Thưởng, Thu nhập khác. Mỗi user có UUID riêng, được sửa/archive như danh mục tự tạo.
 - Seed một lần, trong transaction khi đăng ký. Backfill user cũ chưa từng có category; nếu đã có bất kỳ category kể cả archived thì coi là đã khởi tạo, giữ nguyên lựa chọn cũ. Không seed lại khi list rỗng hoặc user đã archive/đổi tên danh mục. Dùng dấu khởi tạo nội bộ để phân biệt user chưa seed với user chủ động xóa/ẩn.

@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Profile("!test")
 public class CategoryService {
+    /** Icons the Android app can render; must equal CategoryIcons.KEYS on Android. */
+    public static final List<String> ICON_KEYS = List.of("coffee","car","ticket","shopping_bag","receipt","heart",
+            "briefcase","gift","school","more_horiz","image_placeholder");
     private final CategoryRepository categories;
     private final CategorySeedService seeds;
     public CategoryService(CategoryRepository categories, CategorySeedService seeds) { this.categories=categories; this.seeds=seeds; }
@@ -59,8 +62,8 @@ public class CategoryService {
     }
     private static Values validate(CategoryRequest r) {
         String name=FinanceSupport.name(r.name), type=FinanceSupport.type(r.categoryType,"EXPENSE","INCOME");
-        if(r.iconKey!=null && (r.iconKey.isEmpty() || r.iconKey.codePointCount(0,r.iconKey.length())>80))
-            throw FinanceSupport.invalid("iconKey phải có từ 1 đến 80 ký tự");
+        if(r.iconKey!=null && !ICON_KEYS.contains(r.iconKey))
+            throw FinanceSupport.invalid("iconKey không nằm trong danh sách icon được hỗ trợ");
         if(r.colorHex!=null && !r.colorHex.matches("#[0-9a-fA-F]{6}")) throw FinanceSupport.invalid("colorHex phải có định dạng #RRGGBB");
         return new Values(name,type,r.iconKey,r.colorHex==null?null:r.colorHex.toUpperCase(Locale.ROOT),FinanceSupport.sort(r.sortOrder));
     }

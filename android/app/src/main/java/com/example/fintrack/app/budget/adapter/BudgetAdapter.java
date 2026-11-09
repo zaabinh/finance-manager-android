@@ -73,8 +73,8 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
                           : R.color.color_primary
         ));
 
-        // Đặt icon mặc định cho danh mục
-        ((ImageView) holder.itemView.findViewById(R.id.ivBudgetCategoryIcon)).setImageResource(R.drawable.ic_category);
+        // Icon và màu người dùng đã chọn cho danh mục
+        com.example.fintrack.app.category.model.CategoryIcons.paint(holder.itemView.findViewById(R.id.ivBudgetCategoryIcon), category);
 
         // Bấm vào một ngân sách danh mục: màn hình cha quyết định (sửa hạn mức / xóa)
         holder.itemView.setOnClickListener(onClick == null ? null : view -> onClick.accept(budget));

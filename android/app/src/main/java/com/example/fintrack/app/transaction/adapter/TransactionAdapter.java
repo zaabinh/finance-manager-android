@@ -56,8 +56,15 @@ public final class TransactionAdapter extends RecyclerView.Adapter<TransactionAd
                 : item.type == FinanceBook.Type.EXPENSE ? R.color.amount_expense : R.color.amount_transfer);
         ((TextView) holder.itemView.findViewById(R.id.tvTransactionAmount)).setTextColor(color);
         ((TextView) holder.itemView.findViewById(R.id.tvTransactionSign)).setTextColor(color);
-        ((ImageView) holder.itemView.findViewById(R.id.ivTransactionIcon)).setImageResource(
-                item.type == FinanceBook.Type.TRANSFER ? R.drawable.ic_arrow_left_right : R.drawable.ic_banknote);
+        ImageView icon = holder.itemView.findViewById(R.id.ivTransactionIcon);
+        if (item.type == FinanceBook.Type.TRANSFER) {
+            icon.setImageResource(R.drawable.ic_arrow_left_right);
+            // Reset: a recycled row may still carry a category colour.
+            icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                    holder.itemView.getContext().getColor(R.color.text_secondary)));
+        } else {
+            com.example.fintrack.app.category.model.CategoryIcons.paint(icon, book.category(item.categoryId));
+        }
         holder.itemView.setOnClickListener(view -> view.getContext().startActivity(new Intent(view.getContext(), TransactionDetailActivity.class)
                 .putExtra(TransactionFormActivity.EXTRA_ID, item.id)));
     }

@@ -71,6 +71,10 @@ class CategoryServiceTest {
     @Test void validatesIconColorSortAndMissingStatus() {
         CategoryRequest r=request(); r.iconKey="";
         assertThatThrownBy(()->service.create(owner,r)).isInstanceOf(AppException.class);
+        r.iconKey="rocket"; // not in the shared catalogue: the app could not render it
+        assertThatThrownBy(()->service.create(owner,r)).isInstanceOf(AppException.class);
+        // Every seeded icon must be renderable.
+        assertThat(CategoryService.ICON_KEYS).contains("coffee","car","shopping_bag","receipt","more_horiz","briefcase","gift");
         r.iconKey=null; r.colorHex="#fff";
         assertThatThrownBy(()->service.create(owner,r)).isInstanceOf(AppException.class);
         r.colorHex=null; r.sortOrder=-1;
