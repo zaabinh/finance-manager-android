@@ -46,6 +46,7 @@ class UserServiceTest {
         user = new UserRecord(userId, "minhanh", "minh@example.com", "hash", UserStatus.ACTIVE,
                 UserRole.USER, "Minh Anh", true, true, now, now);
         when(users.findById(userId)).thenReturn(Optional.of(user));
+        when(notifications.lockByUserId(userId)).thenReturn(notificationSettings(80));
     }
 
     @Test

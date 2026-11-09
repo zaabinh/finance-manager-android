@@ -102,8 +102,56 @@ class FinanceApiIT {
     }
 
     @Test void allFinanceCollectionsRequireAuthentication() throws Exception {
-        for (String module : List.of("wallets", "categories", "budgets", "transactions"))
+        for (String module : List.of("wallets", "categories", "budgets", "transactions", "notifications", "notifications/unread-count"))
             assertThat(call("GET", "/api/v1/" + module, null, null).getStatus()).isEqualTo(401);
+        ok(call("GET", "/api/v2/users/me/notification-settings", null, null), 401);
+    }
+
+    private UUID notification(UUID owner) {
+        return jdbc.queryForObject("""
+            INSERT INTO fintrack.notifications(user_id,event_key,type,title,body,payload)
+            VALUES (?,?,'DAILY_REMINDER','Reminder','Update your entries',
+              '{"version":1,"target":{"screen":"TRANSACTION_CREATE","localDate":"2026-11-09"}}'::jsonb) RETURNING id
+            """,UUID.class,owner,UUID.randomUUID().toString());
+    }
+    @Test void notificationsUseRealJwtOwnershipAndIndependentReadDeleteState() throws Exception {
+        UUID first=notification(user),second=notification(user);
+        var page=ok(call("GET","/api/v1/notifications?page=0&size=1&readStatus=UNREAD",token,null),200);
+        assertThat(page.get("items").size()).isEqualTo(1);
+        assertThat(page.get("totalPages").asInt()).isEqualTo(2);
+        assertThat(page.get("unreadCount").asInt()).isEqualTo(2);
+        String path="/api/v1/notifications/"+first;
+        ok(call("GET",path,otherToken,null),404);
+        ok(call("PATCH",path+"/read",otherToken,"{\"read\":true}"),404);
+        ok(call("DELETE",path,otherToken,null),404);
+        ok(call("PATCH",path+"/read",token,"{\"read\":false}"),400);
+        var read=ok(call("PATCH",path+"/read",token,"{\"read\":true}"),200);
+        assertThat(ok(call("PATCH",path+"/read",token,"{\"read\":true}"),200).get("readAt")).isEqualTo(read.get("readAt"));
+        UUID newer=notification(user);
+        var all=ok(call("POST","/api/v1/notifications/read-all",token,
+            json.writeValueAsString(Map.of("through",page.get("snapshotAt").asText()))),200);
+        assertThat(all.get("affectedCount").asInt()).isEqualTo(1);
+        assertThat(all.get("unreadCount").asInt()).isEqualTo(1);
+        assertThat(ok(call("GET","/api/v1/notifications/"+newer,token,null),200).get("readAt").isNull()).isTrue();
+        ok(call("DELETE",path,token,null),204);ok(call("DELETE",path,token,null),204);
+        ok(call("GET",path,token,null),404);ok(call("PATCH",path+"/read",token,"{\"read\":true}"),404);
+        assertThat(ok(call("GET","/api/v1/notifications/"+second,token,null),200).get("readAt").isNull()).isFalse();
+    }
+    @Test void notificationQueriesAndBodiesAreStrictAndV1DoesNotResetEmailConsent() throws Exception {
+        for(String query:List.of("page=-1","size=101","readStatus=OTHER","userId=anything","page=0&page=1"))
+            ok(call("GET","/api/v1/notifications?"+query,token,null),400);
+        UUID id=notification(user);
+        ok(call("PATCH","/api/v1/notifications/"+id+"/read",token,"{\"read\":true,\"userId\":\"override\"}"),400);
+        ok(call("POST","/api/v1/notifications/read-all",token,"{\"through\":\"9999-01-01T00:00:00Z\"}"),400);
+        String settings="/api/v2/users/me/notification-settings";
+        assertThat(ok(call("GET",settings,token,null),200).path("data").path("emailFinanceEnabled").asBoolean()).isFalse();
+        assertThat(ok(call("PATCH",settings,token,"{\"emailFinanceEnabled\":true}"),200).path("data").path("emailFinanceEnabled").asBoolean()).isTrue();
+        ok(call("PATCH","/api/v1/users/me/notification-settings",token,"{\"budgetAlertThresholdPercent\":90}"),200);
+        var latest=ok(call("GET",settings,token,null),200).path("data");
+        assertThat(latest.path("emailFinanceEnabled").asBoolean()).isTrue();
+        assertThat(latest.path("budgetAlertThresholdPercent").asInt()).isEqualTo(90);
+        ok(call("PATCH",settings,token,"{\"emailFinanceEnabled\":\"true\"}"),400);
+        ok(call("PATCH",settings,token,"{\"recipient\":\"override@example.test\"}"),400);
     }
 
     @Test void realJwtCannotReadOrMutateOtherOwnersWalletOrCategory() throws Exception {
