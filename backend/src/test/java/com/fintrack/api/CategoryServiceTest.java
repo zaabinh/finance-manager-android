@@ -82,5 +82,7 @@ class CategoryServiceTest {
         ObjectMapper mapper=new ObjectMapper();
         assertThatThrownBy(()->mapper.readValue("{\"name\":\"x\",\"userId\":\"x\"}",CategoryRequest.class)).hasRootCauseInstanceOf(AppException.class);
         assertThatThrownBy(()->mapper.readValue("{\"sortOrder\":1.1}",CategoryRequest.class)).hasRootCauseInstanceOf(AppException.class);
+        assertThatThrownBy(()->mapper.readValue("{\"active\":\"true\"}",CategoryStatusRequest.class)).hasRootCauseInstanceOf(AppException.class);
+        assertThatThrownBy(()->mapper.readValue("{\"active\":1}",CategoryStatusRequest.class)).hasRootCauseInstanceOf(AppException.class);
     }
 }

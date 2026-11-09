@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class FinanceLongDeserializer extends JsonDeserializer<Long> {
     @Override public Long deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        if (!parser.hasToken(JsonToken.VALUE_NUMBER_INT)) throw FinanceSupport.invalid("Tiền phải là số nguyên VND");
+        if (!parser.hasToken(JsonToken.VALUE_NUMBER_INT)) throw FinanceSupport.badRequest("Tiền phải là số nguyên VND");
         try { return parser.getBigIntegerValue().longValueExact(); }
         catch (ArithmeticException exception) { throw FinanceSupport.invalid("Số tiền vượt giới hạn"); }
     }

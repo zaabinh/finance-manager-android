@@ -56,7 +56,9 @@ class PostgresMigrationIT {
             }
             var flyway = Flyway.configure().dataSource(upgradeDatabase.getJdbcUrl(), upgradeDatabase.getUsername(),
                     upgradeDatabase.getPassword()).defaultSchema("fintrack").load();
-            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
+            int pending = flyway.info().pending().length;
+            assertThat(pending).isPositive();
+            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(pending);
             try (var connection = DriverManager.getConnection(upgradeDatabase.getJdbcUrl(),
                     upgradeDatabase.getUsername(), upgradeDatabase.getPassword());
                  var statement = connection.createStatement()) {
@@ -111,15 +113,15 @@ class PostgresMigrationIT {
                     }
                 }
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("6");
+                assertThat(flyway.info().pending()).isEmpty();
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());
                      var statement = connection.createStatement();
                      var result = statement.executeQuery(
-                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5', '6') AND success")) {
+                             "SELECT count(*) FROM fintrack.flyway_schema_history WHERE version IS NOT NULL AND success")) {
                     assertThat(result.next()).isTrue();
-                    assertThat(result.getInt(1)).isEqualTo(6);
+                    assertThat(result.getInt(1)).isEqualTo(flyway.info().all().length);
                 }
                 try (var connection = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
                         POSTGRES.getPassword());

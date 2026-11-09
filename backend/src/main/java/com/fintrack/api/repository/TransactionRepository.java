@@ -52,6 +52,12 @@ public class TransactionRepository {
                 user, clientRequestId).stream().findFirst();
     }
 
+    /** A hash collision only serializes unrelated requests; the scoped key remains the authoritative lookup. */
+    public void lockRequest(UUID user, UUID clientRequestId) {
+        jdbc.query("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", rs -> { },
+                user.toString() + ":" + clientRequestId);
+    }
+
     /** Locks the transaction row alone, then reads its entry in a fresh statement so a concurrent edit is seen. */
     public Row lock(UUID user, UUID id) {
         Row row = jdbc.query("SELECT id, transaction_type, amount_minor, status FROM fintrack.transactions "

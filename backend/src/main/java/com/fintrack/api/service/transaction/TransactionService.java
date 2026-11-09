@@ -76,10 +76,11 @@ public class TransactionService {
         Fields fields = fields(request);
         if (request.clientRequestId == null) throw FinanceSupport.invalid("clientRequestId is required");
         String fingerprint = fingerprint(fields);
-        // Wallet lock first: a same-payload retry targets the same wallet, so it serializes behind the original.
-        var wallet = finance.wallet(user, fields.walletId(), true);
+        // Serialize the user/key before any reference checks, including retries with a changed wallet.
+        transactions.lockRequest(user, request.clientRequestId);
         Result replay = replay(user, request.clientRequestId, fingerprint);
         if (replay != null) return replay;
+        var wallet = finance.wallet(user, fields.walletId(), true);
         if (!wallet.active()) throw FinanceSupport.conflict(ErrorCode.WALLET_ARCHIVED, "Ví đã lưu trữ");
         category(user, fields);
         ensureFunds(user, fields.walletId(), fields.delta());

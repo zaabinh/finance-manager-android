@@ -143,6 +143,58 @@ class TransactionPostgresIT {
         assertThat(balance(wallet)).isEqualTo(10_000);
     }
 
+    @Test void concurrentDifferentWalletPayloadsShareOneIdempotencyKey() throws Exception {
+        UUID second = wallet(user, 0);
+        TransactionRequest first = income(10_000), different = income(20_000);
+        different.walletId = second; different.clientRequestId = first.clientRequestId;
+        assertThat(race(() -> outcome(() -> create(first)), () -> outcome(() -> create(different))))
+                .containsExactlyInAnyOrder("CREATED", "TRANSACTION_REQUEST_CONFLICT");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM fintrack.transactions WHERE user_id = ?", Long.class, user)).isEqualTo(1);
+        assertThat(balance(wallet) + balance(second)).isIn(10_000L, 20_000L);
+    }
+
+    @Test void deferredLedgerFailureRollsBackTheEntirePosting() {
+        TransactionRequest request = income(10_000);
+        assertThatThrownBy(() -> tx.executeWithoutResult(s -> {
+            var created = service.create(user, request);
+            jdbc.update("DELETE FROM fintrack.transaction_entries WHERE transaction_id = ?", created.body().transactionId());
+        })).isInstanceOf(org.springframework.transaction.TransactionException.class);
+        assertThat(balance(wallet)).isEqualTo(0);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM fintrack.transactions WHERE user_id = ?", Long.class, user)).isZero();
+        assertThat(tx.execute(s -> service.create(user, request)).created()).isTrue();
+    }
+
+    @Test void updateRacingDeleteCannotResurrectOrDoubleRefundExpense() throws Exception {
+        jdbc.update("UPDATE fintrack.wallets SET opening_balance_minor = 100000 WHERE id = ?", wallet);
+        var original = create(expense(20_000));
+        var outcomes = race(() -> outcome(() -> tx.execute(s -> service.update(user, original.transactionId(), expense(30_000)))),
+                () -> outcome(() -> { tx.executeWithoutResult(s -> service.delete(user, original.transactionId())); return "VOIDED"; }));
+        assertThat(outcomes).contains("VOIDED");
+        assertThat(service.detail(user, original.transactionId()).status()).isEqualTo("VOIDED");
+        assertThat(balance(wallet)).isEqualTo(100_000);
+    }
+
+    @Test void archivedReferencesRejectWritesButKeepHistoryAndAllowVoid() {
+        var original = create(income(10_000));
+        jdbc.update("UPDATE fintrack.categories SET archived_at = now() WHERE id = ?", incomeCategory);
+        assertCode(() -> create(income(1)), "CATEGORY_ARCHIVED");
+        assertCode(() -> tx.execute(s -> service.update(user, original.transactionId(), income(5_000))), "CATEGORY_ARCHIVED");
+        jdbc.update("UPDATE fintrack.wallets SET archived_at = now() WHERE id = ?", wallet);
+        assertCode(() -> create(income(1)), "WALLET_ARCHIVED");
+        assertThat(service.list(user, 0, 50, null, null, wallet, incomeCategory, null, null, null).items()).hasSize(1);
+        tx.executeWithoutResult(s -> service.delete(user, original.transactionId()));
+        assertThat(balance(wallet)).isZero();
+    }
+
+    @Test void localDayAcrossDstUsesCalendarBoundaries() {
+        jdbc.update("UPDATE fintrack.user_preferences SET time_zone = 'America/New_York' WHERE user_id = ?", user);
+        for (String at : new String[]{"2026-11-01T03:59:59Z", "2026-11-01T04:00:00Z", "2026-11-02T04:59:59Z", "2026-11-02T05:00:00Z"}) {
+            TransactionRequest r = income(1); r.occurredAt = at; create(r);
+        }
+        assertThat(service.list(user, 0, 50, "2026-11-01", "2026-11-01", null, null, null, null, "occurredAt,asc").items())
+                .extracting(t -> t.occurredAt().toString()).containsExactly("2026-11-01T04:00:00Z", "2026-11-02T04:59:59Z");
+    }
+
     @Test void ownershipIsEnforcedEverywhere() {
         var mine = create(income(1_000));
         UUID foreignWallet = wallet(otherUser, 1_000_000);

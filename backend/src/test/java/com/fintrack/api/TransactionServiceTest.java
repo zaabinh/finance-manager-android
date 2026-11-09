@@ -46,8 +46,9 @@ class TransactionServiceTest {
         var result = service.create(user, expense(walletA, 100_000));
         assertThat(result.created()).isTrue();
         var order = inOrder(finance, repository);
-        order.verify(finance).wallet(user, walletA, true);
+        order.verify(repository).lockRequest(user, key);
         order.verify(repository).byRequest(user, key);
+        order.verify(finance).wallet(user, walletA, true);
         order.verify(finance).category(user, expenseCategory, true);
         order.verify(finance).balance(user, walletA);
         var fields = ArgumentCaptor.forClass(Fields.class);
@@ -93,6 +94,7 @@ class TransactionServiceTest {
         assertThat(replay.body()).isSameAs(current);
         verify(repository).detail(user, id);
         verify(repository, times(1)).create(any(), any(), any(), any(), any());
+        verify(finance, times(1)).wallet(user, walletA, true);
     }
 
     @Test void sameKeyDifferentPayloadConflicts() {
@@ -103,6 +105,10 @@ class TransactionServiceTest {
         assertCode(() -> service.create(user, expense(walletA, 95_001)), ErrorCode.TRANSACTION_REQUEST_CONFLICT);
         TransactionRequest note = expense(walletA, 95_000); note.note = "x";
         assertCode(() -> service.create(user, note), ErrorCode.TRANSACTION_REQUEST_CONFLICT);
+        TransactionRequest foreignWallet = expense(walletB, 95_000);
+        when(finance.wallet(user, walletB, true)).thenThrow(FinanceSupport.notFound());
+        assertCode(() -> service.create(user, foreignWallet), ErrorCode.TRANSACTION_REQUEST_CONFLICT);
+        verify(finance, never()).wallet(user, walletB, true);
         when(repository.byRequest(user, key)).thenReturn(Optional.of(new TransactionRepository.Replay(id, null)));
         assertCode(() -> service.create(user, expense(walletA, 95_000)), ErrorCode.TRANSACTION_REQUEST_CONFLICT);
     }
