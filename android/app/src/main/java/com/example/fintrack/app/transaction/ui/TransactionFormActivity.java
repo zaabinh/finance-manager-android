@@ -63,7 +63,8 @@ public final class TransactionFormActivity extends FinanceActivity {
             text(R.id.etTransactionPayee, getIntent().getStringExtra(EXTRA_PAYEE));
         }
         // Wallet IDs are checked against the loaded references in render(); after rotation the form state wins.
-        if (saved == null && !editing) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
+        // Intent extras survive rotation, so re-parse until the form has loaded once.
+        if (!editing && !initialized) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
                 getIntent().getStringExtra(EXTRA_PREFILL_WALLET_ID), getIntent().getStringExtra(EXTRA_PREFILL_DESTINATION_WALLET_ID),
                 getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null);
     }

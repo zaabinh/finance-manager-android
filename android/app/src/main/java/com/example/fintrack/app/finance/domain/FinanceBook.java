@@ -416,6 +416,7 @@ public final class FinanceBook {
     public static final String BUDGET_MONTH_CURRENT = "BUDGET_MONTH_CURRENT";
     public static final String BUDGET_EXCEEDS_AVAILABLE_BALANCE = "BUDGET_EXCEEDS_AVAILABLE_BALANCE";
     public static final String BUDGET_PERIOD_CONFLICT = "BUDGET_PERIOD_CONFLICT";
+    public static final String BUDGET_ARCHIVED = "BUDGET_ARCHIVED";
 
     public MonthlyBudget monthlyBudget(String id) {
         for (MonthlyBudget item : state.monthlyBudgets) if (item.id.equals(id)) return item;

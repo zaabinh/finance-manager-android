@@ -37,4 +37,6 @@
     <string name="budget_shortfall">Ngân sách cần chi vượt số dư khả dụng %1$s. Hãy chuyển thêm tiền vào ví chi tiêu hoặc giảm hạn mức.</string>
     <string name="budget_transfer_from_savings">Chuyển từ tiết kiệm</string>
     <string name="budget_no_savings_wallet">Chưa có ví tiết kiệm đang hoạt động để chuyển tiền</string>
+    <string name="budget_archived_edit">Ngân sách này đã bị xóa nên không thể sửa. Hãy tải lại danh sách.</string>
+    <string name="budget_category_exists">Danh mục này đã có ngân sách trong tháng.</string>
 </resources>
