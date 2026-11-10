@@ -1,0 +1,789 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true">
+
+    <!-- Header Toolbar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rlHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingTop="@dimen/spacing_16"
+        android:paddingBottom="@dimen/spacing_12"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/icon_back_size"
+            android:layout_height="@dimen/icon_back_size"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="@string/analytics_report_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Main Outer White Story Card -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="@dimen/spacing_20"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/spacing_16">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_8"
+                android:background="@drawable/bg_card_white"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_16"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="440dp">
+
+                <!-- 5-segment Story Progress Indicator -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/progressSeg1"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_story_progress_active" />
+
+                    <View
+                        android:id="@+id/progressSeg2"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_story_progress_inactive" />
+
+                    <View
+                        android:id="@+id/progressSeg3"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_story_progress_inactive" />
+
+                    <View
+                        android:id="@+id/progressSeg4"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_story_progress_inactive" />
+
+                    <View
+                        android:id="@+id/progressSeg5"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_story_progress_inactive" />
+                </LinearLayout>
+
+                <!-- Month Selector Dropdown -->
+                <RelativeLayout
+                    android:id="@+id/btnSelectMonth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:background="@drawable/bg_button_outline"
+                    android:paddingHorizontal="@dimen/spacing_16"
+                    android:paddingVertical="@dimen/spacing_8">
+
+                    <TextView
+                        android:id="@+id/tvSelectedMonth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:text="Tháng 10"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_size_body_primary"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="@dimen/spacing_8"
+                        android:layout_toEndOf="@id/tvSelectedMonth"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_chevron_down"
+                        app:tint="@color/text_secondary" />
+                </RelativeLayout>
+
+                <!-- Inner Green Story Main Container -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:background="@drawable/bg_story_card_green"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_20">
+
+                    <TextView
+                        android:id="@+id/tvStoryStepCounter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CÂU CHUYỆN 1 / 5 · MINH HỌA"
+                        android:textColor="#C2E8D2"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <!-- SLIDE 1: Overview -->
+                    <LinearLayout
+                        android:id="@+id/layoutSlide1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="visible">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_12"
+                            android:text="Tháng này, tiền của bạn đã thay đổi thế nào?"
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_24"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Chênh lệch thu – chi"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_body_secondary" />
+
+                            <TextView
+                                android:id="@+id/tvSlide1NetDiff"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_4"
+                                android:text="+5.000.000 đ"
+                                android:textColor="@color/white"
+                                android:textSize="32sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Income vs Expense 2 columns -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_20"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/spacing_8"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_story_card_light_green"
+                                android:orientation="vertical"
+                                android:padding="@dimen/spacing_12">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Thu nhập"
+                                    android:textColor="#C2E8D2"
+                                    android:textSize="@dimen/text_size_caption" />
+
+                                <TextView
+                                    android:id="@+id/tvSlide1Income"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/spacing_4"
+                                    android:text="15 triệu"
+                                    android:textColor="@color/white"
+                                    android:textSize="@dimen/text_size_title_section"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_story_card_light_green"
+                                android:orientation="vertical"
+                                android:padding="@dimen/spacing_12">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Chi tiêu"
+                                    android:textColor="#C2E8D2"
+                                    android:textSize="@dimen/text_size_caption" />
+
+                                <TextView
+                                    android:id="@+id/tvSlide1Expense"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/spacing_4"
+                                    android:text="10 triệu"
+                                    android:textColor="@color/white"
+                                    android:textSize="@dimen/text_size_title_section"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Banner note -->
+                        <TextView
+                            android:id="@+id/tvSlide1Note"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_20"
+                            android:text="Bạn thu nhiều hơn chi trong kỳ. Đây chưa phải số tiền tiết kiệm thực tế."
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/text_size_body_primary" />
+                    </LinearLayout>
+
+                    <!-- SLIDE 2: Category Breakdown -->
+                    <LinearLayout
+                        android:id="@+id/layoutSlide2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_12"
+                            android:text="Tiền của bạn đã đi đâu?"
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <!-- Main Selected Category Box -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_20"
+                            android:gravity="center_horizontal"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:id="@+id/ivSlide2CategoryIcon"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_home"
+                                app:tint="@color/white" />
+
+                            <TextView
+                                android:id="@+id/tvSlide2CategoryPercent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_8"
+                                android:text="40%"
+                                android:textColor="@color/white"
+                                android:textSize="36sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSlide2CategoryDetail"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_4"
+                                android:text="Nhà ở · 4.000.000 đ"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_body_primary" />
+
+                            <ProgressBar
+                                android:id="@+id/pbSlide2Progress"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="@dimen/spacing_16"
+                                android:max="100"
+                                android:progress="40"
+                                android:progressDrawable="@drawable/bg_story_progress_active" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_20"
+                            android:text="Chạm để khám phá từng danh mục"
+                            android:textColor="#C2E8D2"
+                            android:textSize="@dimen/text_size_caption" />
+
+                        <!-- Category Pills Horizontal Scroll -->
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_12"
+                            android:scrollbars="none">
+
+                            <LinearLayout
+                                android:id="@+id/containerSlide2Pills"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal" />
+                        </HorizontalScrollView>
+                    </LinearLayout>
+
+                    <!-- SLIDE 3: Weekly Breakdown -->
+                    <LinearLayout
+                        android:id="@+id/layoutSlide3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_12"
+                            android:text="Chi tiêu không giống nhau mỗi tuần."
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_16"
+                            android:text="Chi tiêu theo tuần"
+                            android:textColor="#C2E8D2"
+                            android:textSize="@dimen/text_size_body_secondary" />
+
+                        <!-- Bar Chart Layout -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="140dp"
+                            android:layout_marginTop="@dimen/spacing_16"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                            <!-- T1 -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                                <View
+                                    android:layout_width="40dp"
+                                    android:layout_height="50dp"
+                                    android:background="@drawable/bg_story_bar_inactive" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/spacing_8"
+                                    android:text="T1"
+                                    android:textColor="#C2E8D2"
+                                    android:textSize="@dimen/text_size_caption" />
+                            </LinearLayout>
+
+                            <!-- T2 -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <View
+                                android:layout_width="40dp"
+                                android:layout_height="75dp"
+                                android:background="@drawable/bg_story_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_8"
+                                android:text="T2"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_caption" />
+                        </LinearLayout>
+
+                        <!-- T3 Peak -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="40dp"
+                                android:layout_height="105dp"
+                                android:background="@drawable/bg_story_bar_active" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_8"
+                                android:text="T3"
+                                android:textColor="@color/white"
+                                android:textSize="@dimen/text_size_caption"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- T4 -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="40dp"
+                                android:layout_height="70dp"
+                                android:background="@drawable/bg_story_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_8"
+                                android:text="T4"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_caption" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Highlight Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_20"
+                        android:background="@drawable/bg_story_card_light_green"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_16">
+
+                        <TextView
+                            android:id="@+id/tvSlide3PeakHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tuần 3 chi tiêu cao nhất"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/text_size_body_primary"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSlide3PeakSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="3.400.000 đ · chiếm 34% chi tiêu tháng."
+                            android:textColor="#C2E8D2"
+                            android:textSize="@dimen/text_size_body_secondary" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- SLIDE 4: Budget Warning -->
+                <LinearLayout
+                    android:id="@+id/layoutSlide4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:text="Những Khoản đang cần bạn chú ý."
+                        android:textColor="@color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <!-- Budget Warning Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_20"
+                        android:background="@drawable/bg_story_card_light_green"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_16">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_coffee"
+                                app:tint="@color/white" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_12"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvSlide4CategoryName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Khoản Ăn uống"
+                                    android:textColor="#C2E8D2"
+                                    android:textSize="@dimen/text_size_caption" />
+
+                                <TextView
+                                    android:id="@+id/tvSlide4BudgetPercent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="80% ngân sách"
+                                    android:textColor="@color/white"
+                                    android:textSize="@dimen/text_size_title_section"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <ProgressBar
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="@dimen/spacing_12"
+                            android:max="100"
+                            android:progress="80"
+                            android:progressDrawable="@drawable/bg_story_progress_active" />
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_12">
+
+                            <TextView
+                                android:id="@+id/tvSlide4Spent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentStart="true"
+                                android:text="Đã chi 3.200.000 đ"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_caption" />
+
+                            <TextView
+                                android:id="@+id/tvSlide4Remaining"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:text="Còn 800.000 đ"
+                                android:textColor="#C2E8D2"
+                                android:textSize="@dimen/text_size_caption" />
+                        </RelativeLayout>
+                    </LinearLayout>
+
+                    <!-- Alert Box -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:background="@drawable/bg_story_card_light_green"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_16">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sắp chạm hạn mức"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/text_size_body_primary"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSlide4AlertNote"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="Bạn đã sử dụng 80% ngân sách Ăn uống. Hãy kiểm tra các khoản chi sắp tới."
+                            android:textColor="#C2E8D2"
+                            android:textSize="@dimen/text_size_body_secondary" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- SLIDE 5: Next Steps -->
+                <LinearLayout
+                    android:id="@+id/layoutSlide5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:gravity="center"
+                        android:text="Một bước nhỏ cho tháng tiếp theo."
+                        android:textColor="@color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <!-- Leaf Circle Icon -->
+                    <FrameLayout
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_marginTop="@dimen/spacing_24"
+                        android:background="@drawable/bg_story_card_light_green"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_leaf"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_20"
+                        android:gravity="center"
+                        android:text="Bạn đã hiểu thêm về tiền của mình."
+                        android:textColor="@color/white"
+                        android:textSize="@dimen/text_size_title_section"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSlide5TipMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:gravity="center"
+                        android:text="Tháng tới, hãy bắt đầu bằng việc xem lại hạn mức Ăn uống và các khoản chi dự kiến."
+                        android:textColor="#C2E8D2"
+                        android:textSize="@dimen/text_size_body_secondary" />
+
+                    <!-- Suggestion Action Chip -->
+                    <LinearLayout
+                        android:id="@+id/btnSlide5Suggestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_24"
+                        android:background="@drawable/bg_story_pill_selected"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="@dimen/spacing_20"
+                        android:paddingVertical="@dimen/spacing_12">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_target"
+                            app:tint="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvSlide5SuggestionAction"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/spacing_8"
+                            android:text="Gợi ý: Xem Khoản Ăn uống"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_size_body_primary"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Disclaimer Footer -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_24"
+                    android:gravity="center"
+                    android:text="Dữ liệu minh họa · Không phải báo cáo tài chính thực tế"
+                    android:textColor="#80C2E8D2"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+
+            <!-- Bottom Navigation Controls (Trước / Tiếp tục) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_20"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnPrevStep"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginEnd="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_outline"
+                    android:text="@string/btn_prev"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnNextStep"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginStart="@dimen/spacing_8"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_primary"
+                    android:text="@string/btn_next"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_size_button"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sheet/Container 629:2895: surface, top radius/sheet 24 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/bg_card_surface" />
+    <corners android:topLeftRadius="@dimen/radius_bottom_sheet" android:topRightRadius="@dimen/radius_bottom_sheet" />
+</shape>

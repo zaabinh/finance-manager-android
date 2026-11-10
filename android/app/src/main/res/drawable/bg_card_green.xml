@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Card/HeroBalance 640:2230: color/bg/brand, radius/hero -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/color_primary" />
+    <corners android:radius="@dimen/radius_hero" />
+</shape>

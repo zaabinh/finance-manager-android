@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Feedback/Inline 628:2683, default Tone=Error (628:2661). Other tones: apply
+     Widget.App.FeedbackInline.* backgroundTint and swap icon from binding code (later task). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/feedbackInline"
+    style="@style/Widget.App.FeedbackInline.Error"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+    <ImageView
+        android:id="@+id/ivFeedbackIcon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="@dimen/spacing_8"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_circle_alert" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvFeedbackMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+            android:textColor="@color/text_primary"
+            tools:text="Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại và thử lần nữa." />
+
+        <TextView
+            android:id="@+id/tvFeedbackAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_4"
+            android:minHeight="@dimen/touch_target_min"
+            android:gravity="center_vertical"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textColor="@color/color_primary"
+            android:visibility="gone"
+            tools:text="Xem chi tiết"
+            tools:visibility="visible" />
+    </LinearLayout>
+</LinearLayout>

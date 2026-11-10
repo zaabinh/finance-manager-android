@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Onboarding Setup Flow -->
+    <string name="step_1_3">Bước 1/3</string>
+    <string name="step_2_3">Bước 2/3</string>
+    <string name="step_3_3">Bước 3/3</string>
+    <string name="btn_complete_setup">Hoàn tất thiết lập</string>
+    <string name="btn_go_home">Vào trang chủ</string>
+    <string name="setup_title">Thiết lập</string>
+
+    <!-- Welcome Screen -->
+    <string name="setup_welcome_brand">Đồng</string>
+    <string name="setup_welcome_slogan_prefix">Đồng</string>
+    <string name="setup_welcome_slogan_part1"> tiền. </string>
+    <string name="setup_welcome_slogan_part2">Đồng</string>
+    <string name="setup_welcome_slogan_part3"> bộ. </string>
+    <string name="setup_welcome_slogan_part4">Đồng</string>
+    <string name="setup_welcome_slogan_part5"> hành.</string>
+    <!-- Each "Đồng" bold brand green (color/text/brand) as in Figma 718:11739 -->
+    <string name="setup_welcome_title"><b><font fgcolor="#FF246B43">Đồng</font></b> tiền. <b><font fgcolor="#FF246B43">Đồng</font></b> bộ. <b><font fgcolor="#FF246B43">Đồng</font></b> hành.</string>
+    <string name="setup_welcome_subtitle">Một cách đơn giản hơn\nđể quản lý tài chính cá nhân</string>
+
+    <!-- Basic Info Screen -->
+    <string name="setup_basic_title">Chúng tôi nên gọi bạn là gì?</string>
+    <string name="setup_basic_subtitle">Tên này hiển thị trong lời chào trên Trang chủ. Bạn có thể đổi sau trong Cài đặt.</string>
+    <string name="setup_display_name_label">Tên hiển thị</string>
+    <string name="setup_display_name_hint">Nhập tên của bạn</string>
+    <string name="setup_display_name_default">Minh Anh</string>
+    <string name="setup_display_name_max">Tối đa 50 ký tự.</string>
+    <string name="setup_currency_label">Đơn vị tiền tệ</string>
+    <string name="setup_currency_info">Việt Nam Đồng (VND, đ) · hiện chỉ hỗ trợ VND</string>
+    <string name="currency_vnd">VND (đ)</string>
+    <string name="currency_usd">USD ($)</string>
+    <string name="currency_eur">EUR (€)</string>
+
+    <!-- Notification Setup Screen -->
+    <string name="setup_notif_title">Nhắc bạn đúng lúc</string>
+    <string name="setup_notif_subtitle">Bạn có thể đổi các cài đặt này bất cứ lúc nào.</string>
+    <string name="notif_enable_title">Bật thông báo</string>
+    <string name="notif_enable_desc">Cho phép Đồng gửi nhắc nhớ và cảnh báo</string>
+    <string name="notif_remind_title">Nhắc nhớ hằng ngày</string>
+    <string name="notif_remind_desc">Một lời nhắc nhẹ để không quên ghi chi tiêu</string>
+    <string name="notif_time_label">Thời gian nhắc</string>
+    <string name="notif_time_default">20:00</string>
+    <string name="notif_alert_title">Cảnh báo ngân sách</string>
+    <string name="notif_alert_desc">Báo khi chi tiêu sắp chạm hoặc vượt hạn mức bạn đặt</string>
+    <string name="notif_permission_note">Đồng sẽ xin quyền gửi thông báo của Android khi bạn bấm Tiếp tục. Nếu bạn từ chối, bạn vẫn tiếp tục bình thường và có thể bật lại trong Cài đặt.</string>
+
+    <!-- Wallet Setup Screen -->
+    <string name="setup_wallet_title">Đồng đã chuẩn bị sẵn cho bạn</string>
+    <string name="setup_wallet_subtitle">Bắt đầu ngay, chỉnh sửa sau bất cứ lúc nào.</string>
+    <string name="wallet_default_section">Ví mặc định</string>
+    <string name="wallet_cash">Tiền mặt</string>
+    <string name="wallet_default_badge">Mặc định</string>
+    <string name="wallet_initial_balance">0 đ</string>
+    <string name="wallet_default_desc">Ví mặc định</string>
+    <string name="setup_cash_set_balance">Nhập số dư</string>
+    <string name="setup_cash_dialog_title">Số dư tiền mặt</string>
+    <string name="setup_cash_dialog_hint">Số tiền bạn đang có trong ví</string>
+    <string name="setup_cash_confirmed">Đã xác nhận, lưu khi hoàn tất</string>
+    <string name="setup_wallet_pending_desc">%1$s, lưu khi hoàn tất</string>
+    <string name="btn_add_other_wallet">+ Thêm ví khác (không bắt buộc)</string>
+    <string name="category_default_section">Danh mục mặc định</string>
+    <string name="category_expense">Chi tiêu</string>
+    <string name="category_income">Thu nhập</string>
+
+    <!-- Setup Complete Screen -->
+    <string name="setup_complete_title">Hoàn tất thiết lập!</string>
+    <string name="setup_complete_subtitle">Đồng đã sẵn sàng đồng hành cùng bạn.</string>
+    <string name="summary_display_name">Tên hiển thị</string>
+    <string name="summary_currency">Đơn vị tiền tệ</string>
+    <string name="summary_default_wallet">Ví mặc định</string>
+    <string name="summary_daily_reminder">Nhắc nhớ hằng ngày</string>
+    <string name="btn_enter_app">Vào ứng dụng</string>
+</resources>

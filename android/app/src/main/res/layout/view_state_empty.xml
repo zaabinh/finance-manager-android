@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma State/Empty 629:2939 (start-aligned as in Figma). One layout for its three types;
+     binding code sets icon/text and shows one CTA:
+     No data  -> ic_inbox,        transaction_empty_*,      btnStatePrimary  "Ghi giao dịch"
+     No results -> ic_search_large, transaction_no_results_*, btnStateSecondary "Xoá bộ lọc"
+     Error    -> ic_cloud_off,    state_error_*,            btnStateSecondary "Thử lại" -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/stateEmpty"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_24">
+
+    <FrameLayout
+        android:layout_width="@dimen/state_icon_container_size"
+        android:layout_height="@dimen/state_icon_container_size"
+        android:background="@drawable/bg_state_icon">
+
+        <ImageView
+            android:id="@+id/ivStateIcon"
+            android:layout_width="@dimen/state_icon_size"
+            android:layout_height="@dimen/state_icon_size"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_inbox" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvStateTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_12"
+        android:accessibilityHeading="true"
+        android:text="@string/transaction_empty_title"
+        android:textAppearance="@style/TextAppearance.App.TitleSection" />
+
+    <TextView
+        android:id="@+id/tvStateBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_12"
+        android:text="@string/transaction_empty_body"
+        android:textAppearance="@style/TextAppearance.App.BodySecondary" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStatePrimary"
+        style="@style/Widget.App.Button.Primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_12"
+        android:text="@string/transaction_empty_action" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStateSecondary"
+        style="@style/Widget.App.Button.Secondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_12"
+        android:visibility="gone"
+        tools:text="@string/action_retry" />
+</LinearLayout>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wallet Module -->
+    <string name="wallet_list_title">Danh sách ví</string>
+    <string name="wallet_add_action">+ Thêm</string>
+    <string name="wallet_detail_title">Chi tiết ví</string>
+    <string name="wallet_edit_action">Sửa</string>
+    <string name="wallet_add_title">Thêm ví</string>
+    <string name="wallet_edit_title">Sửa ví</string>
+    <string name="wallet_name_label">Tên ví</string>
+    <string name="wallet_name_hint">Nhập tên ví</string>
+    <string name="wallet_type_label">Loại ví</string>
+    <string name="wallet_type_cash">Tiền mặt</string>
+    <string name="wallet_type_bank">Ngân hàng</string>
+    <string name="wallet_type_ewallet">Ví điện tử</string>
+    <string name="wallet_type_savings">Tiết kiệm</string>
+    <string name="wallet_provider_label">Ngân hàng / Nhà cung cấp</string>
+    <string name="wallet_provider_hint">Chọn ngân hàng</string>
+    <string name="wallet_balance_label">Số dư hiện tại</string>
+    <string name="wallet_note_label">Ghi chú</string>
+    <string name="wallet_note_hint">Không bắt buộc</string>
+    <string name="btn_create_wallet">Tạo ví</string>
+    <string name="btn_delete_wallet">Xoá ví</string>
+    <string name="recent_transactions">Giao dịch gần đây</string>
+    <string name="this_month_income">THU THÁNG NÀY</string>
+    <string name="this_month_expense">CHI THÁNG NÀY</string>
+    <string name="current_balance_label">Số dư hiện tại</string>
+    <string name="wallet_opening_balance_label">Số dư ban đầu (VND nguyên)</string>
+    <string name="wallet_sort_order">Thứ tự hiển thị</string>
+    <string name="wallet_include_assets">Tính vào tổng tài sản</string>
+    <string name="wallet_archive">Lưu trữ ví</string>
+    <string name="wallet_restore">Kích hoạt lại ví</string>
+    <string name="wallet_archived_suffix"> (Đã lưu trữ)</string>
+    <string name="wallet_missing_or_archived">Ví không tồn tại hoặc cần kích hoạt lại trước khi sửa.</string>
+    <string name="wallet_invalid_name">Tên ví phải có từ 1 đến 100 ký tự.</string>
+    <string name="wallet_invalid_opening">Nhập số nguyên từ 0 đến 999999999999 VND.</string>
+    <string name="wallet_invalid_order">Thứ tự phải là số nguyên không âm.</string>
+    <string name="wallet_list_add">Thêm</string>
+    <string name="wallet_list_empty_title">Chưa có ví nào</string>
+    <string name="wallet_list_empty_hint">Bấm \'Thêm\' ở góc trên bên phải để tạo ví tiền mới.</string>
+    <string name="wallet_name_example">Ví dụ: Techcombank</string>
+    <string name="wallet_opening_label">Số dư ban đầu (không bắt buộc)</string>
+    <string name="wallet_opening_helper">Số tiền đang có trong ví hôm nay (VND).</string>
+</resources>

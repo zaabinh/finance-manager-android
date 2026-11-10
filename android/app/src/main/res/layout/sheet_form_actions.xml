@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma Sheet/FormActions 718:11274: Outline "Hủy" + Primary confirm, 48dp, 12dp gap.
+     Confirm label is set in code (Thêm ví / Thêm danh mục). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSheetCancel"
+        style="@style/Widget.App.Button.Outline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/btn_cancel" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSheetConfirm"
+        style="@style/Widget.App.Button.Primary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_12"
+        android:layout_weight="1" />
+</LinearLayout>

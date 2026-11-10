@@ -1,5 +1,7 @@
 # Complete Figma Prototype — Finance Manager Native Android
 
+> Thuật ngữ đã chốt (26/10/2026): **Wallet / Ví** trong domain, API, database và UI. Dùng `wallets`, `walletId`, `walletType`; tài khoản đăng nhập thuộc User/Auth. Contract: `docs/api/CONTRACT.md`. Tài liệu này không xác nhận đã đổi file Figma.
+
 ## 0. Mục tiêu chung
 
 Hoàn thiện file Figma hiện tại thành một **UI/UX specification hoàn chỉnh** cho ứng dụng Finance Manager Native Android, theo định hướng:

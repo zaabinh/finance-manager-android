@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">fintrack</string>
+    <!-- Master String File - Feature strings are split into modular strings_*.xml files -->
 </resources>

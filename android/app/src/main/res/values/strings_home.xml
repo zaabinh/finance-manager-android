@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home Dashboard -->
+    <string name="greeting_prefix">Xin chào,</string>
+    <string name="sample_user_name">Nguyễn Minh Anh</string>
+    <string name="total_balance_label">TỔNG SỐ DƯ</string>
+    <string name="total_balance_value">đ28.450.000</string>
+    <string name="available_label">Khả dụng</string>
+    <string name="available_value">đ22.412.000</string>
+    <string name="savings_label">Tiết kiệm</string>
+    <string name="savings_value">đ6.038.000</string>
+    <string name="your_wallets">Ví của bạn</string>
+    <string name="wallet_bank">Ngân hàng</string>
+    <string name="wallet_cash_val">đ1.100.000</string>
+    <string name="wallet_bank_val">đ21.312.000</string>
+    <string name="wallet_savings_val">đ6.038.000</string>
+    <string name="overview_analysis">Phân tích tổng quan</string>
+    <string name="tab_income_expense">Thu / Chi</string>
+    <string name="tab_time">Thời gian</string>
+    <string name="income_title">THU NHẬP</string>
+    <string name="income_val">đ18.500.000</string>
+    <string name="expense_title">CHI TIÊU</string>
+    <string name="expense_val">đ9.850.000</string>
+    <string name="remaining_this_month">Còn lại tháng này</string>
+    <string name="remaining_this_month_val">+đ8.650.000</string>
+    <string name="sample_user_greeting">Chào bạn, Minh Anh</string>
+    <string name="total_assets_label">Tổng tài sản</string>
+    <string name="sample_total_assets">32.750.000 đ</string>
+    <string name="available_balance_label">Số dư sử dụng</string>
+    <string name="sample_available_balance">18.420.000 đ</string>
+    <string name="wallet_type_summary">Tiền mặt + Ngân hàng</string>
+    <string name="savings_account_label">Tài khoản tiết kiệm</string>
+    <string name="sample_savings_balance">14.330.000 đ</string>
+    <string name="quick_action_record">Ghi giao dịch</string>
+    <string name="badge_coming_soon">Sắp có</string>
+    <string name="quick_action_budget">Tạo Khoản</string>
+    <string name="quick_action_scan">Quét hóa đơn</string>
+    <string name="quick_action_report">Báo cáo</string>
+    <string name="sample_budget_month">Ngân sách tháng 10</string>
+    <string name="status_in_budget">Trong hạn mức</string>
+    <string name="sample_budget_usage">Đã chi 3.245.000 đ / 6.800.000 đ</string>
+    <string name="sample_budget_remaining">Còn lại 3.555.000 đ - đã dùng 48%</string>
+    <string name="see_details">Xem chi tiết ></string>
+
+    <!-- Formats & Dynamic Strings -->
+    <string name="greeting_format">Chào bạn, %1$s</string>
+    <string name="budget_usage_format">Đã chi %1$s / %2$s</string>
+    <string name="budget_status_exceeded">Vượt hạn mức</string>
+    <string name="budget_exceeded_detail">Vượt %1$s - đã dùng %2$d%%</string>
+    <string name="budget_status_within">Trong hạn mức</string>
+    <string name="budget_remaining_detail">Còn lại %1$s - đã dùng %2$d%%</string>
+    <string name="budget_status_unset">Chưa đặt</string>
+    <string name="budget_spent_only">Đã chi %1$s</string>
+    <string name="budget_unset_note">Chưa đặt hạn mức tháng này</string>
+    <string name="hidden_balance">••••••••</string>
+    <string name="hidden_amount">••••••</string>
+</resources>

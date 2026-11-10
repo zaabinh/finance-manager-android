@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One State/Loading List row: 40dp circle, two lines, amount block. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="56dp"
+    android:orientation="horizontal"
+    android:paddingTop="@dimen/spacing_8"
+    android:paddingBottom="@dimen/spacing_8">
+
+    <View
+        android:layout_width="@dimen/icon_tile_size"
+        android:layout_height="@dimen/icon_tile_size"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:background="@drawable/bg_skeleton_circle" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/spacing_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="160dp"
+            android:layout_height="12dp"
+            android:background="@drawable/bg_skeleton" />
+
+        <View
+            android:layout_width="96dp"
+            android:layout_height="10dp"
+            android:layout_marginTop="@dimen/spacing_8"
+            android:background="@drawable/bg_skeleton" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="64dp"
+        android:layout_height="12dp"
+        android:background="@drawable/bg_skeleton" />
+</LinearLayout>

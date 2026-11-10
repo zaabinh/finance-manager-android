@@ -1,0 +1,4 @@
+name: finance-manager-android
+include:
+  - path: ../docker-compose.yml
+    env_file: ../.env
