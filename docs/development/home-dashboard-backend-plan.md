@@ -1,6 +1,8 @@
 # Kế hoạch backend Home Dashboard
 
-Ngày 08/11/2026. Vai trò Explorer theo [AGENTS.md](../../AGENTS.md). Đây là kế hoạch và API **đề xuất**, chưa triển khai dashboard endpoint. Không thay đổi contract CRUD đang thực hiện trong [execution plan](finance-execution-plan.md).
+Ngày lập 08/11/2026. Vai trò Explorer theo [AGENTS.md](../../AGENTS.md). Backend đã được triển khai ngày 09/11/2026 trên nhánh riêng `feature/home-dashboard`, chưa merge/push. Contract cuối cùng và Android handoff: [HOME_DASHBOARD.md](../api/HOME_DASHBOARD.md); kết quả kiểm tra: [DASHBOARD_IMPLEMENTATION_REPORT.md](../../DASHBOARD_IMPLEMENTATION_REPORT.md). Các mục Android và unread integration còn là công việc tiếp theo. Không thay đổi contract CRUD trong [execution plan](finance-execution-plan.md).
+
+**Điều chỉnh theo code hiện tại:** schema V10 có monthly budget parent; dashboard chỉ lấy category budget active dưới monthly parent active của tháng. Risk vẫn là worst status của category budgets theo kế hoạch này, không thay bằng status tổng của monthly parent. Chuyển ví đã tồn tại trong baseline nhưng không tính vào flow/recent. Notifications được phát triển ở nhánh độc lập nên response hiện tại luôn `available=false`, `unreadCount=null`.
 
 ## 1. Căn cứ, hiện trạng và phạm vi
 
