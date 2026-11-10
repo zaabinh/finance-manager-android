@@ -20,6 +20,7 @@ import com.fintrack.api.repository.UserPreferencesRepository;
 import com.fintrack.api.repository.UserPreferencesRepository.UserPreferencesRecord;
 import com.fintrack.api.repository.UserRepository;
 import com.fintrack.api.repository.UserRepository.UserRecord;
+import com.fintrack.api.service.wallet.WalletService;
 import com.fintrack.api.service.auth.RefreshTokenRotatingService;
 import java.time.DateTimeException;
 import java.time.LocalTime;
@@ -41,6 +42,7 @@ public class UserService {
     private final NotificationSettingsRepository notificationSettings;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRotatingService refreshTokens;
+    private final WalletService wallets;
 
     @Transactional
     public UserProfileResponse getMyProfile(UUID userId) {
@@ -61,7 +63,10 @@ public class UserService {
         if (request.profile().displayName() == null || request.profile().displayName().isBlank()) {
             throw badRequest("Display name is required");
         }
+        // Row lock serializes double submits; a retry after setup completed must not create the wallets again.
+        boolean firstTime = !users.lockById(userId).orElseThrow(UserService::notFound).onboardingCompleted();
         UserProfileResponse profile = updateMyProfile(userId, request.profile());
+        if (firstTime && request.wallets() != null) request.wallets().forEach(wallet -> wallets.create(userId, wallet));
         NotificationSettingsResponse notifications = request.notificationSettings() == null
                 ? toNotifications(getOrCreateNotificationSettings(userId))
                 : updateMyNotificationSettings(userId, request.notificationSettings());
