@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
@@ -45,6 +46,8 @@ public class RefreshTokenRotatingService {
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenRotatingService.class);
     private static final Logger securityLog = LoggerFactory.getLogger("com.fintrack.api.security.audit");
     private static final int REFRESH_TOKEN_BYTES = 32;
+    /** Lifetime of a login without "Ghi nhớ tôi" (never longer than the configured refresh TTL). */
+    public static final Duration UNREMEMBERED_TTL = Duration.ofDays(1);
     private final RefreshSessionRepository sessions;
     private final UserRepository users;
     private final TokenService tokens;
@@ -55,11 +58,17 @@ public class RefreshTokenRotatingService {
     /** Issues an access token and a new refresh token. {@code familyId == null} starts a new family (new login). */
     @Transactional
     public TokenResponse generateTokenPair(
-        UUID userId, 
-        UserRole role, 
-        UUID familyId, 
+        UUID userId,
+        UserRole role,
+        UUID familyId,
         ClientMetadata client) {
-        return issue(userId, role, familyId == null ? UUID.randomUUID() : familyId, client).token();
+        return generateTokenPair(userId, role, familyId, client, true);
+    }
+
+    /** {@code rememberMe == false} ("Ghi nhớ tôi" unchecked) issues a family that lives at most {@link #UNREMEMBERED_TTL}. */
+    @Transactional
+    public TokenResponse generateTokenPair(UUID userId, UserRole role, UUID familyId, ClientMetadata client, boolean rememberMe) {
+        return issue(userId, role, familyId == null ? UUID.randomUUID() : familyId, client, rememberMe).token();
     }
 
     @Transactional(noRollbackFor = RefreshTokenReuseException.class)
@@ -82,7 +91,8 @@ public class RefreshTokenRotatingService {
         }
         if (!session.expiresAt().isAfter(now) || !isUsable(user)) throw invalid();
 
-        Issued next = issue(user.id(), user.role(), session.familyId(), client);
+        // Carry the flag forward so refreshing cannot turn a short session into a 30-day one.
+        Issued next = issue(user.id(), user.role(), session.familyId(), client, session.rememberMe());
         sessions.rotate(session.id(), next.sessionId(), SuccessorTokenCipher.seal(raw, session.id(), next.refreshToken()), now);
         log.debug("Refresh token rotated; familyId={} from={} to={}", session.familyId(), session.id(), next.sessionId());
         return next.token();
@@ -131,14 +141,16 @@ public class RefreshTokenRotatingService {
     private Issued issue(
         UUID userId, 
         UserRole role, 
-        UUID familyId, 
-        ClientMetadata client) {
+        UUID familyId,
+        ClientMetadata client,
+        boolean rememberMe) {
         byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
         random.nextBytes(bytes);
         String refresh = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         // 256-bit random tokens need no salt or slow hash: SHA-256 is preimage-resistant and allows indexed lookup.
-        UUID id = sessions.create(userId, familyId, TokenHash.sha256(refresh),
-                clock.instant().plus(properties.refreshTokenTtl()), client);
+        Duration ttl = rememberMe ? properties.refreshTokenTtl()
+                : java.util.Collections.min(java.util.List.of(properties.refreshTokenTtl(), UNREMEMBERED_TTL));
+        UUID id = sessions.create(userId, familyId, TokenHash.sha256(refresh), clock.instant().plus(ttl), rememberMe, client);
         return new Issued(id, refresh, pair(tokens.createAccessToken(userId, role), refresh));
     }
 

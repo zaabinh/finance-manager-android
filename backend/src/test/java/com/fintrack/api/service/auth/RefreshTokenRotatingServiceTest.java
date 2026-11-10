@@ -40,23 +40,33 @@ class RefreshTokenRotatingServiceTest {
         var user = new UserRepository.UserRecord(userId, "user", "user@example.com", "hash", UserStatus.ACTIVE, UserRole.USER, null, false, true);
         when(users.lockById(userId)).thenReturn(Optional.of(user));
         when(tokens.createAccessToken(userId, UserRole.USER)).thenReturn("access");
-        when(sessions.create(any(), any(), any(), any(), any())).thenReturn(successorId);
+        when(sessions.create(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(successorId);
     }
 
     @Test void loginStartsNewFamilyAndStoresOnlyTheHash() {
         var pair = service.generateTokenPair(userId, UserRole.USER, null, client);
         var familyId = ArgumentCaptor.forClass(UUID.class);
         verify(sessions).create(eq(userId), familyId.capture(), eq(TokenHash.sha256(pair.refreshToken())),
-                eq(now.plus(Duration.ofDays(30))), eq(client));
+                eq(now.plus(Duration.ofDays(30))), eq(true), eq(client));
         assertThat(familyId.getValue()).isNotNull();
         assertThat(pair.refreshToken()).hasSize(43).isNotEqualTo(TokenHash.sha256(pair.refreshToken()));
         assertThat(pair.accessToken()).isEqualTo("access");
     }
 
+    @Test void loginWithoutRememberMeGetsAShortSessionThatRotationCannotExtend() {
+        service.generateTokenPair(userId, UserRole.USER, null, client, false);
+        verify(sessions).create(eq(userId), any(), any(), eq(now.plus(RefreshTokenRotatingService.UNREMEMBERED_TTL)), eq(false), eq(client));
+
+        stub("short", new Session(oldId, userId, family, now.plus(Duration.ofHours(1)), null, null, null, null, false));
+        service.rotateRefreshToken("short", client);
+        // The successor stays short-lived and keeps the flag, not the 30-day default.
+        verify(sessions, times(2)).create(eq(userId), any(), any(), eq(now.plus(RefreshTokenRotatingService.UNREMEMBERED_TTL)), eq(false), eq(client));
+    }
+
     @Test void rotationKeepsFamilyRevokesOldAndSealsSuccessorForGracePeriod() throws Exception {
         stub("old", session(oldId, null, null, null, null));
         var pair = service.rotateRefreshToken("old", client);
-        verify(sessions).create(eq(userId), eq(family), eq(TokenHash.sha256(pair.refreshToken())), any(), eq(client));
+        verify(sessions).create(eq(userId), eq(family), eq(TokenHash.sha256(pair.refreshToken())), any(), eq(true), eq(client));
         var sealed = ArgumentCaptor.forClass(byte[].class);
         verify(sessions).rotate(eq(oldId), eq(successorId), sealed.capture(), eq(now));
         assertThat(SuccessorTokenCipher.open("old", oldId, sealed.getValue())).isEqualTo(pair.refreshToken());
@@ -69,7 +79,7 @@ class RefreshTokenRotatingServiceTest {
         var pair = service.rotateRefreshToken("old", client);
         assertThat(pair.refreshToken()).isEqualTo("successor-raw");
         assertThat(pair.accessToken()).isEqualTo("access");
-        verify(sessions, never()).create(any(), any(), any(), any(), any());
+        verify(sessions, never()).create(any(), any(), any(), any(), anyBoolean(), any());
         verify(sessions, never()).revokeFamily(any(), any(), any());
     }
 
@@ -81,7 +91,7 @@ class RefreshTokenRotatingServiceTest {
                 .isInstanceOfSatisfying(RefreshTokenReuseException.class,
                         ex -> assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.AUTH_REFRESH_TOKEN_INVALID));
         verify(sessions).revokeFamily(family, RevokeReason.REUSE_DETECTED, now);
-        verify(sessions, never()).create(any(), any(), any(), any(), any());
+        verify(sessions, never()).create(any(), any(), any(), any(), anyBoolean(), any());
     }
 
     @Test void replayInsideGracePeriodIsReuseOnceSuccessorWasUsed() {
@@ -101,7 +111,7 @@ class RefreshTokenRotatingServiceTest {
         assertThatThrownBy(() -> service.rotateRefreshToken("expired", client)).isInstanceOf(AppException.class);
         assertThatThrownBy(() -> service.rotateRefreshToken("unknown", client)).isInstanceOf(AppException.class);
         verify(sessions, never()).revokeFamily(any(), any(), any());
-        verify(sessions, never()).create(any(), any(), any(), any(), any());
+        verify(sessions, never()).create(any(), any(), any(), any(), anyBoolean(), any());
     }
 
     @Test void logoutRevokesTheDeviceFamilyAndIgnoresUnknownTokens() {

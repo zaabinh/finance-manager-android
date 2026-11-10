@@ -14,6 +14,7 @@
     <string name="hint_username">VD: NguyenVanA</string>
     <string name="label_password">Mật khẩu</string>
     <string name="hint_password">VD: 12345678</string>
+    <string name="remember_me">Ghi nhớ tôi</string>
     <string name="forgot_password_link">Quên mật khẩu?</string>
     <string name="btn_login">Đăng nhập</string>
     <string name="prompt_dont_have_account">Chưa có tài khoản? </string>

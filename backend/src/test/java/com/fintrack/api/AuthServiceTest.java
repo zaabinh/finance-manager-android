@@ -81,7 +81,7 @@ class AuthServiceTest {
         when(users.findByIdentifier("an.nguyen")).thenReturn(Optional.of(user));
         when(users.lockByIdForAuthentication(id)).thenReturn(Optional.of(user));
         assertThat(service.login(new LoginRequest("an.nguyen", "Strong@123"), client).onboardingCompleted()).isFalse();
-        verify(refreshTokens).generateTokenPair(id, UserRole.USER, null, client);
+        verify(refreshTokens).generateTokenPair(id, UserRole.USER, null, client, true); // rememberMe omitted = remembered
         verify(limits).clearLoginFailures("an.nguyen", client);
     }
     @Test void unverifiedUserCannotLogin() {

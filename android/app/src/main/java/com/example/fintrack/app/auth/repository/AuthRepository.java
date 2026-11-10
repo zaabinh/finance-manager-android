@@ -41,8 +41,8 @@ public class AuthRepository {
     }
 
     /** Gọi API Đăng nhập tài khoản */
-    public void login(String usernameOrEmail, String password, MutableLiveData<Resource<LoginResponse>> result) {
-        apiService.login(new LoginRequest(usernameOrEmail, password)).enqueue(new Callback<ApiResponse<LoginResponse>>() {
+    public void login(String usernameOrEmail, String password, boolean rememberMe, MutableLiveData<Resource<LoginResponse>> result) {
+        apiService.login(new LoginRequest(usernameOrEmail, password, rememberMe)).enqueue(new Callback<ApiResponse<LoginResponse>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<LoginResponse>> call, @NonNull Response<ApiResponse<LoginResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {

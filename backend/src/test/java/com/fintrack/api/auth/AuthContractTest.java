@@ -35,9 +35,9 @@ class AuthContractTest {
     }
 
     @Test
-    void loginRequestContainsOnlyIdentifierAndPassword() throws Exception {
+    void loginRequestContainsIdentifierPasswordAndRememberMe() throws Exception {
         assertThat(recordComponents(LOGIN_REQUEST))
-                .containsExactly("usernameOrEmail", "password");
+                .containsExactly("usernameOrEmail", "password", "rememberMe");
     }
 
     @Test
