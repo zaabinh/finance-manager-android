@@ -56,7 +56,9 @@ public class FinanceBookTest {
         book.save(first, false); book.save(transaction(FinanceBook.Type.EXPENSE, 15_000, "food", cash, null), false);
         assertTrue(book.usage(budget).exceeded); assertEquals(-10_000, book.usage(budget).remaining);
         book.deleteTransaction(first.id); assertEquals(15_000, book.spent(budget)); assertFalse(book.usage(budget).warning);
-        book.deleteBudget(budget.id); assertEquals(1, book.state().transactions.size());
+        // Soft delete: the voided record stays for audit, budget deletion never touches the ledger.
+        book.deleteBudget(budget.id); assertEquals(2, book.state().transactions.size());
+        assertEquals("VOIDED", book.state().transactions.get(0).status);
     }
     @Test public void budgetsUseExactCategoryAndMonthAndExpenseOnly() {
         FinanceBook.Budget budget = new FinanceBook.Budget("b", "food", "2026-10", 500_000); book.save(budget, false);
@@ -107,7 +109,7 @@ public class FinanceBookTest {
         problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, true));
         book.save(value, false);
         problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, false));
-        book.deleteTransaction(value.id); problem(FinanceBook.Problem.NOT_FOUND, () -> book.save(value, true));
+        book.deleteTransaction(value.id); problem(FinanceBook.Problem.VOIDED, () -> book.save(value, true));
     }
     @Test public void searchIgnoresVietnameseAccentsAndMatchesDestinationWallet() {
         book.save(transaction(FinanceBook.Type.TRANSFER, 100, null, cash, bank), false);
@@ -122,7 +124,9 @@ public class FinanceBookTest {
     }
     @Test public void namesAndMonthsAreValidated() {
         problem(FinanceBook.Problem.NAME, () -> book.addWallet("tiền mặt", 0));
-        problem(FinanceBook.Problem.NAME, () -> book.addCategory(" An uong ", FinanceBook.Type.EXPENSE));
+        // Contract: case-insensitive but accent-sensitive.
+        problem(FinanceBook.Problem.NAME, () -> book.addCategory(" ĂN UỐNG ", FinanceBook.Type.EXPENSE));
+        book.addCategory("An uong", FinanceBook.Type.EXPENSE);
         for (String month : new String[]{"2026-00", "2026-13", "26-10", "2026-1", ""})
             problem(FinanceBook.Problem.DATE, () -> FinanceBook.validateMonth(month));
     }
@@ -130,6 +134,25 @@ public class FinanceBookTest {
         FinanceBook.State corrupt = FinanceBook.empty();
         corrupt.transactions.add(transaction(FinanceBook.Type.EXPENSE, 100, "food", "missing", null));
         assertThrows(FinanceBook.Failure.class, () -> new FinanceBook(corrupt));
+    }
+    @Test public void transferToArchivedDestinationIsRejectedAndVoidChecksDestination() {
+        String savings = book.addWallet("Tiết kiệm", 0, FinanceBook.WalletType.SAVINGS).id;
+        book.walletStatus(savings, false);
+        problem(FinanceBook.Problem.ARCHIVED, () -> book.save(transaction(FinanceBook.Type.TRANSFER, 1, null, cash, savings), false));
+        FinanceBook.Transaction moved = transaction(FinanceBook.Type.TRANSFER, 300_000, null, cash, bank); book.save(moved, false);
+        book.save(transaction(FinanceBook.Type.EXPENSE, 2_100_000, "food", bank, null), false); // bank 2_300_000 -> 200_000
+        problem(FinanceBook.Problem.INSUFFICIENT_FUNDS, () -> book.deleteTransaction(moved.id));
+        assertEquals("POSTED", moved.status);
+        problem(FinanceBook.Problem.INSUFFICIENT_FUNDS, () -> book.save(transaction(FinanceBook.Type.TRANSFER, 700_001, null, cash, bank), false));
+    }
+    @Test public void queryWalletFilterMatchesTransferSourceOrDestination() {
+        book.save(transaction(FinanceBook.Type.TRANSFER, 100, null, cash, bank), false);
+        book.save(transaction(FinanceBook.Type.EXPENSE, 100, "food", cash, null), false);
+        assertEquals(1, book.query(new FinanceBook.Query(null, null, null, bank, null, null, null), 0, 50).items.size());
+        assertEquals(2, book.query(new FinanceBook.Query(null, null, null, cash, null, null, null), 0, 50).items.size());
+        assertEquals(1, book.query(new FinanceBook.Query(null, null, FinanceBook.Type.TRANSFER, null, null, null, null), 0, 50).items.size());
+        assertEquals(100, book.total(FinanceBook.Type.EXPENSE, "2026-10"));
+        assertEquals(0, book.total(FinanceBook.Type.INCOME, "2026-10"));
     }
     @Test public void savingsAreSeparateFromAvailableWallets() {
         String savings = book.addWallet("Tiết kiệm", 4_000_000, FinanceBook.WalletType.SAVINGS).id;

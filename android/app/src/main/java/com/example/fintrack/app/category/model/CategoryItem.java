@@ -9,6 +9,10 @@ import java.io.Serializable;
  */
 public class CategoryItem implements Serializable {
 
+    private String colorHex;
+    public String getColorHex() { return colorHex; }
+    public void setColorHex(String colorHex) { this.colorHex = colorHex; }
+
     private String id;              // Mã định danh duy nhất của danh mục (Ví dụ: "c1", "c3"...)
     private String name;            // Tên hiển thị của danh mục (Ví dụ: "Ăn uống", "Lương tháng"...)
     private String type;            // Loại danh mục: "EXPENSE" (Chi tiêu) hoặc "INCOME" (Thu nhập)

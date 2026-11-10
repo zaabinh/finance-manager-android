@@ -12,8 +12,19 @@ public class CategoryRequest {
     @SerializedName("categoryType")
     public final FinanceBook.Type categoryType;
 
+    public final String iconKey;
+    public final String colorHex;
+    public final int sortOrder;
+
     public CategoryRequest(String name, FinanceBook.Type type) {
+        this(name, type, null, null, 0);
+    }
+
+    public CategoryRequest(String name, FinanceBook.Type type, String iconKey, String colorHex, int sortOrder) {
         this.name = name;
         categoryType = type;
+        this.iconKey = iconKey;
+        this.colorHex = colorHex;
+        this.sortOrder = sortOrder;
     }
 }

@@ -102,10 +102,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
 
             // Hiển thị trạng thái hoạt động bằng chữ và màu sắc tương ứng
             if (category.isActive()) {
-                tvCategoryStatus.setText("Đang hoạt động");
+                tvCategoryStatus.setText(R.string.status_active);
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.status_success));
             } else {
-                tvCategoryStatus.setText("Đã vô hiệu hóa");
+                tvCategoryStatus.setText(R.string.status_disabled);
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.neutral_text_400));
             }
 
@@ -125,6 +125,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
             // Hiển thị hình ảnh icon nếu có
             if (category.getIconResId() != 0) {
                 ivCategoryIcon.setImageResource(category.getIconResId());
+            }
+            if (category.getColorHex() != null && category.getColorHex().matches("#[0-9a-fA-F]{6}")) {
+                ivCategoryIcon.setColorFilter(android.graphics.Color.parseColor(category.getColorHex()));
             }
 
             // Lắng nghe sự kiện khi người dùng gạt công tắc bật/tắt trạng thái

@@ -31,6 +31,7 @@ class AuthServiceTest {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
     private final Clock clock = Clock.fixed(Instant.parse("2026-11-02T00:00:00Z"), ZoneOffset.UTC);
     private final RateLimitingService limits = mock(RateLimitingService.class);
+    private final com.fintrack.api.service.category.CategorySeedService categorySeeds = mock(com.fintrack.api.service.category.CategorySeedService.class);
     private final UUID id = UUID.randomUUID();
     private final ClientMetadata client = new ClientMetadata("127.0.0.1", null);
     private AuthService service;
@@ -42,13 +43,14 @@ class AuthServiceTest {
         var verification = new EmailVerificationService(challenges, encoder, events, properties, clock,
                 mock(EmailSenderService.class), mock(EmailTemplateRenderer.class));
         service = new AuthService(users, verification, encoder, refreshTokens, new PasswordPolicy(),
-                new ProviderManager(provider), limits);
+                new ProviderManager(provider), limits, categorySeeds);
         user = new UserRepository.UserRecord(id, "an.nguyen", "an@example.com", encoder.encode("Strong@123"),
                 UserStatus.ACTIVE, UserRole.USER, null, false, true);
     }
     @Test void registrationHashesPasswordAndOtpAndPublishesDeliveryEvent() {
         when(users.create(anyString(), anyString(), anyString())).thenReturn(id);
         service.register(new RegisterRequest(" an.nguyen ", " AN@EXAMPLE.COM ", "Strong@123"));
+        verify(categorySeeds).initialize(id);
         var hash = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(users).create(eq("an.nguyen"), eq("an@example.com"), hash.capture());
         assertThat(encoder.matches("Strong@123", hash.getValue())).isTrue();

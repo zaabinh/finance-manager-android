@@ -45,7 +45,7 @@
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackground"
             android:padding="@dimen/spacing_4"
-            android:text="Thêm"
+            android:text="@string/wallet_list_add"
             android:textColor="@color/color_primary"
             android:textSize="@dimen/text_size_body_primary"
             android:textStyle="bold" />
@@ -86,7 +86,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_16"
-            android:text="Chưa có ví nào"
+            android:text="@string/wallet_list_empty_title"
             android:textColor="@color/text_primary"
             android:textSize="@dimen/text_size_title_section"
             android:textStyle="bold" />
@@ -96,7 +96,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_8"
             android:gravity="center"
-            android:text="Bấm 'Thêm' ở góc trên bên phải để tạo ví tiền mới."
+            android:text="@string/wallet_list_empty_hint"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_size_body_secondary" />
     </LinearLayout>

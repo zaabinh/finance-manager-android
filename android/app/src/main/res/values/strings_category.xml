@@ -7,6 +7,11 @@
     <string name="search_category_hint">Tìm kiếm danh mục...</string>
     <string name="category_name_label">Tên danh mục</string>
     <string name="category_name_hint">Nhập tên danh mục...</string>
+    <string name="category_name_invalid">Tên danh mục phải có từ 1 đến 100 ký tự</string>
+    <string name="category_color_label">Màu biểu tượng (#RRGGBB, không bắt buộc)</string>
+    <string name="category_color_invalid">Nhập màu theo định dạng #RRGGBB</string>
+    <string name="category_sort_label">Thứ tự hiển thị (mặc định 0)</string>
+    <string name="category_sort_invalid">Nhập số nguyên từ 0 đến 2147483647</string>
     <string name="category_type_label">Loại danh mục</string>
     <string name="category_icon_label">Icon</string>
     <string name="category_description_label">Mô tả</string>
@@ -28,4 +33,7 @@
     <string name="cat_bonus">Thưởng</string>
     <string name="cat_other_income">Thu nhập khác</string>
     <string name="category_note">Có sẵn các danh mục chi tiêu và thu nhập phổ biến. Bạn có thể tùy chỉnh sau trong Cài đặt.</string>
+    <string name="category_list_add">Thêm</string>
+    <string name="category_list_empty_title">Không có danh mục nào</string>
+    <string name="category_list_empty_hint">Bấm \'Thêm\' ở góc trên bên phải để tạo danh mục mới.</string>
 </resources>

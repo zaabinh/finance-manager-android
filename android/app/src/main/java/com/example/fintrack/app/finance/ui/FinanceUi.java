@@ -34,8 +34,11 @@ public final class FinanceUi {
         return String.format(Locale.ROOT, "%,d đ", centsOrUnits).replace(',', '.');
     }
     public static String date(long millis) {
+        return date(millis, "Asia/Ho_Chi_Minh");
+    }
+    public static String date(long millis, String timeZone) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ROOT);
-        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
         return sdf.format(new Date(millis));
     }
     public static int typeName(FinanceBook.Type type) {
@@ -61,6 +64,14 @@ public final class FinanceUi {
             case CONFLICT: return R.string.finance_conflict;
             case VALIDATION: return R.string.error_bad_request;
             case SERVER: return R.string.error_server;
+            case INSUFFICIENT_FUNDS: return R.string.finance_insufficient_funds;
+            case VOIDED: return R.string.finance_transaction_voided;
+            case ARCHIVED: return R.string.finance_archived;
+            case NOT_FOUND: return R.string.finance_not_found;
+            case AMOUNT: return R.string.finance_amount_error;
+            case NAME: return R.string.finance_name_error;
+            case CATEGORY: return R.string.finance_category_error;
+            case WALLET: return R.string.finance_wallet_error;
             default: return R.string.finance_storage_error;
         }
     }
@@ -146,7 +157,7 @@ public final class FinanceUi {
         LinearLayout row = new LinearLayout(activity);
         row.setGravity(android.view.Gravity.CENTER);
         NumberPicker year = new NumberPicker(activity), number = new NumberPicker(activity);
-        year.setMinValue(1970); year.setMaxValue(9999); year.setValue(Integer.parseInt(month.substring(0, 4)));
+        year.setMinValue(1); year.setMaxValue(9998); year.setValue(Integer.parseInt(month.substring(0, 4)));
         number.setMinValue(1); number.setMaxValue(12); number.setValue(Integer.parseInt(month.substring(5)));
         year.setContentDescription(activity.getString(R.string.finance_year));
         number.setContentDescription(activity.getString(R.string.budget_period_label));
@@ -158,7 +169,7 @@ public final class FinanceUi {
                 }).show();
     }
     public static void dateTime(FinanceActivity activity, long initial, Consumer<Long> selected) {
-        Calendar date = Calendar.getInstance(FinanceBook.ZONE); date.setTimeInMillis(initial);
+        Calendar date = Calendar.getInstance(TimeZone.getTimeZone(activity.book == null ? "Asia/Ho_Chi_Minh" : activity.book.state().timeZone)); date.setTimeInMillis(initial);
         new DatePickerDialog(activity, (picker, year, month, day) -> {
             date.set(year, month, day);
             new TimePickerDialog(activity, (clock, hour, minute) -> {
@@ -194,26 +205,36 @@ public final class FinanceUi {
                 }).show();
     }
     public static void wallet(FinanceActivity activity, Consumer<String> selected) {
-        if (activity.book == null || activity.book.state().wallets.isEmpty()) {
+        wallet(activity, true, selected);
+    }
+    public static void wallet(FinanceActivity activity, boolean activeOnly, Consumer<String> selected) {
+        if (activity.book == null) {
             Toast.makeText(activity, R.string.finance_wallet_empty, Toast.LENGTH_SHORT).show(); return;
         }
-        java.util.List<FinanceBook.Wallet> list = activity.book.state().wallets;
+        java.util.List<FinanceBook.Wallet> list = new java.util.ArrayList<>();
+        for (FinanceBook.Wallet item : activity.book.state().wallets) if (!activeOnly || item.archivedAt == null) list.add(item);
         CharSequence[] names = new CharSequence[list.size()];
         for (int i = 0; i < list.size(); i++) names[i] = list.get(i).name;
         new MaterialAlertDialogBuilder(activity).setTitle(R.string.label_wallet).setItems(names, (dialog, which) ->
-                selected.accept(list.get(which).id)).show();
+                selected.accept(list.get(which).id))
+                .setNeutralButton(R.string.finance_add_wallet, (dialog, which) -> activity.startActivity(new Intent(activity,
+                        com.example.fintrack.app.wallet.ui.WalletAddActivity.class))).show();
     }
     public static void category(FinanceActivity activity, FinanceBook.Type type, Consumer<String> selected) {
-        if (activity.book == null || activity.book.state().categories.isEmpty()) {
+        category(activity, type, true, selected);
+    }
+    public static void category(FinanceActivity activity, FinanceBook.Type type, boolean activeOnly, Consumer<String> selected) {
+        if (activity.book == null) {
             Toast.makeText(activity, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return;
         }
         java.util.List<FinanceBook.Category> all = activity.book.state().categories;
         java.util.List<FinanceBook.Category> filtered = new java.util.ArrayList<>();
-        for (FinanceBook.Category c : all) if (c.type == type) filtered.add(c);
-        if (filtered.isEmpty()) { Toast.makeText(activity, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return; }
+        for (FinanceBook.Category c : all) if (c.type == type && (!activeOnly || c.archivedAt == null)) filtered.add(c);
         CharSequence[] names = new CharSequence[filtered.size()];
         for (int i = 0; i < filtered.size(); i++) names[i] = filtered.get(i).name;
         new MaterialAlertDialogBuilder(activity).setTitle(R.string.label_category).setItems(names, (dialog, which) ->
-                selected.accept(filtered.get(which).id)).show();
+                selected.accept(filtered.get(which).id))
+                .setNeutralButton(R.string.category_add_title, (dialog, which) -> activity.startActivity(new Intent(activity,
+                        com.example.fintrack.app.category.ui.CategoryAddActivity.class).putExtra("category_type", type.name()))).show();
     }
 }

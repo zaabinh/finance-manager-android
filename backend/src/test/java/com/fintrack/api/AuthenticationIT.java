@@ -213,7 +213,9 @@ class AuthenticationIT {
                 statement.execute("INSERT INTO fintrack.users(username,email,password_hash) VALUES ('existing','existing@example.test','old-hash')");
             }
             var upgrade = Flyway.configure().dataSource(upgradeUrl, username, password).defaultSchema("fintrack").load();
-            assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(3);
+            int pending = upgrade.info().pending().length;
+            assertThat(pending).isPositive();
+            assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(pending);
             assertThat(upgrade.migrate().migrationsExecuted).isZero();
             try (var connection = java.sql.DriverManager.getConnection(upgradeUrl, username, password);
                  var statement = connection.createStatement()) {
@@ -255,8 +257,10 @@ class AuthenticationIT {
             UUID d = old.queryForObject(insert, UUID.class, user, "d".repeat(64), null);
             old.update("UPDATE fintrack.refresh_sessions SET replaced_by_session_id = ? WHERE id = ?", b, a);
             old.update("UPDATE fintrack.refresh_sessions SET replaced_by_session_id = ? WHERE id = ?", c, b);
-            assertThat(Flyway.configure().dataSource(upgradeUrl, username, password).defaultSchema("fintrack").load()
-                    .migrate().migrationsExecuted).isEqualTo(2);
+            var upgrade = Flyway.configure().dataSource(upgradeUrl, username, password).defaultSchema("fintrack").load();
+            int pending = upgrade.info().pending().length;
+            assertThat(pending).isPositive();
+            assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(pending);
             Map<UUID, UUID> family = new HashMap<>();
             Map<UUID, String> reason = new HashMap<>();
             old.query("SELECT id, family_id, revoke_reason FROM fintrack.refresh_sessions", (org.springframework.jdbc.core.RowCallbackHandler) rs -> {

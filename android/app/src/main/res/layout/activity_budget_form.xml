@@ -96,6 +96,8 @@
                     style="@style/Widget.App.FieldSelector.Chevron"
                     android:contentDescription="@null" />
             </LinearLayout>
+
+            <include layout="@layout/view_budget_shortfall" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

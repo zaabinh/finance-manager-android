@@ -20,15 +20,32 @@ public final class FinanceAction {
     private FinanceAction(Consumer<FinanceBook> local, Remote remote) { this.local = local; this.remote = remote; }
     public static FinanceAction transaction(FinanceBook.Transaction value, boolean editing) {
         return new FinanceAction(book -> book.save(value, editing), api -> {
-            TransactionRequest request = new TransactionRequest(value);
-            required(editing ? api.transactions.updateTransaction(value.id, request) : api.transactions.addTransaction(request));
+            TransactionRequest request = new TransactionRequest(value, editing);
+            com.example.fintrack.app.transaction.remote.TransactionResponse response = required(editing
+                    ? api.transactions.updateTransaction(value.id, request) : api.transactions.addTransaction(request));
+            // A POST replay returns the current record; a VOIDED one is not a newly created active transaction.
+            if ("VOIDED".equals(response.status)) {
+                FinanceBook.Failure failure = new FinanceBook.Failure(FinanceBook.Problem.VOIDED);
+                failure.code = editing ? "TRANSACTION_VOIDED" : "TRANSACTION_REPLAY_VOIDED"; throw failure;
+            }
         });
     }
+    /** Category budget under the monthly budget of its month (mock resolves the parent and applies the balance block). */
     public static FinanceAction budget(FinanceBook.Budget value, boolean editing) {
-        return new FinanceAction(book -> book.save(value, editing), api -> {
+        return new FinanceAction(book -> book.saveCategoryBudget(value, editing), api -> {
             BudgetRequest request = new BudgetRequest(value);
             required(editing ? api.budgets.updateBudget(value.id, request) : api.budgets.addBudget(request));
         });
+    }
+    /** POST /monthly-budgets: month and its category budgets in one atomic request. */
+    public static FinanceAction monthlyBudget(String id, String month, java.util.List<FinanceBook.Budget> categories) {
+        return new FinanceAction(book -> book.createMonthlyBudget(id, month, categories),
+                api -> required(api.budgets.addMonthlyBudget(new com.example.fintrack.app.budget.remote.MonthlyBudgetRequest(month, categories))));
+    }
+    /** DELETE /monthly-budgets/{id}: archives its category budgets too; rejected for the current month. */
+    public static FinanceAction deleteMonthlyBudget(String id) {
+        return new FinanceAction(book -> book.deleteMonthlyBudget(id, System.currentTimeMillis()),
+                api -> execute(api.budgets.deleteMonthlyBudget(id)));
     }
     public static FinanceAction deleteTransaction(String id) {
         return new FinanceAction(book -> book.deleteTransaction(id), api -> execute(api.transactions.deleteTransaction(id)));
@@ -37,10 +54,52 @@ public final class FinanceAction {
         return new FinanceAction(book -> book.deleteBudget(id), api -> execute(api.budgets.deleteBudget(id)));
     }
     public static FinanceAction wallet(String name, long opening, FinanceBook.WalletType type) {
-        return new FinanceAction(book -> book.addWallet(name, opening, type), api -> required(api.wallets.addWallet(new WalletRequest(name, opening, type))));
+        return wallet(name, opening, type, true, 0);
+    }
+    public static FinanceAction wallet(String name, long opening, FinanceBook.WalletType type, boolean included, int order) {
+        return new FinanceAction(book -> {
+            FinanceBook.Wallet value = book.addWallet(name, opening, type); value.includeInAssets = included; value.sortOrder = order;
+        }, api -> required(api.wallets.addWallet(new WalletRequest(name, opening, type, included, order))));
+    }
+    public static FinanceAction walletUpdate(String id, String name, long opening, FinanceBook.WalletType type, boolean included, int order) {
+        return new FinanceAction(book -> book.updateWallet(id, name, opening, type, included, order),
+                api -> required(api.wallets.updateWallet(id, new WalletRequest(name, opening, type, included, order))));
+    }
+    public static FinanceAction walletStatus(String id, boolean active) {
+        return new FinanceAction(book -> book.walletStatus(id, active), api -> required(api.wallets.walletStatus(id,
+                new com.example.fintrack.app.wallet.remote.WalletStatusRequest(active))));
+    }
+    public static FinanceAction walletArchive(String id) {
+        return new FinanceAction(book -> book.walletStatus(id, false), api -> execute(api.wallets.archiveWallet(id)));
     }
     public static FinanceAction category(String name, FinanceBook.Type type) {
-        return new FinanceAction(book -> book.addCategory(name, type), api -> required(api.categories.addCategory(new CategoryRequest(name, type))));
+        return category(name, type, null, null, 0);
+    }
+    public static FinanceAction category(String name, FinanceBook.Type type, String icon, String color, int order) {
+        return new FinanceAction(book -> {
+            FinanceBook.Category value = book.addCategory(name, type); value.iconKey = icon; value.colorHex = color; value.sortOrder = order;
+        }, api -> required(api.categories.addCategory(new CategoryRequest(name, type, icon, color, order))));
+    }
+    public static FinanceAction categoryUpdate(String id, String name, FinanceBook.Type type, String icon, String color, int order) {
+        return new FinanceAction(book -> book.updateCategory(id, name, type, icon, color, order),
+                api -> required(api.categories.updateCategory(id, new CategoryRequest(name, type, icon, color, order))));
+    }
+    public static FinanceAction categoryStatus(String id, boolean active) {
+        return new FinanceAction(book -> book.categoryStatus(id, active), api -> required(api.categories.categoryStatus(id,
+                new com.example.fintrack.app.category.remote.CategoryStatusRequest(active))));
+    }
+    public static FinanceAction categoryArchive(String id) {
+        return new FinanceAction(book -> book.categoryStatus(id, false), api -> execute(api.categories.archiveCategory(id)));
+    }
+    /** shortfallMinor of BUDGET_EXCEEDS_AVAILABLE_BALANCE; null when absent or not an integer. */
+    private static Long shortfall(String raw) {
+        try {
+            com.google.gson.JsonElement root = com.google.gson.JsonParser.parseString(raw);
+            if (!root.isJsonObject()) return null;
+            com.google.gson.JsonElement value = root.getAsJsonObject().get("shortfallMinor");
+            return value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber() ? null
+                    : value.getAsJsonPrimitive().getAsBigDecimal().longValueExact();
+        } catch (RuntimeException ignored) { return null; }
     }
     public static <T> T required(Call<T> call) {
         T body = execute(call);
@@ -51,11 +110,41 @@ public final class FinanceAction {
         try {
             Response<T> response = call.execute();
             if (!response.isSuccessful()) {
-                if (response.errorBody() != null) response.errorBody().close();
                 int status = response.code();
-                throw new FinanceBook.Failure(status == 401 ? FinanceBook.Problem.UNAUTHORIZED
+                FinanceBook.Problem problem = status == 401 ? FinanceBook.Problem.UNAUTHORIZED
                         : status == 409 ? FinanceBook.Problem.CONFLICT : status == 404 ? FinanceBook.Problem.NOT_FOUND
-                        : status == 400 || status == 422 ? FinanceBook.Problem.VALIDATION : FinanceBook.Problem.SERVER);
+                        : status == 400 || status == 422 ? FinanceBook.Problem.VALIDATION : FinanceBook.Problem.SERVER;
+                String message = null, code = null;
+                Long shortfall = null;
+                java.util.List<String> fieldNames = new java.util.ArrayList<>();
+                if (response.errorBody() != null) {
+                    try (okhttp3.ResponseBody body = response.errorBody()) {
+                        String raw = body.string();
+                        com.example.fintrack.app.core.network.ApiErrorResponse error = new com.google.gson.Gson().fromJson(
+                                raw, com.example.fintrack.app.core.network.ApiErrorResponse.class);
+                        shortfall = shortfall(raw);
+                        if (error != null) {
+                            code = error.getErrorCode();
+                            if ("WALLET_INSUFFICIENT_FUNDS".equals(code)) problem = FinanceBook.Problem.INSUFFICIENT_FUNDS;
+                            else if ("TRANSACTION_VOIDED".equals(code)) problem = FinanceBook.Problem.VOIDED;
+                            // These have a precise Vietnamese resource; the server message is English.
+                            boolean localized = problem == FinanceBook.Problem.INSUFFICIENT_FUNDS || problem == FinanceBook.Problem.VOIDED
+                                    || problem == FinanceBook.Problem.NOT_FOUND;
+                            message = localized ? null : error.getMessage();
+                            if (error.getFieldErrors() != null && !error.getFieldErrors().isEmpty()) {
+                                StringBuilder fields = new StringBuilder();
+                                for (com.example.fintrack.app.core.network.ApiErrorResponse.FieldError field : error.getFieldErrors()) {
+                                    if (fields.length() > 0) fields.append("\n");
+                                    fields.append(field.getField()).append(": ").append(field.getMessage());
+                                    fieldNames.add(field.getField());
+                                }
+                                message = fields.toString();
+                            }
+                        }
+                    } catch (com.google.gson.JsonParseException ignored) { }
+                }
+                FinanceBook.Failure failure = new FinanceBook.Failure(problem, message);
+                failure.code = code; failure.fields = fieldNames; failure.shortfallMinor = shortfall; throw failure;
             }
             return response.body();
         } catch (IOException e) { throw new FinanceBook.Failure(FinanceBook.Problem.NETWORK); }

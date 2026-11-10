@@ -33,6 +33,7 @@ public class AuthService implements AuthOperations {
     private final PasswordPolicy policy;
     private final AuthenticationManager authentication;
     private final RateLimitingService limiter;
+    private final com.fintrack.api.service.category.CategorySeedService categorySeeds;
 
     @Override @Transactional
     public void register(RegisterRequest request) {
@@ -65,6 +66,7 @@ public class AuthService implements AuthOperations {
                     ? ErrorCode.AUTH_USERNAME_ALREADY_EXISTS : ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
         }
         // Send verification email
+        categorySeeds.initialize(id);
         verification.issue(id, email, Purpose.EMAIL_VERIFICATION, username);
     }
     @Override @Transactional

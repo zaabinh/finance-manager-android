@@ -35,7 +35,12 @@ public final class MockFinanceStore {
             com.google.gson.JsonObject object = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
             for (String key : new String[]{"version", "wallets", "categories", "transactions", "budgets"})
                 if (!object.has(key)) throw new IllegalStateException("Incomplete file");
-            return new FinanceBook(gson.fromJson(object, FinanceBook.State.class));
+            // Old mock snapshots predate inclusion flags; preserve their previous behavior.
+            for (com.google.gson.JsonElement wallet : object.getAsJsonArray("wallets"))
+                if (!wallet.getAsJsonObject().has("includeInAssets")) wallet.getAsJsonObject().addProperty("includeInAssets", true);
+            FinanceBook.State state = gson.fromJson(object, FinanceBook.State.class);
+            if (!object.has("monthlyBudgets")) adoptLegacyBudgets(state);
+            return new FinanceBook(state);
         } catch (Exception e) { throw new FinanceBook.Failure(FinanceBook.Problem.STORAGE); }
     }
 
@@ -44,7 +49,8 @@ public final class MockFinanceStore {
         action.accept(candidate);
         candidate.validateTotals();
         // Validate aggregate arithmetic before committing any change.
-        for (FinanceBook.Wallet wallet : candidate.state().wallets) candidate.balance(wallet.id);
+        for (FinanceBook.Wallet wallet : candidate.state().wallets)
+            if (candidate.balance(wallet.id) < 0) throw new FinanceBook.Failure(FinanceBook.Problem.INSUFFICIENT_FUNDS);
         FileOutputStream output = null;
         try {
             byte[] data = gson.toJson(candidate.state()).getBytes(StandardCharsets.UTF_8);
@@ -57,16 +63,36 @@ public final class MockFinanceStore {
             throw new FinanceBook.Failure(FinanceBook.Problem.STORAGE);
         }
     }
+    /**
+     * Mock-only upgrade of files written before hierarchical budgets: give each month that has active category
+     * budgets one monthly container so local demo data stays usable. The server migration never does this.
+     */
+    private static void adoptLegacyBudgets(FinanceBook.State state) {
+        state.monthlyBudgets = new java.util.ArrayList<>();
+        java.util.Map<String, String> parents = new java.util.HashMap<>();
+        for (FinanceBook.Budget budget : state.budgets) {
+            if (budget == null || budget.archivedAt != null || budget.month == null) continue;
+            String parent = parents.get(budget.month);
+            if (parent == null) {
+                parent = java.util.UUID.randomUUID().toString(); parents.put(budget.month, parent);
+                state.monthlyBudgets.add(new FinanceBook.MonthlyBudget(parent, budget.month));
+            }
+            budget.monthlyBudgetId = parent;
+        }
+    }
     private static FinanceBook demo() {
         FinanceBook.State state = FinanceBook.empty();
         state.wallets.add(new FinanceBook.Wallet("demo-cash", "Tiền mặt", 2_000_000));
         FinanceBook.Wallet bank = new FinanceBook.Wallet("demo-bank", "Ngân hàng", 10_000_000);
         bank.walletType = FinanceBook.WalletType.BANK; state.wallets.add(bank);
+        FinanceBook.Wallet savings = new FinanceBook.Wallet("demo-savings", "Tiết kiệm", 20_000_000);
+        savings.walletType = FinanceBook.WalletType.SAVINGS; state.wallets.add(savings);
         FinanceBook book = new FinanceBook(state);
         long now = System.currentTimeMillis();
         book.save(new FinanceBook.Transaction("demo-expense", FinanceBook.Type.EXPENSE, 95_000, "food", "demo-cash", null, now, "Giao dịch mẫu", "Quán cà phê"), false);
         book.save(new FinanceBook.Transaction("demo-income", FinanceBook.Type.INCOME, 18_500_000, "salary", "demo-bank", null, now, "Giao dịch mẫu", ""), false);
-        book.save(new FinanceBook.Budget("demo-budget", "food", FinanceBook.month(now), 3_000_000), false);
+        book.createMonthlyBudget("demo-monthly-budget", FinanceBook.month(now), java.util.Collections.singletonList(
+                new FinanceBook.Budget("demo-budget", "food", FinanceBook.month(now), 3_000_000)));
         return book;
     }
 }

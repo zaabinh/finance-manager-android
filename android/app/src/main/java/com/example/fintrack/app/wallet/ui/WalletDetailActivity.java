@@ -2,106 +2,47 @@ package com.example.fintrack.app.wallet.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.fintrack.R;
-import com.example.fintrack.app.wallet.adapter.TransactionAdapter;
-import com.example.fintrack.app.wallet.model.WalletItem;
-import com.example.fintrack.app.wallet.viewmodel.WalletViewModel;
+import com.example.fintrack.app.finance.data.FinanceAction;
+import com.example.fintrack.app.finance.data.FinanceRepository;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.ui.FinanceActivity;
+import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.transaction.ui.TransactionListActivity;
 
-public class WalletDetailActivity extends AppCompatActivity {
-
-    private ImageView btnBack;
-    private TextView btnEditWallet;
-    private TextView tvWalletName;
-    private TextView tvBalanceHero;
-    private TextView tvIncomeThisMonth;
-    private TextView tvExpenseThisMonth;
-    private RecyclerView rvRecentTransactions;
-    private Button btnDelete;
-    private Button btnDisable;
-
-    private WalletViewModel walletViewModel;
-    private TransactionAdapter transactionAdapter;
-    private String walletId;
-    private WalletItem currentWallet;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_wallet_detail);
-
-        walletId = getIntent().getStringExtra("WALLET_ID");
-        walletViewModel = new ViewModelProvider(this).get(WalletViewModel.class);
-
-        initViews();
-        setupRecyclerView();
-        loadData();
-        setupListeners();
-    }
-
-    private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
-        btnEditWallet = findViewById(R.id.btnEditWallet);
-        tvWalletName = findViewById(R.id.tvWalletName);
-        tvBalanceHero = findViewById(R.id.tvBalanceHero);
-        tvIncomeThisMonth = findViewById(R.id.tvIncomeThisMonth);
-        tvExpenseThisMonth = findViewById(R.id.tvExpenseThisMonth);
-        rvRecentTransactions = findViewById(R.id.rvRecentTransactions);
-        btnDelete = findViewById(R.id.btnDelete);
-        btnDisable = findViewById(R.id.btnDisable);
-    }
-
-    private void setupRecyclerView() {
-        transactionAdapter = new TransactionAdapter();
-        rvRecentTransactions.setLayoutManager(new LinearLayoutManager(this));
-        rvRecentTransactions.setAdapter(transactionAdapter);
-    }
-
-    private void loadData() {
-        currentWallet = walletViewModel.getWalletById(walletId != null ? walletId : "w1");
-        if (currentWallet != null) {
-            tvWalletName.setText(currentWallet.getName());
-            tvBalanceHero.setText(currentWallet.getFormattedBalance());
-        }
-        transactionAdapter.setTransactions(walletViewModel.getRecentTransactions(walletId));
-    }
-
-    private void setupListeners() {
-        btnBack.setOnClickListener(v -> finish());
-
-        btnEditWallet.setOnClickListener(v -> {
-            Intent intent = new Intent(this, WalletEditActivity.class);
-            intent.putExtra("WALLET_ID", currentWallet != null ? currentWallet.getId() : walletId);
-            startActivity(intent);
+public class WalletDetailActivity extends FinanceActivity {
+    private String id;
+    private FinanceBook.Wallet wallet;
+    @Override protected int layout() { return R.layout.activity_wallet_detail; }
+    @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
+    @Override protected void bind(Bundle saved) {
+        id = getIntent().getStringExtra("WALLET_ID");
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        findViewById(R.id.btnEditWallet).setOnClickListener(v -> {
+            if (wallet != null && wallet.archivedAt == null)
+                startActivity(new Intent(this, WalletEditActivity.class).putExtra("WALLET_ID", id));
         });
-
-        btnDelete.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Xoá ví")
-                    .setMessage("Bạn có chắc chắn muốn xoá ví này?")
-                    .setPositiveButton("Xoá", (dialog, which) -> {
-                        if (currentWallet != null) {
-                            walletViewModel.deleteWallet(currentWallet.getId());
-                        }
-                        Toast.makeText(this, "Đã xoá ví thành công", Toast.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .setNegativeButton("Huỷ", (dialog, which) -> dialog.dismiss())
-                    .show();
+        findViewById(R.id.btnDelete).setOnClickListener(v -> {
+            if (wallet != null) confirmDelete(() -> model.change(FinanceAction.walletArchive(id), false));
         });
-
-        btnDisable.setOnClickListener(v -> {
-            Toast.makeText(this, "Đã vô hiệu hoá ví", Toast.LENGTH_SHORT).show();
+        findViewById(R.id.btnDisable).setOnClickListener(v -> {
+            if (wallet != null) model.change(FinanceAction.walletStatus(id, wallet.archivedAt != null), false);
         });
+        findViewById(R.id.btnSeeAllTransactions).setOnClickListener(v ->
+                startActivity(new Intent(this, TransactionListActivity.class).putExtra("WALLET_ID", id)));
+        // A transaction page cannot provide exact monthly totals.
+        visible(R.id.rvRecentTransactions, false);
+        ((android.view.View)findViewById(R.id.tvIncomeThisMonth).getParent().getParent()).setVisibility(android.view.View.GONE);
     }
+    @Override protected void render() {
+        wallet = book.wallet(id);
+        if (wallet == null) { Toast.makeText(this, R.string.wallet_missing_or_archived, Toast.LENGTH_LONG).show(); finish(); return; }
+        text(R.id.tvWalletName, wallet.name + (wallet.archivedAt == null ? "" : getString(R.string.wallet_archived_suffix)));
+        text(R.id.tvBalanceHero, FinanceUi.money(book.balance(id)));
+        visible(R.id.btnEditWallet, wallet.archivedAt == null);
+        visible(R.id.btnDelete, false);
+        text(R.id.btnDisable, getString(wallet.archivedAt == null ? R.string.wallet_archive : R.string.wallet_restore));
+    }
+    @Override protected void completed() { model.refresh(); }
 }

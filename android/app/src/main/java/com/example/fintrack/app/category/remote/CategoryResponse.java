@@ -15,8 +15,16 @@ public class CategoryResponse {
     @SerializedName("categoryType")
     public FinanceBook.Type categoryType;
 
+    public String iconKey, colorHex, archivedAt, createdAt, updatedAt;
+    public int sortOrder;
+
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
     public FinanceBook.Category domain() {
-        return new FinanceBook.Category(categoryId, name, categoryType);
+        FinanceBook.Category value = new FinanceBook.Category(categoryId, name, categoryType);
+        value.iconKey = iconKey;
+        value.colorHex = colorHex;
+        value.archivedAt = archivedAt;
+        value.sortOrder = sortOrder;
+        return value;
     }
 }

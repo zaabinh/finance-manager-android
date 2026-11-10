@@ -20,12 +20,19 @@ import java.util.List;
  */
 public final class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.Holder> {
 
-    private final FinanceBook book;
-    private final List<FinanceBook.Transaction> transactions;
+    private FinanceBook book;
+    private List<FinanceBook.Transaction> transactions;
 
     public TransactionAdapter(FinanceBook book, List<FinanceBook.Transaction> transactions) {
         this.book = book;
         this.transactions = transactions;
+    }
+
+    /** Replaces rows in place so appending a page keeps the scroll position. */
+    public void submit(FinanceBook book, List<FinanceBook.Transaction> transactions) {
+        this.book = book;
+        this.transactions = transactions;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -42,7 +49,7 @@ public final class TransactionAdapter extends RecyclerView.Adapter<TransactionAd
         holder.text(R.id.tvTransactionTitle, !item.payee.isEmpty() ? item.payee
                 : category != null ? category.name : holder.itemView.getContext().getString(R.string.transaction_type_transfer));
         holder.text(R.id.tvTransactionMeta, (wallet == null ? "" : wallet.name)
-                + (destination == null ? "" : " → " + destination.name) + " · " + FinanceUi.date(item.occurredAt));
+                + (destination == null ? "" : " → " + destination.name) + " · " + FinanceUi.date(item.occurredAt, book.state().timeZone));
         holder.text(R.id.tvTransactionSign, item.type == FinanceBook.Type.INCOME ? "+" : item.type == FinanceBook.Type.EXPENSE ? "−" : "");
         holder.text(R.id.tvTransactionAmount, FinanceUi.money(item.amount));
         int color = holder.itemView.getContext().getColor(item.type == FinanceBook.Type.INCOME ? R.color.amount_income

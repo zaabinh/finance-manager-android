@@ -33,8 +33,9 @@ public class TransactionRequest {
     @SerializedName("amountMinor")
     public final long amountMinor;
 
-    public TransactionRequest(FinanceBook.Transaction value) {
-        clientRequestId = value.id;
+    /** PUT omits clientRequestId (contract section 5); POST keeps the form's stable key across retries. */
+    public TransactionRequest(FinanceBook.Transaction value, boolean editing) {
+        clientRequestId = editing ? null : value.clientRequestId != null ? value.clientRequestId : value.id;
         transactionType = value.type;
         amountMinor = value.amount;
         categoryId = value.type == FinanceBook.Type.TRANSFER ? null : value.categoryId;

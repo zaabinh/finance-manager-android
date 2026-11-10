@@ -39,10 +39,21 @@ public class TransactionResponse {
     @SerializedName("amountMinor")
     public long amountMinor;
 
+    @SerializedName("status") public String status;
+    @SerializedName("voidedAt") public String voidedAt;
+    @SerializedName("clientRequestId") public String clientRequestId;
+    @SerializedName("createdAt") public String createdAt;
+    @SerializedName("updatedAt") public String updatedAt;
+
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
     public FinanceBook.Transaction domain() {
-        return new FinanceBook.Transaction(transactionId, transactionType, amountMinor, categoryId, walletId,
-                destinationWalletId, parseTimestamp(occurredAt), note, payee);
+        FinanceBook.Transaction value = new FinanceBook.Transaction(transactionId, transactionType, amountMinor, categoryId, walletId,
+                destinationWalletId, parseTimestamp(occurredAt),
+                note == null ? "" : note, payee == null ? "" : payee);
+        value.status = status == null ? "POSTED" : status;
+        value.voidedAt = voidedAt;
+        value.clientRequestId = clientRequestId;
+        return value;
     }
 
     public static String timestamp(long value) {

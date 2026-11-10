@@ -1,6 +1,5 @@
 package com.example.fintrack.app.budget.adapter;
 
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +8,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
-import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
-import com.example.fintrack.app.budget.ui.BudgetFormActivity;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -23,11 +20,13 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
 
     private final FinanceBook book;
     private final List<FinanceBook.Budget> budgets;
+    private final java.util.function.Consumer<FinanceBook.Budget> onClick;
 
-    // Constructor nhận dữ liệu sổ tài chính và danh sách ngân sách
-    public BudgetAdapter(FinanceBook book, List<FinanceBook.Budget> budgets) {
+    // Constructor nhận dữ liệu sổ tài chính và danh sách ngân sách danh mục (thuộc một ngân sách tháng)
+    public BudgetAdapter(FinanceBook book, List<FinanceBook.Budget> budgets, java.util.function.Consumer<FinanceBook.Budget> onClick) {
         this.book = book;
         this.budgets = budgets;
+        this.onClick = onClick;
     }
 
     @NonNull
@@ -45,7 +44,9 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
         FinanceBook.BudgetUsage usage = book.usage(budget);
 
         // Hiển thị tên danh mục và khoảng thời gian của ngân sách
-        holder.text(R.id.tvBudgetCategoryName, book.category(budget.categoryId).name);
+        FinanceBook.Category category = book.category(budget.categoryId);
+        holder.text(R.id.tvBudgetCategoryName, category == null
+                ? holder.itemView.getContext().getString(R.string.transaction_category_placeholder) : category.name);
         holder.text(R.id.tvBudgetPeriod, FinanceUi.monthLabel(budget.month).toString());
 
         // Hiển thị phần trăm đã chi tiêu
@@ -75,12 +76,9 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
         // Đặt icon mặc định cho danh mục
         ((ImageView) holder.itemView.findViewById(R.id.ivBudgetCategoryIcon)).setImageResource(R.drawable.ic_category);
 
-        // Xử lý sự kiện bấm vào một item để xem chi tiết ngân sách
-        holder.itemView.setOnClickListener(view -> {
-            Intent intent = new Intent(view.getContext(), BudgetDetailActivity.class)
-                    .putExtra(BudgetFormActivity.EXTRA_ID, budget.id);
-            view.getContext().startActivity(intent);
-        });
+        // Bấm vào một ngân sách danh mục: màn hình cha quyết định (sửa hạn mức / xóa)
+        holder.itemView.setOnClickListener(onClick == null ? null : view -> onClick.accept(budget));
+        holder.itemView.setClickable(onClick != null);
     }
 
     @Override

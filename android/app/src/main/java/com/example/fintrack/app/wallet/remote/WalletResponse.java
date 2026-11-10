@@ -18,10 +18,20 @@ public class WalletResponse {
     @SerializedName("openingBalanceMinor")
     public long openingBalanceMinor;
 
+    public long balanceMinor;
+    public String archivedAt;
+    public boolean includeInAssets = true;
+    public int sortOrder;
+    public String currencyCode, createdAt, updatedAt;
+
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
     public FinanceBook.Wallet domain() {
         FinanceBook.Wallet wallet = new FinanceBook.Wallet(walletId, name, openingBalanceMinor);
         wallet.walletType = walletType;
+        wallet.serverBalanceMinor = balanceMinor;
+        wallet.archivedAt = archivedAt;
+        wallet.includeInAssets = includeInAssets;
+        wallet.sortOrder = sortOrder;
         return wallet;
     }
 }

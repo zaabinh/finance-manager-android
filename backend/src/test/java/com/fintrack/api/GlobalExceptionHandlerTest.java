@@ -71,6 +71,16 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.trace").doesNotExist());
     }
 
+    @Test
+    void budgetShortfallKeepsEnvelopeAndAddsShortfall() throws Exception {
+        mockMvc.perform(get("/shortfall"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("BUDGET_EXCEEDS_AVAILABLE_BALANCE"))
+                .andExpect(jsonPath("$.shortfallMinor").value(30000))
+                .andExpect(jsonPath("$.path").value("/shortfall"))
+                .andExpect(jsonPath("$.fieldErrors").isArray());
+    }
+
     @RestController
     @TestComponent
     static class ErrorProbeController {
@@ -81,6 +91,11 @@ class GlobalExceptionHandlerTest {
 
         @GetMapping("/parameter")
         void parameter(@RequestParam int count) {
+        }
+
+        @GetMapping("/shortfall")
+        void shortfall() {
+            throw new com.fintrack.api.exception.BudgetShortfallException(30_000);
         }
 
         @GetMapping("/failure")
