@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.adapter.IconPickerAdapter;
@@ -14,16 +13,16 @@ import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /** Uses the same repository, session checks and command lifecycle as finance pickers. */
 abstract class CategoryFormActivity extends FinanceActivity {
-    private EditText name, color, order;
+    private EditText name, order;
     private SwitchMaterial status;
     private Button save;
     private RecyclerView icons;
-    private String id, iconKey = "coffee", colorHex;
+    private CategoryAppearance appearance;
+    private String id, iconKey, manualColor, colorHex;
     private int sortOrder;
     private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
     private boolean initialized, restoredForm, bindingStatus;
@@ -36,16 +35,16 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if ("INCOME".equals(getIntent().getStringExtra("category_type"))) type = FinanceBook.Type.INCOME;
         if (saved != null) {
             type = FinanceBook.Type.valueOf(saved.getString("categoryType", "EXPENSE"));
-            iconKey = saved.getString("iconKey");
+            iconKey = saved.getString("iconKey"); manualColor = saved.getString("manualColor");
             restoredForm = saved.getBoolean("categoryLoaded");
         }
         name = findViewById(R.id.etCategoryName);
-        color = findViewById(R.id.etCategoryColor);
         order = findViewById(R.id.etCategorySortOrder);
         status = findViewById(R.id.switchStatus);
         icons = findViewById(R.id.rvIconPicker);
         save = findViewById(editing() ? R.id.btnSaveChanges : R.id.btnCreateCategory);
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        toolbar(R.id.toolbarForm);
+        findViewById(R.id.btnTypeTransfer).setVisibility(View.GONE);
         if (!editing()) {
             findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
             // Lifecycle is changed explicitly after creation, not through unsupported POST fields.
@@ -58,36 +57,31 @@ abstract class CategoryFormActivity extends FinanceActivity {
             if (!bindingStatus && initialized && !model.busy())
                 model.change(FinanceAction.categoryStatus(id, active), false);
         });
-        findViewById(R.id.btnSelectCategoryType).setOnClickListener(v ->
-                new MaterialAlertDialogBuilder(this).setTitle(R.string.category_type_label)
-                        .setItems(new CharSequence[]{getString(R.string.transaction_type_expense),getString(R.string.transaction_type_income)},
-                                (dialog, which) -> { type = which == 0 ? FinanceBook.Type.EXPENSE : FinanceBook.Type.INCOME; showType(); }).show());
+        findViewById(R.id.btnTypeExpense).setOnClickListener(v -> { type = FinanceBook.Type.EXPENSE; showType(); appearance.setType(type); });
+        findViewById(R.id.btnTypeIncome).setOnClickListener(v -> { type = FinanceBook.Type.INCOME; showType(); appearance.setType(type); });
         save.setOnClickListener(v -> {
             if (!initialized || model.busy()) return;
             String value = name.getText().toString().trim();
             if (value.isEmpty() || value.codePointCount(0,value.length()) > 100) {
                 name.setError(getString(R.string.category_name_invalid)); return;
             }
-            String colorValue = color.getText().toString().trim();
-            if (!colorValue.isEmpty() && !colorValue.matches("#[0-9a-fA-F]{6}")) {
-                color.setError(getString(R.string.category_color_invalid)); return;
-            }
             try { sortOrder = order.getText().toString().trim().isEmpty() ? 0 : Integer.parseInt(order.getText().toString().trim()); }
             catch (NumberFormatException exception) { order.setError(getString(R.string.category_sort_invalid)); return; }
             if (sortOrder < 0) { order.setError(getString(R.string.category_sort_invalid)); return; }
-            colorHex = colorValue.isEmpty() ? null : colorValue.toUpperCase(java.util.Locale.ROOT);
+            colorHex = appearance.colorHex(); iconKey = appearance.iconKey();
             model.change(editing() ? FinanceAction.categoryUpdate(id,value,type,iconKey,colorHex,sortOrder)
                     : FinanceAction.category(value,type,iconKey,colorHex,sortOrder),true);
         });
-        showType(); showIcons();
+        showType(); showIcons(manualColor);
         save.setEnabled(false);
     }
 
-    private void showType() { text(R.id.tvSelectedCategoryType,getString(FinanceUi.typeName(type))); }
-    private void showIcons() {
-        icons.setLayoutManager(new GridLayoutManager(this,5));
-        icons.setAdapter(new IconPickerAdapter(CategoryIcons.RESOURCES,CategoryIcons.resource(iconKey),
-                resource -> iconKey = CategoryIcons.key(resource)));
+    private void showType() {
+        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeExpense)).setChecked(type == FinanceBook.Type.EXPENSE);
+        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeIncome)).setChecked(type == FinanceBook.Type.INCOME);
+    }
+    private void showIcons(String manual) {
+        appearance = new CategoryAppearance(this, icons, findViewById(R.id.rvColorPicker), type, iconKey, manual);
     }
     @Override protected void render() {
         if (name == null) return;
@@ -95,11 +89,11 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if (editing() && current == null) { save.setEnabled(false); return; }
         if (!initialized) {
             if (current != null) {
-                colorHex = current.colorHex; sortOrder = current.sortOrder;
-                if (!restoredForm) { name.setText(current.name); type = current.type; iconKey = current.iconKey; }
+                sortOrder = current.sortOrder;
+                if (!restoredForm) { name.setText(current.name); type = current.type; iconKey = current.iconKey; manualColor = current.colorHex; }
             }
-            if (!restoredForm) { color.setText(colorHex == null ? "" : colorHex); order.setText(String.valueOf(sortOrder)); }
-            initialized = true; showType(); showIcons();
+            if (!restoredForm) order.setText(String.valueOf(sortOrder));
+            initialized = true; showType(); if (!restoredForm) showIcons(manualColor);
         }
         boolean active = current == null || current.archivedAt == null;
         bindingStatus = true;
@@ -107,9 +101,10 @@ abstract class CategoryFormActivity extends FinanceActivity {
         bindingStatus = false;
         text(R.id.tvStatusLabel,getString(active ? R.string.status_active : R.string.status_disabled));
         name.setEnabled(active);
-        color.setEnabled(active); order.setEnabled(active);
-        findViewById(R.id.btnSelectCategoryType).setEnabled(active);
+        order.setEnabled(active);
+        findViewById(R.id.btnTypeExpense).setEnabled(active); findViewById(R.id.btnTypeIncome).setEnabled(active);
         icons.setVisibility(active ? View.VISIBLE : View.GONE);
+        findViewById(R.id.rvColorPicker).setVisibility(active ? View.VISIBLE : View.GONE);
         save.setEnabled(active && !model.busy());
         if(editing()) findViewById(R.id.btnDeleteCategory).setEnabled(active && !model.busy());
     }
@@ -119,7 +114,7 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if (status != null) status.setEnabled(!busy && initialized);
     }
     @Override protected void onSaveInstanceState(Bundle state) {
-        state.putString("categoryType",type.name()); state.putString("iconKey",iconKey);
+        state.putString("categoryType",type.name()); state.putString("iconKey",appearance.iconKey()); state.putString("manualColor",appearance.manualColor());
         state.putBoolean("categoryLoaded", initialized);
         super.onSaveInstanceState(state);
     }

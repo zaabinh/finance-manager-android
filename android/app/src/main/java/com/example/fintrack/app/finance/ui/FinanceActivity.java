@@ -77,7 +77,8 @@ public abstract class FinanceActivity extends AppCompatActivity {
 
     /** Text for a failed command; screens may localise specific server codes. Null shows nothing. */
     protected CharSequence failure(FinanceViewModel.Command command) {
-        return command.message != null ? command.message : getString(FinanceUi.error(command.error));
+        // Server messages may be English or technical; always show the localized text for the problem.
+        return getString(FinanceUi.error(command.error));
     }
 
     /** Kiểm tra xem người dùng đã đăng nhập đúng tài khoản hay chưa */

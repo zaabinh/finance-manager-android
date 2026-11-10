@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Control/IconChoice 718:11414/11417: 48dp circle, 12dp gap (6dp margin each side). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <FrameLayout
         android:id="@+id/flIconContainer"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:background="@drawable/bg_expense_card"
-        android:padding="10dp">
+        android:layout_width="@dimen/touch_target_min"
+        android:layout_height="@dimen/touch_target_min"
+        android:layout_gravity="center"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_icon_choice"
+        android:foreground="?attr/selectableItemBackgroundBorderless">
 
         <ImageView
             android:id="@+id/ivPickerIcon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="@dimen/icon_size_default"
+            android:layout_height="@dimen/icon_size_default"
+            android:layout_gravity="center"
             android:contentDescription="@null"
             android:src="@drawable/ic_coffee"
-            app:tint="@color/status_error" />
+            app:tint="@color/text_secondary" />
     </FrameLayout>
-
 </FrameLayout>

@@ -131,4 +131,5 @@
     <string name="receipt_unreadable_body">Ảnh bị mờ hoặc thiếu sáng. Đặt hóa đơn phẳng, đủ sáng rồi chụp lại — hoặc nhập tay.</string>
     <string name="receipt_retake">Chụp lại</string>
     <string name="receipt_manual_entry">Nhập tay thay thế</string>
+    <string name="picker_add_wallet">+ Thêm ví mới</string>
 </resources>

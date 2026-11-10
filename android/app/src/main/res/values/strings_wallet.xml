@@ -38,4 +38,7 @@
     <string name="wallet_list_add">Thêm</string>
     <string name="wallet_list_empty_title">Chưa có ví nào</string>
     <string name="wallet_list_empty_hint">Bấm \'Thêm\' ở góc trên bên phải để tạo ví tiền mới.</string>
+    <string name="wallet_name_example">Ví dụ: Techcombank</string>
+    <string name="wallet_opening_label">Số dư ban đầu (không bắt buộc)</string>
+    <string name="wallet_opening_helper">Số tiền đang có trong ví hôm nay (VND).</string>
 </resources>

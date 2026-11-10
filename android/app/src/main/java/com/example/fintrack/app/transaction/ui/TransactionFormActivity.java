@@ -30,6 +30,11 @@ public final class TransactionFormActivity extends FinanceActivity {
     private long occurredAt = System.currentTimeMillis();
     private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
     private boolean initialized, editing;
+    // Quick-create (Sheet/Wallet, Sheet/Category): ids known before saving, to find and select the new record afterwards.
+    private java.util.Set<String> knownIds;
+    private boolean awaitingWallet, awaitingDestination, awaitingCategory;
+    private com.example.fintrack.app.wallet.ui.WalletSheet walletSheet;
+    private com.example.fintrack.app.category.ui.CategorySheet categorySheet;
     @Override protected int layout() { return R.layout.activity_transaction_form; }
     // Editing reads the record by ID (it is not part of the reference snapshot in the real flavor).
     @Override protected FinanceRepository.Scope readScope() {
@@ -52,7 +57,7 @@ public final class TransactionFormActivity extends FinanceActivity {
         findViewById(R.id.btnTypeExpense).setOnClickListener(view -> selectType(FinanceBook.Type.EXPENSE));
         findViewById(R.id.btnTypeIncome).setOnClickListener(view -> selectType(FinanceBook.Type.INCOME));
         findViewById(R.id.btnTypeTransfer).setOnClickListener(view -> selectType(FinanceBook.Type.TRANSFER));
-        findViewById(R.id.fieldCategory).setOnClickListener(view -> FinanceUi.category(this, type, value -> { category = value; render(); }));
+        findViewById(R.id.fieldCategory).setOnClickListener(view -> chooseCategory());
         findViewById(R.id.fieldWallet).setOnClickListener(view -> chooseWallet(false));
         findViewById(R.id.fieldSourceWallet).setOnClickListener(view -> chooseWallet(false));
         findViewById(R.id.fieldDestinationWallet).setOnClickListener(view -> chooseWallet(true));
@@ -64,7 +69,8 @@ public final class TransactionFormActivity extends FinanceActivity {
             text(R.id.etTransactionPayee, getIntent().getStringExtra(EXTRA_PAYEE));
         }
         // Wallet IDs are checked against the loaded references in render(); after rotation the form state wins.
-        if (saved == null && !editing) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
+        // Intent extras survive rotation, so re-parse until the form has loaded once.
+        if (!editing && !initialized) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
                 getIntent().getStringExtra(EXTRA_PREFILL_WALLET_ID), getIntent().getStringExtra(EXTRA_PREFILL_DESTINATION_WALLET_ID),
                 getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null);
     }
@@ -74,10 +80,61 @@ public final class TransactionFormActivity extends FinanceActivity {
         type = value; render();
     }
     private void chooseWallet(boolean target) {
-        FinanceUi.wallet(this, value -> { if (target) destination = value; else wallet = value; render(); });
+        if (book == null) { Toast.makeText(this, R.string.finance_wallet_empty, Toast.LENGTH_SHORT).show(); return; }
+        // A transfer needs two different wallets, so the other side is not offered.
+        String other = type == FinanceBook.Type.TRANSFER ? (target ? wallet : destination) : null;
+        com.example.fintrack.app.core.ui.PickerSheet.show(this, R.string.picker_wallet_title,
+                com.example.fintrack.app.core.ui.PickerSheet.wallets(book.state().wallets, other), target ? destination : wallet,
+                R.string.picker_add_wallet, () -> createWallet(target), value -> { if (target) destination = value; else wallet = value; render(); });
+    }
+    private void chooseCategory() {
+        if (book == null) { Toast.makeText(this, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return; }
+        com.example.fintrack.app.core.ui.PickerSheet.show(this, R.string.picker_category_title,
+                com.example.fintrack.app.core.ui.PickerSheet.categories(book.state().categories, type), category,
+                R.string.picker_add_category, this::createCategory, value -> { category = value; render(); });
+    }
+    private void createWallet(boolean target) {
+        walletSheet = com.example.fintrack.app.wallet.ui.WalletSheet.show(this, (sheet, value) -> {
+            if (book == null || model.busy()) return;
+            remember(); awaitingWallet = !target; awaitingDestination = target;
+            model.change(FinanceAction.wallet(value.name, value.openingBalance, FinanceBook.WalletType.valueOf(value.walletType),
+                    value.includeInAssets, value.sortOrder), false);
+        });
+    }
+    private void createCategory() {
+        categorySheet = com.example.fintrack.app.category.ui.CategorySheet.show(this, type, (sheet, name, categoryType, icon, colorHex) -> {
+            if (book == null || model.busy()) return;
+            // The new category must match the transaction type, so the form follows the sheet's type choice.
+            if (categoryType != type && type != FinanceBook.Type.TRANSFER) { category = null; type = categoryType; }
+            remember(); awaitingCategory = true;
+            model.change(FinanceAction.category(name, categoryType, icon, colorHex, 0), false);
+        });
+    }
+    private void remember() {
+        knownIds = new java.util.HashSet<>();
+        for (FinanceBook.Wallet w : book.state().wallets) knownIds.add(w.id);
+        for (FinanceBook.Category c : book.state().categories) knownIds.add(c.id);
+    }
+    /** Selects the record created through a quick-create sheet once it shows up in the refreshed book. */
+    private void adoptCreated() {
+        if (knownIds == null) return;
+        if (awaitingWallet || awaitingDestination) for (FinanceBook.Wallet w : book.state().wallets) {
+            if (knownIds.contains(w.id)) continue;
+            if (awaitingDestination) destination = w.id; else wallet = w.id;
+            awaitingWallet = awaitingDestination = false; knownIds = null;
+            if (walletSheet != null) walletSheet.dismiss();
+            return;
+        }
+        if (awaitingCategory) for (FinanceBook.Category c : book.state().categories) {
+            if (knownIds.contains(c.id)) continue;
+            category = c.id; awaitingCategory = false; knownIds = null;
+            if (categorySheet != null) categorySheet.dismiss();
+            return;
+        }
     }
     @Override protected void render() {
         if (book == null) return;
+        adoptCreated();
         if (!initialized) {
             if (editing) {
                 FinanceBook.Transaction existing = book.transaction(id);
@@ -199,7 +256,12 @@ public final class TransactionFormActivity extends FinanceActivity {
         if (!labels.isEmpty()) return context.getString(R.string.transaction_field_errors, android.text.TextUtils.join(", ", labels));
         return context.getString(FinanceUi.error(command.error));
     }
-    @Override protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveTransaction), loading); }
+    @Override protected void loading(boolean loading) {
+        FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveTransaction), loading);
+        boolean creating = loading && knownIds != null;
+        if (walletSheet != null && (awaitingWallet || awaitingDestination || !loading)) walletSheet.loading(creating);
+        if (categorySheet != null && (awaitingCategory || !loading)) categorySheet.loading(creating);
+    }
     @Override protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out); out.putString("id", id); out.putString("requestId", requestId); out.putString("type", type.name()); out.putString("category", category);
         out.putString("wallet", wallet); out.putString("destination", destination); out.putLong("date", occurredAt); out.putBoolean("initialized", initialized);

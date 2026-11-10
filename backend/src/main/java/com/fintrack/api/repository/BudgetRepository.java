@@ -64,6 +64,15 @@ public class BudgetRepository {
                 .append(" ORDER BY b.category_id ASC, b.id ASC");
         return jdbc.query(sql.toString(), BudgetRepository::response, args.toArray());
     }
+    /** Home risk summary: active children of the active monthly parent, using the same usage and threshold as CRUD. */
+    public List<BudgetResponse> dashboardActive(UUID userId, YearMonth month) {
+        return jdbc.query(SELECT + """
+                 AND b.period_start = ? AND b.archived_at IS NULL
+                 AND EXISTS (SELECT 1 FROM fintrack.monthly_budgets m WHERE m.user_id = b.user_id
+                             AND m.id = b.monthly_budget_id AND m.month = b.period_start AND m.archived_at IS NULL)
+                 ORDER BY b.id
+                """, BudgetRepository::response, userId, month.atDay(1));
+    }
     public BudgetResponse detail(UUID userId, UUID id) {
         return jdbc.query(SELECT + " AND b.id = ?", BudgetRepository::response, userId, id)
                 .stream().findFirst().orElseThrow(FinanceSupport::notFound);

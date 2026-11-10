@@ -52,6 +52,8 @@ final class BudgetUi {
         }
         if (FinanceBook.BUDGET_MONTH_MISSING.equals(code)) return activity.getString(R.string.budget_month_missing);
         if (FinanceBook.BUDGET_MONTH_CURRENT.equals(code)) return activity.getString(R.string.monthly_budget_current_locked);
+        if (FinanceBook.BUDGET_ARCHIVED.equals(code)) return activity.getString(R.string.budget_archived_edit);
+        if (FinanceBook.BUDGET_PERIOD_CONFLICT.equals(code)) return activity.getString(R.string.budget_category_exists);
         return null;
     }
 

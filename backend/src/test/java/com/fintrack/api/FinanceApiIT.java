@@ -102,7 +102,7 @@ class FinanceApiIT {
     }
 
     @Test void allFinanceCollectionsRequireAuthentication() throws Exception {
-        for (String module : List.of("wallets", "categories", "budgets", "transactions", "notifications", "notifications/unread-count"))
+        for (String module : List.of("wallets", "categories", "budgets", "transactions", "dashboard", "notifications", "notifications/unread-count"))
             assertThat(call("GET", "/api/v1/" + module, null, null).getStatus()).isEqualTo(401);
         ok(call("GET", "/api/v2/users/me/notification-settings", null, null), 401);
     }
@@ -152,6 +152,36 @@ class FinanceApiIT {
         assertThat(latest.path("budgetAlertThresholdPercent").asInt()).isEqualTo(90);
         ok(call("PATCH",settings,token,"{\"emailFinanceEnabled\":\"true\"}"),400);
         ok(call("PATCH",settings,token,"{\"recipient\":\"override@example.test\"}"),400);
+    }
+
+    @Test void dashboardReturnsDirectSnapshotWithoutPrivateTransactionOrProfileFields() throws Exception {
+        String wallet = wallet(1_000);
+        ok(call("POST", "/api/v1/transactions", token, posting(wallet, expense, "EXPENSE", 100)), 201);
+        var dashboard = ok(call("GET", "/api/v1/dashboard?month=2026-11", token, null), 200);
+        assertThat(dashboard.get("month").asText()).isEqualTo("2026-11");
+        assertThat(dashboard.get("currencyCode").asText()).isEqualTo("VND");
+        assertThat(dashboard.get("snapshotAt").asText()).endsWith("Z");
+        assertThat(dashboard.get("assets").get("totalMinor").asLong()).isEqualTo(900);
+        assertThat(dashboard.get("monthlyFlow").get("netSavingsMinor").asLong()).isEqualTo(-100);
+        assertThat(dashboard.get("budget").get("worstStatus").asText()).isEqualTo("NONE");
+        assertThat(dashboard.get("notifications").get("available").asBoolean()).isFalse();
+        assertThat(dashboard.get("notifications").get("unreadCount").isNull()).isTrue();
+        var recent = dashboard.get("recentTransactions").get(0);
+        assertThat(recent.get("wallet").get("walletId").asText()).isEqualTo(wallet);
+        assertThat(recent.has("note") || recent.has("payee") || dashboard.get("user").has("email") || dashboard.has("data")).isFalse();
+        var other = ok(call("GET", "/api/v1/dashboard?month=2026-11", otherToken, null), 200);
+        assertThat(other.get("assets").get("totalMinor").asLong()).isZero();
+        assertThat(other.get("recentTransactions").isEmpty()).isTrue();
+    }
+
+    @Test void dashboardStrictQueriesAndOverflowHaveStandardErrors() throws Exception {
+        for (String query : List.of("month=", "month=2026-1", "month=0000-01", "month=9999-01", "month=2026-13",
+                "userId=" + user, "limit=10", "month=2026-11&month=2026-12")) {
+            assertThat(ok(call("GET", "/api/v1/dashboard?" + query, token, null), 400).get("errorCode").asText()).isEqualTo("BAD_REQUEST");
+        }
+        jdbc.update("INSERT INTO fintrack.wallets(user_id,name,wallet_type,opening_balance_minor) VALUES (?,'Extreme A','CASH',?)", user, Long.MAX_VALUE);
+        jdbc.update("INSERT INTO fintrack.wallets(user_id,name,wallet_type,opening_balance_minor) VALUES (?,'Extreme B','SAVINGS',1)", user);
+        assertThat(ok(call("GET", "/api/v1/dashboard?month=2026-11", token, null), 422).get("errorCode").asText()).isEqualTo("FINANCE_AMOUNT_OVERFLOW");
     }
 
     @Test void realJwtCannotReadOrMutateOtherOwnersWalletOrCategory() throws Exception {

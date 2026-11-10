@@ -1,7 +1,10 @@
 package com.example.fintrack.app.core.ui;
 
 import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.text.method.DigitsKeyListener;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.EditText;
@@ -18,6 +21,11 @@ public final class MoneyInput {
 
     /** @param chips optional group shown only while there are suggestions (its scroll parent is toggled too). */
     public static void attach(EditText input, ChipGroup chips) {
+        // inputType="number" and maxLength filters reject or cut the "." separators below; MoneyFormat caps
+        // digits itself, so accept digits + "." while keeping the numeric keypad.
+        input.setFilters(new InputFilter[0]);
+        input.setKeyListener(DigitsKeyListener.getInstance("0123456789."));
+        input.setRawInputType(InputType.TYPE_CLASS_NUMBER);
         input.addTextChangedListener(new TextWatcher() {
             private boolean busy;
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -30,7 +38,8 @@ public final class MoneyInput {
                     if (!grouped.contentEquals(s)) {
                         int digitsBefore = MoneyFormat.digitsBefore(s, input.getSelectionStart());
                         s.replace(0, s.length(), grouped);
-                        input.setSelection(MoneyFormat.indexAfterDigits(grouped, digitsBefore));
+                        // Clamp: any remaining filter could still make s differ from grouped.
+                        input.setSelection(Math.min(MoneyFormat.indexAfterDigits(grouped, digitsBefore), s.length()));
                     }
                     if (chips != null) showSuggestions(input, chips, MoneyFormat.suggestions(grouped));
                 } finally { busy = false; }

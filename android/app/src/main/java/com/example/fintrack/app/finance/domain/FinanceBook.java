@@ -128,6 +128,9 @@ public final class FinanceBook {
         s.categories.add(new Category("salary", "Lương", Type.INCOME));
         s.categories.add(new Category("bonus", "Thưởng", Type.INCOME));
         s.categories.add(new Category("other-income", "Thu nhập khác", Type.INCOME));
+        // Same icon keys as the backend seed (V8__category_seed.sql), in the order added above.
+        String[] icons = {"coffee", "car", "shopping_bag", "receipt", "more_horiz", "briefcase", "gift", "more_horiz"};
+        for (int i = 0; i < icons.length; i++) s.categories.get(i).iconKey = icons[i];
         return s;
     }
 
@@ -416,6 +419,7 @@ public final class FinanceBook {
     public static final String BUDGET_MONTH_CURRENT = "BUDGET_MONTH_CURRENT";
     public static final String BUDGET_EXCEEDS_AVAILABLE_BALANCE = "BUDGET_EXCEEDS_AVAILABLE_BALANCE";
     public static final String BUDGET_PERIOD_CONFLICT = "BUDGET_PERIOD_CONFLICT";
+    public static final String BUDGET_ARCHIVED = "BUDGET_ARCHIVED";
 
     public MonthlyBudget monthlyBudget(String id) {
         for (MonthlyBudget item : state.monthlyBudgets) if (item.id.equals(id)) return item;

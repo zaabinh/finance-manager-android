@@ -28,6 +28,7 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
     }
 
     private final List<Integer> iconList;     // Danh sách chứa ID các icon (ví dụ: R.drawable.ic_coffee, ...)
+    private int tint;                        // màu xem trước (0 = màu phụ mặc định)
     private int selectedIconResId;            // ID của icon đang được chọn hiện tại
     private final OnIconSelectListener listener; // Biến lắng nghe sự kiện chọn icon
 
@@ -37,6 +38,9 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
         this.selectedIconResId = selectedIconResId;
         this.listener = listener;
     }
+
+    /** Xem trước tất cả icon bằng màu danh mục đang chọn. */
+    public void setTint(int color) { tint = color; notifyDataSetChanged(); }
 
     /**
      * Cập nhật lại icon đang được chọn từ bên ngoài và vẽ lại giao diện
@@ -59,7 +63,7 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
         int iconRes = iconList.get(position); // Lấy ID icon tại vị trí hiện tại
 
         // Gắn dữ liệu và xử lý khi người dùng bấm chọn icon này
-        holder.bind(iconRes, iconRes == selectedIconResId, v -> {
+        holder.bind(iconRes, iconRes == selectedIconResId, tint, v -> {
             selectedIconResId = iconRes; // Lưu lại icon mới được bấm
             notifyDataSetChanged();      // Vẽ lại giao diện để đổi màu viền/nền icon được chọn
 
@@ -93,17 +97,17 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
          * Gắn hình ảnh icon và thay đổi giao diện (màu nền, màu icon)
          * tùy theo việc ô này có đang được chọn (isSelected) hay không.
          */
-        public void bind(int iconRes, boolean isSelected, View.OnClickListener clickListener) {
+        public void bind(int iconRes, boolean isSelected, int tint, View.OnClickListener clickListener) {
             ivPickerIcon.setImageResource(iconRes); // Hiển thị hình ảnh icon
 
             if (isSelected) {
                 // Nếu ĐƯỢC CHỌN: Đổi sang màu nền và màu icon nổi bật (Primary)
-                flIconContainer.setBackgroundResource(R.drawable.bg_currency_box);
-                ivPickerIcon.setColorFilter(ContextCompat.getColor(itemView.getContext(), R.color.color_primary));
+                flIconContainer.setBackgroundResource(R.drawable.bg_icon_choice_selected);
+                ivPickerIcon.setColorFilter(tint != 0 ? tint : ContextCompat.getColor(itemView.getContext(), R.color.color_primary));
             } else {
                 // Nếu KHÔNG ĐƯỢC CHỌN: Hiển thị giao diện bình thường / phụ
-                flIconContainer.setBackgroundResource(R.drawable.bg_expense_card);
-                ivPickerIcon.setColorFilter(ContextCompat.getColor(itemView.getContext(), R.color.status_error));
+                flIconContainer.setBackgroundResource(R.drawable.bg_icon_choice);
+                ivPickerIcon.setColorFilter(tint != 0 ? tint : ContextCompat.getColor(itemView.getContext(), R.color.text_secondary));
             }
 
             // Lắng nghe sự kiện khi người dùng bấm vào ô icon này
