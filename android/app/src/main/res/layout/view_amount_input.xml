@@ -89,4 +89,6 @@
         android:textAppearance="@style/TextAppearance.App.BodySecondary"
         android:textColor="@color/status_error"
         android:visibility="gone" />
+
+    <include layout="@layout/view_amount_suggestions" />
 </LinearLayout>

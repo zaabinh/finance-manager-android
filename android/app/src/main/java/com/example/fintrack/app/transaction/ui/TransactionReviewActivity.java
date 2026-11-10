@@ -32,6 +32,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
 
     @Override protected void bind(Bundle saved) {
         toolbar(R.id.toolbarReceiptReview);
+        com.example.fintrack.app.core.ui.MoneyInput.attach(findViewById(R.id.etAmount), findViewById(R.id.chipGroupAmountSuggestions));
         images = getIntent().getStringArrayListExtra("images");
         index = getIntent().getIntExtra("index", 0);
         if (images == null || index < 0 || index >= images.size()) { finish(); return; }
@@ -134,6 +135,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
     }
 
     @Override protected void loading(boolean loading) {
+        FinanceUi.progress((android.widget.Button) findViewById(R.id.btnConfirmReceipt), loading);
         findViewById(R.id.btnConfirmReceipt).setEnabled(!loading && !reading);
     }
 

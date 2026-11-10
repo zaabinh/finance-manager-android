@@ -1,215 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Full-screen form built from the Sheet/Category field structure (form_category_fields). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_app_canvas"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
 
-    <!-- Header Toolbar -->
-    <RelativeLayout
-        android:id="@+id/rlHeader"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/spacing_16"
-        android:paddingTop="@dimen/spacing_16"
-        android:paddingBottom="@dimen/spacing_12"
-        app:layout_constraintTop_toTopOf="parent">
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarForm"
+        style="@style/Widget.App.Toolbar.Back"
+        app:title="@string/category_edit_title" />
 
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="@dimen/icon_back_size"
-            android:layout_height="@dimen/icon_back_size"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@null"
-            android:padding="4dp"
-            android:src="@drawable/ic_arrow_back"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="@string/category_edit_title"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/text_size_title_section"
-            android:textStyle="bold" />
-    </RelativeLayout>
-
-    <!-- Form ScrollView -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/spacing_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/spacing_16">
+            android:padding="@dimen/spacing_16">
 
-            <!-- Field 1: Tên danh mục -->
+            <include layout="@layout/form_category_fields" />
+
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_16"
-                android:text="@string/category_name_label"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_caption"
-                android:textStyle="bold" />
+                android:labelFor="@id/etCategorySortOrder"
+                android:text="@string/category_sort_label"
+                android:textAppearance="@style/TextAppearance.App.Label" />
 
             <EditText
-                android:id="@+id/etCategoryName"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/spacing_8"
-                android:autofillHints="name"
-                android:background="@drawable/bg_currency_box"
-                android:hint="@string/category_name_hint"
-                android:inputType="textCapWords"
-                android:paddingHorizontal="@dimen/spacing_16"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_hint"
-                android:textSize="@dimen/text_size_body_primary"
-                tools:text="Mua sắm" />
-
-            <!-- Field 2: Loại danh mục -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_20"
-                android:text="@string/category_type_label"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_caption"
-                android:textStyle="bold" />
-
-            <RelativeLayout
-                android:id="@+id/btnSelectCategoryType"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/spacing_8"
-                android:background="@drawable/bg_currency_box"
-                android:paddingHorizontal="@dimen/spacing_16">
-
-                <TextView
-                    android:id="@+id/tvSelectedCategoryType"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:text="@string/category_expense"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/text_size_body_primary" />
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_chevron_down"
-                    app:tint="@color/text_secondary" />
-            </RelativeLayout>
-
-            <!-- Field 3: Icon Grid -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_20"
-                android:text="@string/category_icon_label"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_caption"
-                android:textStyle="bold" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvIconPicker"
+                android:id="@+id/etCategorySortOrder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_8"
-                android:background="@drawable/bg_card_white"
-                android:padding="@dimen/spacing_8" />
-
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_20" android:text="@string/category_color_label"
-                android:textColor="@color/text_secondary" />
-            <EditText android:id="@+id/etCategoryColor" android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height" android:inputType="textCapCharacters"
-                android:maxLength="7" android:singleLine="true" android:hint="#RRGGBB"
-                android:background="@drawable/bg_currency_box" android:paddingHorizontal="@dimen/spacing_16" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_20" android:text="@string/category_sort_label"
-                android:textColor="@color/text_secondary" />
-            <EditText android:id="@+id/etCategorySortOrder" android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height" android:inputType="number" android:maxLength="10"
-                android:singleLine="true" android:hint="0" android:background="@drawable/bg_currency_box"
-                android:paddingHorizontal="@dimen/spacing_16" />
-
-            <!-- Field 5: Trạng thái -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_20"
-                android:text="@string/category_status_label"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_caption"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/spacing_4"
+                android:background="@drawable/bg_input_field"
+                android:hint="0"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:maxLength="10"
+                android:minHeight="@dimen/input_min_height"
+                android:paddingHorizontal="@dimen/spacing_12"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_8"
+                android:layout_marginTop="@dimen/spacing_16"
                 android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_target_min"
                 android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvStatusLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/status_active"
+                    android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switchStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    app:useMaterialThemeColors="true" />
-
-                <TextView
-                    android:id="@+id/tvStatusLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_8"
-                    android:text="@string/status_active"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/text_size_body_primary" />
+                    android:checked="true" />
             </LinearLayout>
-
-            <!-- Bottom Action Buttons: Save Changes & Delete Category -->
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnSaveChanges"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginTop="@dimen/spacing_32"
-                android:background="@drawable/bg_button_primary"
-                android:text="@string/btn_save_changes"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_button"
-                android:textStyle="bold" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnDeleteCategory"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginTop="@dimen/spacing_12"
-                android:background="@drawable/bg_button_outline"
-                android:text="@string/btn_delete_category"
-                android:textAllCaps="false"
-                android:textColor="@color/status_error"
-                android:textSize="@dimen/text_size_button"
-                android:textStyle="bold" />
-
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet_action_divider"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_16">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeleteCategory"
+            style="@style/Widget.App.Button.Outline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_delete_category" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveChanges"
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/spacing_12"
+            android:text="@string/btn_save_changes" />
+    </LinearLayout>
+</LinearLayout>

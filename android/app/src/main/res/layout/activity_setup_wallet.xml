@@ -132,10 +132,14 @@
 
                 <!-- Default Cash Wallet Card -->
                 <LinearLayout
+                    android:id="@+id/cardCashWallet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_20"
                     android:background="@drawable/bg_card_white"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:padding="@dimen/spacing_16">
@@ -165,6 +169,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvCashDesc"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/spacing_4"
@@ -175,15 +180,23 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tvCashBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="end"
-                        android:text="@string/wallet_initial_balance"
+                        android:text="@string/setup_cash_set_balance"
                         android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_size_title_section"
                         android:textStyle="bold" />
 
                 </LinearLayout>
+
+                <!-- Wallets added in this step (pending, not saved yet) -->
+                <LinearLayout
+                    android:id="@+id/llPendingWallets"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
 
                 <!-- Add Wallet -->
                 <TextView
@@ -192,8 +205,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_16"
                     android:background="?attr/selectableItemBackground"
-                    android:paddingTop="@dimen/spacing_4"
-                    android:paddingBottom="@dimen/spacing_4"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
                     android:text="@string/btn_add_other_wallet"
                     android:textColor="@color/color_primary"
                     android:textSize="@dimen/text_size_body_primary"

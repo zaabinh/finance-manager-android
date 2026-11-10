@@ -6,6 +6,8 @@
     <string name="splash_brand_title">Tiền của tôi ở đâu</string>
     <string name="splash_version">v1.0.0</string>
 
+    <string name="amount_suggestion_description">Gợi ý số tiền %1$s đồng</string>
+
     <!-- Common Button Actions -->
     <string name="btn_start">Bắt đầu</string>
     <string name="btn_continue">Tiếp tục</string>

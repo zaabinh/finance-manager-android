@@ -8,8 +8,6 @@
     <string name="category_name_label">Tên danh mục</string>
     <string name="category_name_hint">Nhập tên danh mục...</string>
     <string name="category_name_invalid">Tên danh mục phải có từ 1 đến 100 ký tự</string>
-    <string name="category_color_label">Màu biểu tượng (#RRGGBB, không bắt buộc)</string>
-    <string name="category_color_invalid">Nhập màu theo định dạng #RRGGBB</string>
     <string name="category_sort_label">Thứ tự hiển thị (mặc định 0)</string>
     <string name="category_sort_invalid">Nhập số nguyên từ 0 đến 2147483647</string>
     <string name="category_type_label">Loại danh mục</string>
@@ -36,4 +34,17 @@
     <string name="category_list_add">Thêm</string>
     <string name="category_list_empty_title">Không có danh mục nào</string>
     <string name="category_list_empty_hint">Bấm \'Thêm\' ở góc trên bên phải để tạo danh mục mới.</string>
+    <string name="category_name_example">Ví dụ: Cà phê</string>
+    <string name="sheet_category_title">Thêm danh mục</string>
+    <string name="category_color_title">Màu sắc</string>
+    <string-array name="category_color_names">
+        <item>Màu đỏ</item>
+        <item>Màu xanh lá</item>
+        <item>Màu nâu</item>
+        <item>Màu xanh dương</item>
+        <item>Màu tím</item>
+        <item>Màu xanh ngọc</item>
+        <item>Màu cam</item>
+        <item>Màu xám</item>
+    </string-array>
 </resources>

@@ -38,7 +38,9 @@ public final class BudgetFormActivity extends FinanceActivity {
 
     @Override
     protected void bind(Bundle saved) {
-        toolbar(R.id.toolbarBudgetForm); editing = getIntent().hasExtra(EXTRA_ID);
+        toolbar(R.id.toolbarBudgetForm);
+        com.example.fintrack.app.core.ui.MoneyInput.attach(findViewById(R.id.etAmount), findViewById(R.id.chipGroupAmountSuggestions));
+        editing = getIntent().hasExtra(EXTRA_ID);
         monthlyId = getIntent().getStringExtra(EXTRA_MONTHLY_ID);
         if (monthlyId == null) {
             // A category budget cannot exist without its monthly budget: start from "Tạo ngân sách tháng".
@@ -122,7 +124,7 @@ public final class BudgetFormActivity extends FinanceActivity {
     }
 
     @Override
-    protected void loading(boolean loading) { findViewById(R.id.btnSaveBudget).setEnabled(!loading); }
+    protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveBudget), loading); }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {

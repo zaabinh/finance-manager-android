@@ -89,6 +89,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
             ((TextView) row.findViewById(R.id.tvRowCategory)).setText(category == null
                     ? getString(R.string.transaction_category_placeholder) : category.name);
             EditText limit = row.findViewById(R.id.etRowLimit);
+            com.example.fintrack.app.core.ui.MoneyInput.attach(limit);
             limit.setText(limits.get(i));
             limit.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -146,7 +147,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
     }
 
     @Override
-    protected void loading(boolean loading) { findViewById(R.id.btnSaveMonthlyBudget).setEnabled(!loading); }
+    protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveMonthlyBudget), loading); }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {

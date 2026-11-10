@@ -40,7 +40,12 @@ Develop already ships the v2 palette (same hex as Figma P1). There is one token 
 | Section/Header | 639:2181 | `layout/view_section_header.xml` (S0-F4) | Foundation | PROPOSED |
 | State/Empty, State/Loading | 629:2939, 629:2970 | `layout/view_state_empty.xml`, `view_state_loading_*.xml` (S0-F5) | Foundation | PROPOSED |
 | Feedback/Toast, Dialog/Confirm | 628:2706, 628:2734 | Snackbar style, `layout/dialog_confirm.xml` (S0-F5) | Foundation | PROPOSED |
-| Sheet/Container, List/Option | 629:2895, 628:2749 | `layout/sheet_container.xml`, `item_option.xml` (S0-F5) | Foundation | PROPOSED |
+| Sheet/Container | 629:2895 | `layout/sheet_picker.xml` + `item_picker_option.xml`, `drawable/bg_sheet*.xml` (BottomSheetDialog content; approved by product owner 2026-11-09) | Foundation | IMPLEMENTED |
+| Sheet/Header | 718:11273 | `layout/sheet_header.xml` (ids `tvSheetTitle`, `btnSheetClose`; included by sheet_wallet/sheet_category) | Foundation | IMPLEMENTED |
+| Sheet/FormActions | 718:11274 | `layout/sheet_form_actions.xml` (`btnSheetCancel` Outline + `btnSheetConfirm` Primary) | Foundation | IMPLEMENTED |
+| Sheet/Wallet | 718:11413 (Add 718:11293; Edit 718:11346 not built) | `layout/sheet_wallet.xml` + shared `layout/form_wallet_fields.xml`; controller `wallet/ui/WalletSheet`; also reused by `activity_wallet_add/edit.xml`. Skipped: default-wallet checkbox (no model field) | Foundation | IMPLEMENTED |
+| Sheet/Category | 718:11596 (Add 718:11421; Edit 718:11506 not built) | `layout/sheet_category.xml` + shared `layout/form_category_fields.xml`; controller `category/ui/CategorySheet`; icon grid `item_icon_picker.xml` (Control/IconChoice 718:11414/11417, `bg_icon_choice*.xml`); reused by `activity_category_add/edit.xml` | Foundation | IMPLEMENTED |
+| List/Option | 628:2749 | `item_option.xml` (S0-F5) | Foundation | PROPOSED |
 | Input/Amount | 628:2576 | `layout/view_amount_input.xml` | B | PROPOSED |
 | Card/Transaction | 429:2230 | `layout/item_transaction.xml` | B | PROPOSED |
 | Card/Wallet | 643:2369 | `layout/item_wallet.xml` | B | PROPOSED |

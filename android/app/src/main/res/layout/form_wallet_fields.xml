@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared by Sheet/Wallet 718:11413 and the wallet create/edit screens: Name, Type (Field/Selector), Opening balance.
+     Type value/icon are bound in code (WalletTypes). Opening balance uses MoneyInput + amount chips. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@id/etWalletName"
+        android:text="@string/wallet_name_label"
+        android:textAppearance="@style/TextAppearance.App.Label" />
+
+    <EditText
+        android:id="@+id/etWalletName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4"
+        android:autofillHints="name"
+        android:background="@drawable/bg_input_field"
+        android:hint="@string/wallet_name_example"
+        android:inputType="textCapWords"
+        android:maxLength="100"
+        android:minHeight="@dimen/input_min_height"
+        android:paddingHorizontal="@dimen/spacing_12"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+        android:textColorHint="@color/text_hint" />
+
+    <LinearLayout
+        android:id="@+id/fieldWalletType"
+        style="@style/Widget.App.FieldSelector"
+        android:layout_marginTop="@dimen/spacing_16">
+
+        <ImageView
+            android:id="@+id/ivWalletTypeIcon"
+            style="@style/Widget.App.FieldSelector.Icon"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_landmark" />
+
+        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+            <TextView
+                style="@style/Widget.App.FieldSelector.Label"
+                android:text="@string/wallet_type_label" />
+
+            <TextView
+                android:id="@+id/tvWalletTypeValue"
+                style="@style/Widget.App.FieldSelector.Value" />
+        </LinearLayout>
+
+        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_16"
+        android:labelFor="@id/etBalance"
+        android:text="@string/wallet_opening_label"
+        android:textAppearance="@style/TextAppearance.App.Label" />
+
+    <EditText
+        android:id="@+id/etBalance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4"
+        android:background="@drawable/bg_input_field"
+        android:hint="@string/wallet_initial_balance"
+        android:importantForAutofill="no"
+        android:inputType="number"
+        android:minHeight="@dimen/input_min_height"
+        android:paddingHorizontal="@dimen/spacing_12"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+        android:textColorHint="@color/text_hint" />
+
+    <include layout="@layout/view_amount_suggestions" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4"
+        android:text="@string/wallet_opening_helper"
+        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+        android:textColor="@color/text_secondary" />
+</LinearLayout>
