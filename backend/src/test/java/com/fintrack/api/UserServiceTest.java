@@ -35,6 +35,7 @@ class UserServiceTest {
     private final NotificationSettingsRepository notifications = mock(NotificationSettingsRepository.class);
     private final PasswordEncoder passwords = mock(PasswordEncoder.class);
     private final RefreshTokenRotatingService refreshTokens = mock(RefreshTokenRotatingService.class);
+    private final com.fintrack.api.service.wallet.WalletService wallets = mock(com.fintrack.api.service.wallet.WalletService.class);
     private final UUID userId = UUID.randomUUID();
     private final Instant now = Instant.parse("2026-11-05T00:00:00Z");
     private UserService service;
@@ -42,7 +43,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new UserService(users, preferences, notifications, passwords, refreshTokens);
+        service = new UserService(users, preferences, notifications, passwords, refreshTokens, wallets);
         user = new UserRecord(userId, "minhanh", "minh@example.com", "hash", UserStatus.ACTIVE,
                 UserRole.USER, "Minh Anh", true, true, now, now);
         when(users.findById(userId)).thenReturn(Optional.of(user));
@@ -111,28 +112,58 @@ class UserServiceTest {
     }
 
     @Test
-    void firstSetupSavesProfileAndNotificationsThenCompletesOnboarding() {
+    void firstSetupSavesProfileNotificationsAndWalletsThenCompletesOnboarding() {
+        when(users.lockById(userId)).thenReturn(Optional.of(notOnboarded()));
         when(preferences.findByUserId(userId))
                 .thenReturn(Optional.of(prefs("Minh Anh", "Asia/Ho_Chi_Minh")))
                 .thenReturn(Optional.of(prefs("An", "Asia/Tokyo")));
         when(notifications.findByUserId(userId)).thenReturn(Optional.of(notificationSettings(80)));
+        var cash = wallet("Tiền mặt", "CASH", 500_000);
+        var bank = wallet("Techcombank", "BANK", 2_000_000);
 
         var response = service.completeFirstSetup(userId, new FirstSetupRequest(
                 new UpdateProfileRequest("An", "Asia/Tokyo"),
-                new UpdateNotificationSettingsRequest(true, false, LocalTime.of(21, 0), true, (short) 80, true, true)));
+                new UpdateNotificationSettingsRequest(true, false, LocalTime.of(21, 0), true, (short) 80, true, true),
+                java.util.List.of(cash, bank)));
 
         verify(preferences).upsert(userId, "An", "VND", "Asia/Tokyo", (short) 1);
         verify(notifications).upsert(userId, true, false, LocalTime.of(21, 0), true, (short) 80, true, true);
+        verify(wallets).create(userId, cash);
+        verify(wallets).create(userId, bank);
         verify(users).completeOnboarding(userId);
         assertThat(response.onboardingCompleted()).isTrue();
     }
 
     @Test
+    void repeatedFirstSetupDoesNotCreateWalletsTwice() {
+        when(users.lockById(userId)).thenReturn(Optional.of(user)); // onboarding already completed
+        when(preferences.findByUserId(userId)).thenReturn(Optional.of(prefs("An", "Asia/Tokyo")));
+        when(notifications.findByUserId(userId)).thenReturn(Optional.of(notificationSettings(80)));
+
+        service.completeFirstSetup(userId, new FirstSetupRequest(new UpdateProfileRequest("An", "Asia/Tokyo"), null,
+                java.util.List.of(wallet("Tiền mặt", "CASH", 500_000))));
+
+        verify(wallets, never()).create(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void firstSetupRequiresDisplayName() {
         assertThatThrownBy(() -> service.completeFirstSetup(userId,
-                new FirstSetupRequest(new UpdateProfileRequest(" ", "Asia/Tokyo"), null)))
+                new FirstSetupRequest(new UpdateProfileRequest(" ", "Asia/Tokyo"), null, null)))
                 .isInstanceOf(AppException.class);
         verify(users, never()).completeOnboarding(userId);
+        verify(wallets, never()).create(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    private UserRecord notOnboarded() {
+        return new UserRecord(userId, "minhanh", "minh@example.com", "hash", UserStatus.ACTIVE,
+                UserRole.USER, "Minh Anh", false, true, now, now);
+    }
+
+    private static com.fintrack.api.dto.request.wallet.WalletRequest wallet(String name, String type, long opening) {
+        var request = new com.fintrack.api.dto.request.wallet.WalletRequest();
+        request.name = name; request.walletType = type; request.openingBalanceMinor = opening; request.includeInAssets = true;
+        return request;
     }
 
     private UserPreferencesRecord prefs(String displayName, String timeZone) {

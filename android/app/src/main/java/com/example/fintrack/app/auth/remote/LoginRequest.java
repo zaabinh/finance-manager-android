@@ -8,8 +8,11 @@ public class LoginRequest {
 
     @SerializedName("password")
     private String password;
+    @SerializedName("rememberMe")
+    private boolean rememberMe;
 
-    public LoginRequest(String usernameOrEmail, String password) {
+    public LoginRequest(String usernameOrEmail, String password, boolean rememberMe) {
+        this.rememberMe = rememberMe;
         this.usernameOrEmail = usernameOrEmail;
         this.password = password;
     }

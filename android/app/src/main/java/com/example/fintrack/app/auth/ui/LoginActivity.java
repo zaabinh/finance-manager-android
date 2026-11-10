@@ -136,6 +136,7 @@ public class LoginActivity extends AppCompatActivity {
                         var login = resource.getData();
                         onboardingCompletedAfterLogin = login.isOnboardingCompleted();
                         awaitingLoginProfile = true;
+                        sessionManager.setRememberMe(((android.widget.CheckBox) findViewById(R.id.cbRememberMe)).isChecked());
                         sessionManager.saveAuthToken(
                                 login.getToken().getAccessToken(),
                                 login.getToken().getRefreshToken()
@@ -285,6 +286,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        authViewModel.login(usernameOrEmail, password);
+        boolean rememberMe = ((android.widget.CheckBox) findViewById(R.id.cbRememberMe)).isChecked();
+        authViewModel.login(usernameOrEmail, password, rememberMe);
     }
 }

@@ -144,8 +144,13 @@ public class SetupWalletActivity extends AppCompatActivity {
         btnCompleteSetup.setOnClickListener(v -> userViewModel.completeFirstSetup(buildRequest()));
     }
 
-    // shortcut: chưa gửi ví; `pending.all()` giữ danh sách ví (Tiền mặt + ví thêm), bổ sung trường wallets khi có wallet API
+    // Ví đã xác nhận (Tiền mặt + ví thêm) được gửi kèm; server tạo chúng cùng lúc hoàn tất thiết lập.
     private FirstSetupRequest buildRequest() {
+        java.util.List<com.example.fintrack.app.wallet.remote.WalletRequest> wallets = new java.util.ArrayList<>();
+        for (com.example.fintrack.app.setup.model.PendingWallet wallet : pending.all())
+            wallets.add(new com.example.fintrack.app.wallet.remote.WalletRequest(wallet.name, wallet.openingBalance,
+                    com.example.fintrack.app.finance.domain.FinanceBook.WalletType.valueOf(wallet.walletType),
+                    wallet.includeInAssets, wallet.sortOrder));
         Intent in = getIntent();
         boolean notifEnabled = in.getBooleanExtra(SetupNotificationActivity.EXTRA_NOTIF_ENABLED, true);
         boolean budgetAlert = in.getBooleanExtra(SetupNotificationActivity.EXTRA_BUDGET_ALERT, true);
@@ -158,7 +163,8 @@ public class SetupWalletActivity extends AppCompatActivity {
                         budgetAlert,
                         in.getIntExtra(SetupNotificationActivity.EXTRA_BUDGET_THRESHOLD, 80),
                         budgetAlert,
-                        notifEnabled));
+                        notifEnabled),
+                wallets);
     }
 
     private void observeFirstSetup() {

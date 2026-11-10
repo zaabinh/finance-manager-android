@@ -100,9 +100,9 @@ public class AuthViewModel extends AndroidViewModel {
     // --- Các hàm xử lý nghiệp vụ xác thực ---
 
     /** Thực hiện đăng nhập */
-    public void login(String usernameOrEmail, String password) {
+    public void login(String usernameOrEmail, String password, boolean rememberMe) {
         loginResult.setValue(Resource.loading(null)); // Đặt trạng thái là Đang tải
-        authRepository.login(usernameOrEmail, password, loginResult);
+        authRepository.login(usernameOrEmail, password, rememberMe, loginResult);
     }
 
     /** Thực hiện đăng ký tài khoản mới */

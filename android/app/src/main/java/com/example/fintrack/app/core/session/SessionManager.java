@@ -25,6 +25,7 @@ public class SessionManager {
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_REMEMBER_ME = "remember_me";
 
     private static SessionManager instance;
     private final SharedPreferences pref;
@@ -79,8 +80,15 @@ public class SessionManager {
     public static synchronized SessionManager getInstance(Context context) {
         if (instance == null) {
             instance = new SessionManager(context);
+            // First use in a new process = the app was closed. Without "Ghi nhớ tôi" the user must log in again.
+            if (instance.isLoggedIn() && !instance.pref.getBoolean(KEY_REMEMBER_ME, true)) instance.clearSession();
         }
         return instance;
+    }
+
+    /** "Ghi nhớ tôi": giữ đăng nhập sau khi đóng ứng dụng. Mặc định true. */
+    public void setRememberMe(boolean remember) {
+        pref.edit().putBoolean(KEY_REMEMBER_ME, remember).apply();
     }
 
     /** Lưu Token xác thực và chuyển trạng thái thành Đã đăng nhập */
@@ -155,6 +163,7 @@ public class SessionManager {
                 .remove(KEY_USER_ID)
                 .remove(KEY_USER_EMAIL)
                 .remove(KEY_USER_NAME)
+                .remove(KEY_REMEMBER_ME)
                 .putBoolean(KEY_IS_SETUP_COMPLETED, wasSetupCompleted)
                 .apply();
     }

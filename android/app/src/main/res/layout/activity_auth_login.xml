@@ -130,17 +130,35 @@
 
                 </RelativeLayout>
 
-                <!-- Forgot Password Link -->
-                <TextView
-                    android:id="@+id/tvForgotPassword"
-                    android:layout_width="wrap_content"
+                <!-- Remember me + Forgot Password Link -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
                     android:layout_marginTop="@dimen/spacing_8"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="@dimen/spacing_8"
-                    android:text="@string/forgot_password_link"
-                    android:textAppearance="@style/TextAppearance.App.Button" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/cbRememberMe"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:button="@drawable/selector_checkbox"
+                        android:checked="true"
+                        android:minHeight="@dimen/touch_target_min"
+                        android:paddingStart="@dimen/spacing_8"
+                        android:text="@string/remember_me"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary" />
+
+                    <TextView
+                        android:id="@+id/tvForgotPassword"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="@dimen/spacing_8"
+                        android:text="@string/forgot_password_link"
+                        android:textAppearance="@style/TextAppearance.App.Button" />
+                </LinearLayout>
 
                 <!-- Login Button Container -->
                 <androidx.constraintlayout.widget.ConstraintLayout
