@@ -68,7 +68,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://api-staging.example.com/\""
+                "\"https://api-staging-dongfinance.zaabinh.id.vn/\""
             )
         }
 
@@ -82,7 +82,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://api.example.com/\""
+                "\"https://api-dongfinance.zaabinh.id.vn\""
             )
         }
     }
