@@ -2,13 +2,17 @@ package com.example.fintrack.app.auth.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.lifecycle.ViewModelProvider;
@@ -40,6 +44,9 @@ public class LoginActivity extends AppCompatActivity {
     private AuthViewModel authViewModel;
     private UserViewModel userViewModel;
     private SessionManager sessionManager;
+    private static final String KEY_PENDING_VERIFICATION_EMAIL = "key_pending_verification_email";
+    // Email the last resend-verification request was sent for; survives rotation while the request runs.
+    private String pendingVerificationEmail;
     private boolean onboardingCompletedAfterLogin;
     private boolean awaitingLoginProfile;
 
@@ -66,6 +73,8 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_auth_login);
+        if (savedInstanceState != null)
+            pendingVerificationEmail = savedInstanceState.getString(KEY_PENDING_VERIFICATION_EMAIL);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
@@ -144,13 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                     String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.login_failed);
 
                     if ("AUTH_EMAIL_NOT_VERIFIED".equals(errorMsg)) {
-                        String userEmail = etUsernameOrEmail.getText().toString().trim();
-                        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                                .setTitle("Tài khoản chưa xác thực Email")
-                                .setMessage("Tài khoản của bạn chưa được kích hoạt. Bạn có muốn gửi lại mã xác nhận OTP về email không?")
-                                .setPositiveButton("Gửi lại Email", (dialog, which) -> authViewModel.resendVerification(userEmail))
-                                .setNegativeButton("Để sau", null)
-                                .show();
+                        promptResendVerification(etUsernameOrEmail.getText().toString().trim());
                     } else {
                         Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     }
@@ -191,22 +194,76 @@ public class LoginActivity extends AppCompatActivity {
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case SUCCESS:
-                    Toast.makeText(this, "Mã xác nhận đã được gửi! Vui lòng kiểm tra email.", Toast.LENGTH_LONG).show();
-                    String email = etUsernameOrEmail.getText().toString().trim();
-                    authViewModel.setRegisteredEmail(email);
+                    // Null after navigating: a LiveData replay on recreation must not reopen the OTP screen.
+                    if (pendingVerificationEmail == null) break;
+                    Toast.makeText(this, R.string.verify_resend_sent, Toast.LENGTH_LONG).show();
+                    authViewModel.setRegisteredEmail(pendingVerificationEmail);
                     Intent intent = new Intent(LoginActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", email);
+                    intent.putExtra("email", pendingVerificationEmail);
+                    pendingVerificationEmail = null;
                     startActivity(intent);
                     break;
                 case ERROR:
-                    String msg = resource.getMessage() != null ? resource.getMessage() : "Không thể gửi email xác nhận. Vui lòng thử lại.";
+                    if (pendingVerificationEmail == null) break;
+                    pendingVerificationEmail = null;
+                    String msg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.verify_resend_failed);
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                     break;
                 case LOADING:
-                    Toast.makeText(this, "Đang gửi lại email xác nhận...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.verify_resend_sending, Toast.LENGTH_SHORT).show();
                     break;
             }
         });
+    }
+
+    /**
+     * Account exists and the password was correct, but the email is unverified. Resend needs the
+     * account email: the backend looks it up by email only and silently ignores anything else.
+     */
+    private void promptResendVerification(String identifier) {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder builder =
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.verify_required_title)
+                        .setNegativeButton(R.string.verify_later, null);
+        if (Patterns.EMAIL_ADDRESS.matcher(identifier).matches()) {
+            builder.setMessage(R.string.verify_required_message)
+                    .setPositiveButton(R.string.verify_resend, (dialog, which) -> resendVerification(identifier))
+                    .show();
+            return;
+        }
+        // Signed in with a username: ask for the registered email.
+        EditText emailInput = new EditText(this);
+        emailInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        emailInput.setHint(R.string.hint_email);
+        FrameLayout container = new FrameLayout(this);
+        int padding = getResources().getDimensionPixelSize(R.dimen.spacing_24);
+        container.setPadding(padding, 0, padding, 0);
+        container.addView(emailInput);
+        AlertDialog dialog = builder.setMessage(R.string.verify_required_message_username)
+                .setView(container)
+                .setPositiveButton(R.string.verify_resend, null)
+                .show();
+        // Set after show() so an invalid email keeps the dialog open.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String email = emailInput.getText().toString().trim();
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                emailInput.setError(getString(R.string.error_invalid_email));
+                return;
+            }
+            dialog.dismiss();
+            resendVerification(email);
+        });
+    }
+
+    private void resendVerification(String email) {
+        pendingVerificationEmail = email;
+        authViewModel.resendVerification(email);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_PENDING_VERIFICATION_EMAIL, pendingVerificationEmail);
     }
 
     /**
