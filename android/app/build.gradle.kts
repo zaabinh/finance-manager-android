@@ -82,7 +82,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://api-dongfinance.zaabinh.id.vn\""
+                "\"https://api-dongfinance.zaabinh.id.vn/\""
             )
         }
     }
