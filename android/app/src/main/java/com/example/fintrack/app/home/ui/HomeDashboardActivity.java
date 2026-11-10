@@ -7,14 +7,18 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
 import com.example.fintrack.app.analytics.ui.AnalyticsActivity;
 import com.example.fintrack.app.auth.ui.LoginActivity;
-import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
-import com.example.fintrack.app.budget.ui.MonthlyBudgetFormActivity;
+import com.example.fintrack.BuildConfig;
+import com.example.fintrack.app.core.network.ErrorMapper;
+import com.example.fintrack.app.home.remote.DashboardApiService;
+import com.example.fintrack.app.home.remote.DashboardResponse;
+import com.example.fintrack.app.wallet.ui.WalletAddActivity;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionManager;
@@ -39,7 +43,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private ImageView btnToggleBalanceVisibility;
 
     private View btnActionRecord;
-    private View btnActionBudget;
+    private View btnActionAddWallet;
     private View btnActionScan;
     private View btnActionReport;
 
@@ -60,8 +64,6 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private long totalAssetsCents;
     private long availableCents;
     private long savingsCents;
-    // Ngân sách tháng hiện tại (null nếu chưa tạo) để nút tắt "Ngân sách" mở đúng màn hình
-    private String currentMonthlyBudgetId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +93,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
         btnToggleBalanceVisibility = findViewById(R.id.btnToggleBalanceVisibility);
 
         btnActionRecord = findViewById(R.id.btnActionRecord);
-        btnActionBudget = findViewById(R.id.btnActionBudget);
+        btnActionAddWallet = findViewById(R.id.btnActionAddWallet);
         btnActionScan = findViewById(R.id.btnActionScan);
         btnActionReport = findViewById(R.id.btnActionReport);
 
@@ -126,53 +128,73 @@ public class HomeDashboardActivity extends AppCompatActivity {
             }
         });
 
-        // Lắng nghe dữ liệu tài chính (Số dư, Ngân sách)
+        // Mock flavor has no dashboard endpoint: derive the same summary from the local ledger.
         financeModel.state().observe(this, resource -> {
-            // Xử lý khi có lỗi tải dữ liệu tài chính
             if (resource.getStatus() == Resource.Status.ERROR) {
-                com.google.android.material.snackbar.Snackbar.make(findViewById(android.R.id.content),
-                                FinanceUi.error(FinanceBook.Problem.valueOf(resource.getMessage())), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                        .setAction(R.string.action_retry, view -> financeModel.refresh()).show();
+                showLoadError(getString(FinanceUi.error(FinanceBook.Problem.valueOf(resource.getMessage()))));
             }
             if (resource.getData() == null) return;
             FinanceBook book = resource.getData();
-            String month = book.monthAt(System.currentTimeMillis());
-
-            // Tính toán tài sản tổng, tiền tiết kiệm và tiền khả dụng
-            totalAssetsCents = book.assets(false);
-            savingsCents = book.assets(true);
-            availableCents = Math.subtractExact(totalAssetsCents, savingsCents);
-
-            // Cập nhật lên giao diện hiển thị số dư
-            updateBalanceDisplay();
-
-            // Ngân sách tháng hiện tại: tổng (dẫn xuất) và đã chi lấy từ server (mock tính cùng công thức)
-            FinanceBook.MonthlyBudget currentBudget = book.monthlyBudgetFor(month);
-            currentMonthlyBudgetId = currentBudget == null ? null : currentBudget.id;
-            long spent = currentBudget == null ? book.budgetSpent(month) : book.monthlySpent(currentBudget);
+            FinanceBook.MonthlyBudget currentBudget = book.monthlyBudgetFor(book.monthAt(System.currentTimeMillis()));
+            long total = book.assets(false), savings = book.assets(true);
+            long spent = currentBudget == null ? book.budgetSpent(book.monthAt(System.currentTimeMillis())) : book.monthlySpent(currentBudget);
             long limit = currentBudget == null ? 0 : book.monthlyTotal(currentBudget);
+            int percent = limit <= 0 ? 0 : java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
+                    .divide(java.math.BigInteger.valueOf(limit)).min(java.math.BigInteger.valueOf(100)).intValue();
+            showSummary(total, Math.subtractExact(total, savings), savings, limit, spent, percent, limit > 0 && spent >= limit);
+        });
+    }
 
+    /** Real backend: one GET /api/v1/dashboard request for the whole Home summary. */
+    private void loadDashboard() {
+        com.example.fintrack.app.finance.data.FinanceRepository.client(this, financeOwner)
+                .create(DashboardApiService.class).dashboard().enqueue(new retrofit2.Callback<DashboardResponse>() {
+            @Override public void onResponse(@NonNull retrofit2.Call<DashboardResponse> call, @NonNull retrofit2.Response<DashboardResponse> response) {
+                if (isFinishing() || isDestroyed()) return;
+                DashboardResponse body = response.body();
+                if (!response.isSuccessful() || body == null || body.assets == null || body.budget == null) {
+                    showLoadError(ErrorMapper.getHttpErrorMessage(HomeDashboardActivity.this, response));
+                    return;
+                }
+                DashboardResponse.Budget budget = body.budget;
+                showSummary(body.assets.totalMinor, body.assets.availableMinor, body.assets.savingsMinor,
+                        budget.limitMinor, budget.spentMinor, budget.progressPercent,
+                        "EXCEEDED".equals(budget.worstStatus) || (budget.limitMinor > 0 && budget.spentMinor >= budget.limitMinor));
+            }
+            @Override public void onFailure(@NonNull retrofit2.Call<DashboardResponse> call, @NonNull Throwable error) {
+                if (!isFinishing() && !isDestroyed()) showLoadError(ErrorMapper.getErrorMessage(HomeDashboardActivity.this, error));
+            }
+        });
+    }
+
+    private void showLoadError(String message) {
+        com.google.android.material.snackbar.Snackbar.make(findViewById(android.R.id.content), message,
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                .setAction(R.string.action_retry, view -> refreshSummary()).show();
+    }
+
+    private void refreshSummary() {
+        if (BuildConfig.USE_MOCK) financeModel.refresh();
+        else loadDashboard();
+    }
+
+    private void showSummary(long total, long available, long savings, long limit, long spent, int percent, boolean exceeded) {
+        totalAssetsCents = total;
+        availableCents = available;
+        savingsCents = savings;
+        updateBalanceDisplay();
             if (tvBudgetUsage != null && tvBudgetRemaining != null && pbBudgetProgress != null) {
                 if (limit > 0) {
                     // Đã thiết lập hạn mức ngân sách
-                    int percent = java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
-                            .divide(java.math.BigInteger.valueOf(limit)).min(java.math.BigInteger.valueOf(100)).intValue();
                     pbBudgetProgress.setProgress(percent);
                     tvBudgetUsage.setText(getString(R.string.budget_usage_format, FinanceUi.money(spent), FinanceUi.money(limit)));
-
-                    if (spent >= limit) {
-                        // Trường hợp chi tiêu vượt quá hạn mức
-                        tvBudgetStatusBadge.setText(R.string.budget_status_exceeded);
-                        tvBudgetStatusBadge.setBackgroundResource(R.drawable.bg_badge_over_budget);
-                        tvBudgetStatusBadge.setTextColor(getColor(R.color.status_error));
-                        tvBudgetRemaining.setText(getString(R.string.budget_exceeded_detail, FinanceUi.money(spent - limit), percent));
-                    } else {
-                        // Trường hợp chi tiêu trong hạn mức cho phép
-                        tvBudgetStatusBadge.setText(R.string.budget_status_within);
-                        tvBudgetStatusBadge.setBackgroundResource(R.drawable.bg_badge_in_budget);
-                        tvBudgetStatusBadge.setTextColor(getColor(R.color.status_success));
-                        tvBudgetRemaining.setText(getString(R.string.budget_remaining_detail, FinanceUi.money(limit - spent), percent));
-                    }
+                    // Badge: any category over its limit counts (dashboard worstStatus), not only the total.
+                    tvBudgetStatusBadge.setText(exceeded ? R.string.budget_status_exceeded : R.string.budget_status_within);
+                    tvBudgetStatusBadge.setBackgroundResource(exceeded ? R.drawable.bg_badge_over_budget : R.drawable.bg_badge_in_budget);
+                    tvBudgetStatusBadge.setTextColor(getColor(exceeded ? R.color.status_error : R.color.status_success));
+                    tvBudgetRemaining.setText(spent >= limit
+                            ? getString(R.string.budget_exceeded_detail, FinanceUi.money(spent - limit), percent)
+                            : getString(R.string.budget_remaining_detail, FinanceUi.money(limit - spent), percent));
                 } else {
                     // Chưa thiết lập hạn mức ngân sách
                     tvBudgetStatusBadge.setText(R.string.budget_status_unset);
@@ -181,7 +203,6 @@ public class HomeDashboardActivity extends AppCompatActivity {
                     pbBudgetProgress.setProgress(0);
                 }
             }
-        });
     }
 
     // Cập nhật trạng thái ẩn/hiện số tiền trên giao diện
@@ -220,10 +241,8 @@ public class HomeDashboardActivity extends AppCompatActivity {
             btnActionRecord.setOnClickListener(v -> startActivity(new Intent(this, TransactionFormActivity.class)));
         }
 
-        if (btnActionBudget != null) {
-            btnActionBudget.setOnClickListener(v -> startActivity(currentMonthlyBudgetId == null
-                    ? new Intent(this, MonthlyBudgetFormActivity.class)
-                    : new Intent(this, BudgetDetailActivity.class).putExtra(BudgetDetailActivity.EXTRA_MONTHLY_ID, currentMonthlyBudgetId)));
+        if (btnActionAddWallet != null) {
+            btnActionAddWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletAddActivity.class)));
         }
 
         if (btnActionScan != null) {
@@ -257,8 +276,6 @@ public class HomeDashboardActivity extends AppCompatActivity {
         if (userViewModel != null) {
             userViewModel.fetchProfile();
         }
-        if (financeModel != null) {
-            financeModel.refresh();
-        }
+        refreshSummary();
     }
 }

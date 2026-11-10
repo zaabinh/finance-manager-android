@@ -32,8 +32,7 @@
     <string name="savings_account_label">Tài khoản tiết kiệm</string>
     <string name="sample_savings_balance">14.330.000 đ</string>
     <string name="quick_action_record">Ghi giao dịch</string>
-    <string name="badge_coming_soon">Sắp có</string>
-    <string name="quick_action_budget">Tạo Khoản</string>
+    <string name="quick_action_add_wallet">Thêm Ví</string>
     <string name="quick_action_scan">Quét hóa đơn</string>
     <string name="quick_action_report">Báo cáo</string>
     <string name="sample_budget_month">Ngân sách tháng 10</string>
