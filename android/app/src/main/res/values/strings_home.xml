@@ -50,7 +50,8 @@
     <string name="budget_remaining_detail">Còn lại %1$s - đã dùng %2$d%%</string>
     <string name="budget_status_unset">Chưa đặt</string>
     <string name="budget_spent_only">Đã chi %1$s</string>
-    <string name="budget_unset_note">Chưa đặt hạn mức tháng này</string>
+    <string name="budget_unset_note">Bạn chưa tạo ngân sách cho tháng này. Hãy tạo ngân sách để theo dõi và kiểm soát chi tiêu.</string>
+    <string name="home_create_budget">Tạo ngân sách &gt;</string>
     <string name="hidden_balance">••••••••</string>
     <string name="hidden_amount">••••••</string>
 </resources>

@@ -64,6 +64,8 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private long totalAssetsCents;
     private long availableCents;
     private long savingsCents;
+    // Whether the current month has a budget; decides where the budget card's link goes
+    private boolean hasBudget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,26 +185,29 @@ public class HomeDashboardActivity extends AppCompatActivity {
         availableCents = available;
         savingsCents = savings;
         updateBalanceDisplay();
-            if (tvBudgetUsage != null && tvBudgetRemaining != null && pbBudgetProgress != null) {
-                if (limit > 0) {
-                    // Đã thiết lập hạn mức ngân sách
-                    pbBudgetProgress.setProgress(percent);
-                    tvBudgetUsage.setText(getString(R.string.budget_usage_format, FinanceUi.money(spent), FinanceUi.money(limit)));
-                    // Badge: any category over its limit counts (dashboard worstStatus), not only the total.
-                    tvBudgetStatusBadge.setText(exceeded ? R.string.budget_status_exceeded : R.string.budget_status_within);
-                    tvBudgetStatusBadge.setBackgroundResource(exceeded ? R.drawable.bg_badge_over_budget : R.drawable.bg_badge_in_budget);
-                    tvBudgetStatusBadge.setTextColor(getColor(exceeded ? R.color.status_error : R.color.status_success));
-                    tvBudgetRemaining.setText(spent >= limit
-                            ? getString(R.string.budget_exceeded_detail, FinanceUi.money(spent - limit), percent)
-                            : getString(R.string.budget_remaining_detail, FinanceUi.money(limit - spent), percent));
-                } else {
-                    // Chưa thiết lập hạn mức ngân sách
-                    tvBudgetStatusBadge.setText(R.string.budget_status_unset);
-                    tvBudgetUsage.setText(getString(R.string.budget_spent_only, FinanceUi.money(spent)));
-                    tvBudgetRemaining.setText(R.string.budget_unset_note);
-                    pbBudgetProgress.setProgress(0);
-                }
-            }
+        hasBudget = limit > 0;
+        if (homeBudgetLink instanceof TextView) {
+            ((TextView) homeBudgetLink).setText(hasBudget ? R.string.see_details : R.string.home_create_budget);
+        }
+        if (tvBudgetUsage == null || tvBudgetRemaining == null || pbBudgetProgress == null) return;
+        if (hasBudget) {
+            // Đã thiết lập hạn mức ngân sách
+            pbBudgetProgress.setProgress(percent);
+            tvBudgetUsage.setText(getString(R.string.budget_usage_format, FinanceUi.money(spent), FinanceUi.money(limit)));
+            // Badge: any category over its limit counts (dashboard worstStatus), not only the total.
+            tvBudgetStatusBadge.setText(exceeded ? R.string.budget_status_exceeded : R.string.budget_status_within);
+            tvBudgetStatusBadge.setBackgroundResource(exceeded ? R.drawable.bg_badge_over_budget : R.drawable.bg_badge_in_budget);
+            tvBudgetStatusBadge.setTextColor(getColor(exceeded ? R.color.status_error : R.color.status_success));
+            tvBudgetRemaining.setText(spent >= limit
+                    ? getString(R.string.budget_exceeded_detail, FinanceUi.money(spent - limit), percent)
+                    : getString(R.string.budget_remaining_detail, FinanceUi.money(limit - spent), percent));
+        } else {
+            // Chưa có ngân sách tháng này: báo cho người dùng và mời tạo (link bên dưới mở form tạo ngân sách)
+            tvBudgetStatusBadge.setText(R.string.budget_status_unset);
+            tvBudgetUsage.setText(getString(R.string.budget_spent_only, FinanceUi.money(spent)));
+            tvBudgetRemaining.setText(R.string.budget_unset_note);
+            pbBudgetProgress.setProgress(0);
+        }
     }
 
     // Cập nhật trạng thái ẩn/hiện số tiền trên giao diện
@@ -255,7 +260,9 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
         // Đường dẫn bấm vào xem danh sách/chi tiết ngân sách
         if (homeBudgetLink != null) {
-            homeBudgetLink.setOnClickListener(v -> startActivity(new Intent(this, BudgetListActivity.class)));
+            // No budget this month: the link invites the user to create one instead of opening an empty list.
+            homeBudgetLink.setOnClickListener(v -> startActivity(new Intent(this,
+                    hasBudget ? BudgetListActivity.class : com.example.fintrack.app.budget.ui.MonthlyBudgetFormActivity.class)));
         }
 
         // Khởi tạo thanh điều hướng dưới màn hình (Bottom Navigation)
