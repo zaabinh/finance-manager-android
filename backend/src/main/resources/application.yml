@@ -58,6 +58,10 @@ springdoc:
   swagger-ui:
     enabled: false
 app:
+  notifications:
+    producers-enabled: ${NOTIFICATION_PRODUCERS_ENABLED:false}
+    email-enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+    action-origin: ${NOTIFICATION_ACTION_ORIGIN:}
   auth:
     issuer: ${AUTH_JWT_ISSUER:fintrack-api}
     access-token-ttl: ${AUTH_ACCESS_TOKEN_TTL:15m}

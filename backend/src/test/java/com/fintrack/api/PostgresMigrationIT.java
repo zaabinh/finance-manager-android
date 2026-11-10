@@ -140,7 +140,8 @@ class PostgresMigrationIT {
                     }
                     assertThat(tables).containsExactlyInAnyOrder("users", "user_preferences", "refresh_sessions",
                             "wallets", "categories", "transactions", "transaction_entries", "budgets", "monthly_budgets",
-                            "verification_challenges", "notification_settings");
+                            "verification_challenges", "notification_settings", "notifications", "notification_outbox",
+                            "budget_notification_state", "notification_finance_events", "daily_notification_schedule");
                     try (var script = getClass().getResourceAsStream("/db/core-schema-smoke.sql")) {
                         assertThat(script).isNotNull();
                         statement.execute(new String(script.readAllBytes(), StandardCharsets.UTF_8));

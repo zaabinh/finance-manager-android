@@ -53,6 +53,9 @@ class ApplicationSmokeTest {
                 .andExpect(jsonPath("$.path").value("/api/v1/wallets"))
                 .andExpect(header().doesNotExist("Set-Cookie"));
         mockMvc.perform(get("/actuator/env")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/notifications")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/notifications/unread-count")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v2/users/me/notification-settings")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/actuator/health/not-a-probe")).andExpect(status().isUnauthorized());
     }
 

@@ -52,6 +52,10 @@ public class NotificationSettingsRepository {
                 .findFirst();
     }
 
+    public NotificationSettingsRecord lockByUserId(UUID userId) {
+        return jdbc.query(SELECT + " WHERE user_id = ? FOR UPDATE", MAPPER, userId).stream().findFirst().orElseThrow();
+    }
+
     // 2. Khởi tạo thiết lập mặc định (nếu chưa có)
     public void createDefault(UUID userId) {
         String sql = """

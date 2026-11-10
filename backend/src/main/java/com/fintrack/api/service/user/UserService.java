@@ -114,7 +114,8 @@ public class UserService {
             throw badRequest("At least one notification setting is required");
         }
         getActiveUser(userId);
-        NotificationSettingsRecord current = getOrCreateNotificationSettings(userId);
+        getOrCreateNotificationSettings(userId);
+        NotificationSettingsRecord current = notificationSettings.lockByUserId(userId);
         boolean enabled = valueOr(request.notificationsEnabled(), current.notificationsEnabled());
         boolean dailyEnabled = valueOr(request.dailyReminderEnabled(), current.dailyReminderEnabled());
         LocalTime dailyTime = request.dailyReminderTime() == null ? current.dailyReminderTime() : request.dailyReminderTime();

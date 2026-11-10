@@ -1,6 +1,6 @@
 # Kế hoạch backend Notifications và email tài chính
 
-Ngày 08/11/2026. Vai trò Explorer theo [AGENTS.md](../../AGENTS.md). API/schema/interfaces dưới đây là **đề xuất triển khai mới**, không mô tả tính năng đã tồn tại. Yêu cầu email tài chính mở rộng phạm vi cho đợt Notifications này; không đổi scope hoặc điều kiện nghiệm thu CRUD đang chạy.
+Ngày lập 08/11/2026. Backend đã triển khai trên nhánh riêng `feature/notification`, chưa merge/push. Contract cuối cùng: [NOTIFICATIONS.md](../api/NOTIFICATIONS.md); rollout: [NOTIFICATIONS.md](../deployment/NOTIFICATIONS.md); kết quả: [NOTIFICATIONS_IMPLEMENTATION_REPORT.md](../../NOTIFICATIONS_IMPLEMENTATION_REPORT.md). Android, App Links và nối unread vào Dashboard là phần handoff tiếp theo; không thay đổi auth/CRUD contract. Nội dung bên dưới giữ nguyên yêu cầu và quyết định thiết kế ban đầu để đối chiếu.
 
 ## 1. Hiện trạng và dependency
 
