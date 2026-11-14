@@ -129,6 +129,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.mlkit.text.recognition)
 
+    // CameraX
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+
     // Networking
     implementation(libs.gson)
     implementation(libs.retrofit)

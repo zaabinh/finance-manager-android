@@ -331,8 +331,11 @@ public final class TransactionReviewActivity extends FinanceActivity {
 
     @Override protected void completed() {
         if (images != null && index + 1 < images.size()) {
+            Toast.makeText(this, getString(R.string.receipt_review_title_batch, index + 1, images.size()) + " - " + getString(R.string.finance_saved), Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, TransactionReviewActivity.class)
                     .putStringArrayListExtra(EXTRA_IMAGES, images).putExtra(EXTRA_INDEX, index + 1));
+        } else {
+            Toast.makeText(this, "Đã lưu giao dịch từ hóa đơn thành công", Toast.LENGTH_SHORT).show();
         }
         finish();
     }

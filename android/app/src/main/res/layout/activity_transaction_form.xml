@@ -48,6 +48,38 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_16" />
 
+            <!-- Nút quét nhanh hóa đơn OCR để tự động điền -->
+            <LinearLayout
+                android:id="@+id/btnQuickOcrScan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_badge_neutral"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_camera"
+                    app:tint="@color/color_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quét hóa đơn"
+                    android:textColor="@color/color_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <!-- Expense / Income: Danh mục + Ví -->
             <LinearLayout
                 android:id="@+id/groupExpenseIncome"
