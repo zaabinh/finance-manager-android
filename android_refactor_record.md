@@ -23,8 +23,8 @@ Plan: `android_refactor.md`. Base commit `bb0bf71` on `develop`. User authorized
 | 3 Typed errors/results | done, reviewed | Main orchestrator; contract/review subagent (drafts only, no filesystem tools) | 170 unit tests pass on mock and dev; androidTest APK builds; lint 0 errors, 396 warnings. Typed parser/cancellation tests added. Log: `android/build/phase3-check2.log`. |
 | 4 Canonical models | done, reviewed | Main integration; persistence/test draft agents; independent reviewer `gpt-6.1-sol/high` | 184 unit tests pass on mock and dev; mock/dev/staging debug, prodRelease/R8 and androidTest assemble pass; lint pass. Immutable entities/snapshots, explicit v1 file codec, domain helpers and compatibility tests. Log: `android/build/phase34-final.log`. Targeted device storage checks NOT RUN; runtime limitations below. |
 | 5 Pagination/mutation lifecycle | done, reviewed | Integration/review `gpt-6.1-sol/high`; UI and tests `gpt-6.1-sol/medium`; main validation/commit | Final tree: 201 unit tests pass per mock/dev flavor, all flavor builds/R8, lint and androidTest assembly pass. Scoped snapshots, independent pagination, mutation receipts and one-time acknowledgment. P1 queued-session issue fixed and independently re-reviewed. Log: `android/build/phase35-verified.log`. |
-| 6 UI cleanup / mock isolation | pending | | |
-| 7 Cleanup / CI | pending | | |
+| 6 UI cleanup / mock isolation | done, reviewed | Groundwork: Integration Agent (Opus). Screens: three Feature Implementers (Sonnet) with disjoint file ownership. Main: review, gate, commit | Commits `280b1e5`, `3b9a4cd`. Integrated gate: 252 unit tests per flavor, all four flavor builds incl. R8, lint 0 errors. |
+| 7 Cleanup / CI | done, reviewed | Integration Agent (Opus); FinanceBook split merged from `refactor/finance-book` | Commits `81f3932`, `624992f`. Final gate: 271 unit tests per flavor, all four flavor builds incl. R8, lint 0 errors / 388 warnings, androidTest APK assembles. |
 
 ## Stable shared contracts
 - `app.FintrackApplication` → `container()`, `static container(Context)`.
@@ -68,6 +68,12 @@ Phase5 tests cover stale query responses, pagination retry without losing rows o
 - Logout / deactivation results are one-time events (no repeated toast or redirect on recreation).
 - A request issued under a session that has since ended fails locally before it is sent.
 - Not verified on a device: manual login → logout → same-account login.
+
+## Phase 6–7 execution notes (2026-11-14)
+- Work continued in worktree `.worktrees/android-refactor` on `feature/android-refactor`; the main checkout and its uncommitted user edits were not touched.
+- `origin/develop` had moved 8 commits; merged as `6ed65cd` before phase 6 and ported into the refactored architecture (empty auth bodies, dashboard API, remember-me, first-setup wallets).
+- Review of phases 1–5 found one regression (session expiry left finance screens loading); fixed in `280b1e5` with tests.
+- Full report: `docs/refactoring/android-refactor-report.md`.
 
 ## Blockers
 - Instrumentation cannot be used as a clean gate: the suite already fails on the base commit on the only available emulator (API 37).
