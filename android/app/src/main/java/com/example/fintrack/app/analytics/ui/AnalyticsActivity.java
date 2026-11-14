@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,7 +18,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.fintrack.R;
 import com.example.fintrack.app.analytics.model.AnalyticsCategoryItem;
 import com.example.fintrack.app.analytics.model.AnalyticsData;
-import com.example.fintrack.app.analytics.provider.AnalyticsDataProvider;
+import com.example.fintrack.app.FintrackApplication;
+import com.example.fintrack.app.analytics.provider.AnalyticsProvider;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
 
 import java.util.ArrayList;
@@ -84,6 +86,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     private AnalyticsData analyticsData;
     private String currentMonth = "Tháng 10";
     private AnalyticsCategoryItem selectedCategory;
+    private AnalyticsProvider provider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +94,16 @@ public class AnalyticsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_analytics);
 
         initViews();
+        provider = FintrackApplication.container(this).analyticsProvider();
+        if (provider == null) {
+            // Not connected (real flavors): the layout's sample figures must never show. Only the header stays.
+            View header = findViewById(R.id.rlHeader);
+            ViewGroup root = (ViewGroup) header.getParent();
+            for (int i = 0; i < root.getChildCount(); i++)
+                if (root.getChildAt(i) != header) root.getChildAt(i).setVisibility(View.GONE);
+            btnBack.setOnClickListener(v -> finish());
+            return;
+        }
         loadAnalyticsData(currentMonth);
         setupListeners();
         updateStepUI();
@@ -146,7 +159,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     private void loadAnalyticsData(String month) {
         currentMonth = month;
         tvSelectedMonth.setText(month);
-        analyticsData = AnalyticsDataProvider.getAnalyticsDataForMonth(month);
+        analyticsData = provider.getAnalyticsDataForMonth(month);
 
         tvSlide1NetDiff.setText(analyticsData.getNetDifference());
         tvSlide1Income.setText(analyticsData.getTotalIncome());

@@ -29,7 +29,7 @@ public final class TransactionListViewModel extends ViewModel {
     private List<Transaction> rows = Collections.emptyList();
     private int page = -1, totalPages;
     private long generation;
-    private boolean initialLoading, pageLoading;
+    private boolean initialLoading, pageLoading, expired;
     private volatile boolean cleared;
     private RequestHandle read = RequestHandle.NONE;
 
@@ -48,6 +48,17 @@ public final class TransactionListViewModel extends ViewModel {
     public boolean initialLoading() { return initialLoading; }
     public boolean pageLoading() { return pageLoading; }
     private boolean active() { return !cleared && session.isCurrent(origin); }
+    /**
+     * For results and could-not-start outcomes, on the main thread. A cleared model stays silent; once the origin
+     * session has ended, loading stops and expiry is signalled once as an UNAUTHORIZED error without rows.
+     */
+    private boolean live() {
+        if (cleared) return false;
+        if (session.isCurrent(origin)) return true;
+        initialLoading = false; pageLoading = false;
+        if (!expired) { expired = true; state.setValue(Resource.error(AppError.sessionExpired(), null)); }
+        return false;
+    }
 
     public void query(FinanceBook.Query value) {
         if (!active() || java.util.Objects.equals(query, value)) return;
@@ -71,13 +82,13 @@ public final class TransactionListViewModel extends ViewModel {
         loadMoreError.setValue(null);
         state.setValue(Resource.loading(rows));
         executors.serial().execute(() -> {
-            if (!active()) return;
+            if (!active()) { executors.main().execute(this::live); return; }
             try {
                 FinanceRepository repository = repositories.apply(origin);
                 executors.main().execute(() -> {
-                    if (!active() || requested != generation) return;
+                    if (!live() || requested != generation) return;
                     read = repository.transactionsAsync(requestedQuery, requestedPage, executors, result -> {
-                        if (!active() || requested != generation) return;
+                        if (!live() || requested != generation) return;
                         initialLoading = false; pageLoading = false;
                         if (result.getStatus() == Resource.Status.ERROR) {
                             failure(result.getError(), requestedPage); return;
@@ -93,7 +104,7 @@ public final class TransactionListViewModel extends ViewModel {
             } catch (Exception error) {
                 AppError failure = FinanceRepository.error(error);
                 executors.main().execute(() -> {
-                    if (!active() || requested != generation) return;
+                    if (!live() || requested != generation) return;
                     initialLoading = false; pageLoading = false;
                     failure(failure, requestedPage);
                 });

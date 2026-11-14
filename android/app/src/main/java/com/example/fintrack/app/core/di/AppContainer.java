@@ -2,7 +2,11 @@ package com.example.fintrack.app.core.di;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.example.fintrack.BuildConfig;
+import com.example.fintrack.app.analytics.provider.AnalyticsDataProvider;
+import com.example.fintrack.app.analytics.provider.AnalyticsProvider;
 import com.example.fintrack.app.auth.remote.AuthApiService;
 import com.example.fintrack.app.auth.repository.AuthRepository;
 import com.example.fintrack.app.budget.remote.BudgetApiService;
@@ -19,6 +23,8 @@ import com.example.fintrack.app.finance.data.MockFinanceStore;
 import com.example.fintrack.app.finance.remote.FinanceApiBundle;
 import com.example.fintrack.app.home.remote.DashboardApiService;
 import com.example.fintrack.app.home.repository.DashboardRepository;
+import com.example.fintrack.app.notification.provider.DemoNotificationProvider;
+import com.example.fintrack.app.notification.provider.NotificationProvider;
 import com.example.fintrack.app.transaction.remote.TransactionApiService;
 import com.example.fintrack.app.user.remote.UserApiService;
 import com.example.fintrack.app.user.repository.UserRepository;
@@ -53,6 +59,8 @@ public class AppContainer {
     private DashboardRepository dashboardRepository;
     private SessionSnapshot financeOrigin;
     private FinanceRepository financeRepository;
+    private AnalyticsProvider analyticsProvider;
+    private NotificationProvider notificationProvider;
 
     public AppContainer(Context appContext) {
         this(appContext, AppExecutors.create());
@@ -105,6 +113,22 @@ public class AppContainer {
             financeOrigin = origin;
         }
         return financeRepository;
+    }
+
+    /** Demo figures in the mock flavor; null ("not connected") elsewhere, where nothing fabricated may be shown. */
+    @Nullable
+    public synchronized AnalyticsProvider analyticsProvider() {
+        if (BuildConfig.USE_MOCK && analyticsProvider == null) analyticsProvider = new AnalyticsDataProvider();
+        return analyticsProvider;
+    }
+
+    /** Demo notifications of the signed-in account in the mock flavor; null ("not connected") elsewhere. */
+    @Nullable
+    public synchronized NotificationProvider notificationProvider() {
+        if (BuildConfig.USE_MOCK && notificationProvider == null)
+            notificationProvider = new DemoNotificationProvider(() -> sessionStore().current().userId,
+                    DemoNotificationProvider.preferences(appContext));
+        return notificationProvider;
     }
 
     private FinanceRepository remoteFinanceRepository(SessionSnapshot origin) {

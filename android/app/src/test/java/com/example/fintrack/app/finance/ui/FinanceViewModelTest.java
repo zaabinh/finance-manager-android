@@ -73,6 +73,65 @@ public class FinanceViewModelTest {
         assertNull(model.command().getValue()); assertTrue(repository.reads.isEmpty());
         model.refresh(); assertTrue(repository.reads.isEmpty());
     }
+    private static int expiries(java.util.List<Resource<FinanceBook>> states) {
+        int count = 0;
+        for (Resource<FinanceBook> state : states) {
+            if (state.getStatus() == Resource.Status.ERROR) {
+                assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, state.getError().code);
+                assertEquals(com.example.fintrack.app.finance.domain.FinanceProblem.UNAUTHORIZED, FinanceErrors.problem(state.getError()));
+                count++;
+            }
+        }
+        return count;
+    }
+    private java.util.List<Resource<FinanceBook>> record(FinanceViewModel model) {
+        java.util.List<Resource<FinanceBook>> states = new java.util.ArrayList<>();
+        model.state().observeForever(states::add);
+        return states;
+    }
+    @Test public void sessionEndedDuringReadStopsLoadingAndSignalsExpiryOnceWithoutData() {
+        FinanceViewModel model = model(); model.refresh(); model.refresh();
+        java.util.List<Resource<FinanceBook>> states = record(model);
+        session.clear(session.current());
+        repository.reads.get(1).deliver(Resource.success(book()));
+        repository.reads.get(0).deliver(Resource.success(book()));
+        assertFalse(model.snapshotLoading());
+        assertEquals(1, expiries(states));
+        for (Resource<FinanceBook> state : states) assertNull(state.getData());
+    }
+    @Test public void sessionReplacedByNewLoginNeverDeliversOldData() {
+        FinanceViewModel model = model(); model.refresh();
+        session.clear(session.current()); session.login("b", "r", true);
+        repository.reads.get(0).deliver(Resource.success(book()));
+        assertNull(model.state().getValue().getData());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
+    }
+    @Test public void sessionEndedDuringSaveStopsSavingAndSignalsExpiry() {
+        FinanceViewModel model = model(); model.change(FinanceAction.deleteTransaction("id"), true);
+        session.clear(session.current());
+        repository.writes.get(0).deliver(Resource.success(new MutationReceipt("old", null)));
+        assertFalse(model.saveLoading()); assertEquals(Boolean.FALSE, model.saveLoadingState().getValue());
+        assertNull(model.command().getValue());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
+    }
+    @Test public void readThatCannotStartAfterSessionEndsSignalsExpiry() {
+        java.util.ArrayDeque<Runnable> queue = new java.util.ArrayDeque<>();
+        AppExecutors queued = new AppExecutors(queue::add, queue::add, Runnable::run, Runnable::run);
+        session.login("a", "r", true);
+        FinanceViewModel model = new FinanceViewModel(session, origin -> repository, queued, FinanceRepository.Scope.ALL, null);
+        model.refresh(); session.clear(session.current()); queue.remove().run();
+        assertTrue(repository.reads.isEmpty()); assertFalse(model.snapshotLoading());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
+    }
+    @Test public void clearedModelStaysSilentAfterSessionEnds() {
+        FinanceViewModel model = model(); ViewModelStore owner = new ViewModelStore();
+        new ViewModelProvider(owner, new ViewModelProvider.Factory() {
+            @Override public <T extends ViewModel> T create(Class<T> type) { return type.cast(model); }
+        }).get(FinanceViewModel.class);
+        model.refresh(); owner.clear(); session.clear(session.current());
+        repository.reads.get(0).deliver(Resource.success(book()));
+        assertEquals(Resource.Status.LOADING, model.state().getValue().getStatus());
+    }
     @Test public void clearingOwnerCancelsReadsAndSuppressesLaterCallbacks() {
         FinanceViewModel model = model();
         ViewModelStore owner = new ViewModelStore();

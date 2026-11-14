@@ -3,7 +3,6 @@ package com.example.fintrack.app.finance.ui;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.domain.FinanceProblem;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -12,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
 import com.example.fintrack.app.FintrackApplication;
-import com.example.fintrack.app.auth.ui.LoginActivity;
+import com.example.fintrack.app.core.ui.SessionExpiry;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -89,11 +88,10 @@ public abstract class FinanceActivity extends AppCompatActivity {
         return getString(FinanceUi.error(command.error));
     }
 
-    /** Kiểm tra phiên đăng nhập lúc mở màn hình có còn là phiên hiện tại hay không */
-    private boolean authenticated() {
-        if (origin.userId != null && !origin.userId.trim().isEmpty()
-                && FintrackApplication.container(this).sessionStore().isCurrent(origin)) return true;
-        startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish(); return false;
+    /** Kiểm tra phiên đăng nhập lúc mở màn hình có còn là phiên hiện tại hay không; nếu không thì chuyển về Login */
+    protected final boolean authenticated() {
+        if (origin.userId != null && !origin.userId.trim().isEmpty() && SessionExpiry.isCurrent(this, origin)) return true;
+        SessionExpiry.redirectToLogin(this); return false;
     }
 
     @Override protected void onResume() { super.onResume(); if (authenticated() && model != null) model.refresh(); }

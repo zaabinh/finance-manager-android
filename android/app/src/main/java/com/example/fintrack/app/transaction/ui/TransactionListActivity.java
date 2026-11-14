@@ -93,6 +93,7 @@ public final class TransactionListActivity extends FinanceActivity {
             }
         });
         history.state().observe(this, resource -> {
+            if (resource.getStatus() == Resource.Status.ERROR && !authenticated()) return; // session ended: Login
             updateLoading();
             render();
             if (resource.getStatus() == Resource.Status.ERROR) {

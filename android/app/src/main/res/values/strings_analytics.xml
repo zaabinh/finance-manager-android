@@ -8,4 +8,6 @@
     <string name="btn_next">Tiếp tục →</string>
     <string name="btn_review">Xem lại →</string>
     <string name="select_report_month">Chọn tháng báo cáo</string>
+    <string name="analytics_not_connected_title">Chưa kết nối dữ liệu phân tích</string>
+    <string name="analytics_not_connected_body">Tính năng này sẽ hiển thị số liệu thật khi được kết nối với máy chủ.</string>
 </resources>

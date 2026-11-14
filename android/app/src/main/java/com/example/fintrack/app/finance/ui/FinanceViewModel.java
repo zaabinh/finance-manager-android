@@ -32,7 +32,7 @@ public final class FinanceViewModel extends ViewModel {
     private final String detailId;
     private RequestHandle read = RequestHandle.NONE;
     private long generation;
-    private boolean snapshotLoading, saveLoading;
+    private boolean snapshotLoading, saveLoading, expired;
     private volatile boolean cleared;
 
     public static final class Command {
@@ -59,6 +59,18 @@ public final class FinanceViewModel extends ViewModel {
     public boolean saveLoading() { return saveLoading; }
     public boolean busy() { return saveLoading; }
     private boolean active() { return !cleared && session.isCurrent(origin); }
+    /**
+     * For results and could-not-start outcomes, on the main thread. A cleared model stays silent; once the origin
+     * session has ended, loading stops and expiry is signalled once as an UNAUTHORIZED error without data.
+     */
+    private boolean live() {
+        if (cleared) return false;
+        if (session.isCurrent(origin)) return true;
+        snapshotLoading = false;
+        if (saveLoading) { saveLoading = false; saving.setValue(false); }
+        if (!expired) { expired = true; state.setValue(Resource.error(AppError.sessionExpired(), null)); }
+        return false;
+    }
     private FinanceBook previous() { return state.getValue() == null ? null : state.getValue().getData(); }
 
     public void refresh() {
@@ -69,15 +81,15 @@ public final class FinanceViewModel extends ViewModel {
         snapshotLoading = true;
         state.setValue(Resource.loading(previous));
         resolve(repository -> {
-            if (!active() || requested != generation) return;
+            if (!live() || requested != generation) return;
             read = repository.readAsync(scope, detailId, executors, result -> {
-                if (!active() || requested != generation) return;
+                if (!live() || requested != generation) return;
                 snapshotLoading = false;
                 state.setValue(result.getStatus() == Resource.Status.ERROR
                         ? Resource.error(result.getError(), previous) : Resource.success(result.getData()));
             });
         }, error -> {
-            if (!active() || requested != generation) return;
+            if (!live() || requested != generation) return;
             snapshotLoading = false;
             state.setValue(Resource.error(error, previous));
         });
@@ -94,7 +106,7 @@ public final class FinanceViewModel extends ViewModel {
         saveLoading = true;
         saving.setValue(true);
         resolve(repository -> repository.mutateAsync(action, previous, () -> session.isCurrent(origin), executors, result -> {
-            if (!active()) return;
+            if (!live()) return;
             saveLoading = false;
             saving.setValue(false);
             if (result.getStatus() == Resource.Status.ERROR) { failed(result.getError()); return; }
@@ -103,7 +115,7 @@ public final class FinanceViewModel extends ViewModel {
             command.setValue(new Event<>(new Command(null, complete, null, receipt)));
             if (!complete && receipt.snapshot == null) refresh();
         }), error -> {
-            if (!active()) return;
+            if (!live()) return;
             saveLoading = false;
             saving.setValue(false);
             failed(error);
@@ -114,13 +126,13 @@ public final class FinanceViewModel extends ViewModel {
     }
     private void resolve(Consumer<FinanceRepository> ready, Consumer<AppError> failed) {
         executors.serial().execute(() -> {
-            if (!active()) return;
+            if (!active()) { executors.main().execute(this::live); return; }
             try {
                 FinanceRepository repository = repositories.apply(origin);
-                executors.main().execute(() -> { if (active()) ready.accept(repository); });
+                executors.main().execute(() -> { if (live()) ready.accept(repository); });
             } catch (Exception error) {
                 AppError failure = FinanceRepository.error(error);
-                executors.main().execute(() -> { if (active()) failed.accept(failure); });
+                executors.main().execute(() -> { if (live()) failed.accept(failure); });
             }
         });
     }

@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.analytics.ui.AnalyticsActivity;
-import com.example.fintrack.app.auth.ui.LoginActivity;
+import com.example.fintrack.app.core.ui.SessionExpiry;
 import com.example.fintrack.BuildConfig;
 import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.home.remote.DashboardResponse;
@@ -133,6 +133,8 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
         // Real backend: one GET /api/v1/dashboard request for the whole Home summary; its aggregates are shown as sent.
         dashboardModel.summary().observe(this, resource -> {
+            // The session that asked has ended (e.g. the server rejected the refresh token): leave for Login.
+            if (resource.getStatus() == Resource.Status.ERROR && SessionExpiry.redirectIfEnded(this, origin)) return;
             if (resource.getStatus() == Resource.Status.ERROR) showLoadError(ErrorMapper.text(this, resource.getError()));
             if (resource.getStatus() != Resource.Status.SUCCESS) return;
             DashboardResponse body = resource.getData();
@@ -144,6 +146,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
 
         // Mock flavor has no dashboard endpoint: derive the same summary from the local ledger.
         financeModel.state().observe(this, resource -> {
+            if (resource.getStatus() == Resource.Status.ERROR && SessionExpiry.redirectIfEnded(this, origin)) return;
             if (resource.getStatus() == Resource.Status.ERROR) {
                 showLoadError(getString(FinanceUi.error(FinanceErrors.problem(resource.getError()))));
             }
@@ -264,11 +267,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Nếu phiên lúc mở màn hình không còn là phiên hiện tại (đăng xuất, đổi tài khoản, đăng nhập lại) thì đá về màn hình Login
-        if (sessionStore != null && !sessionStore.isCurrent(origin)) {
-            startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-            finish();
-            return;
-        }
+        if (sessionStore != null && SessionExpiry.redirectIfEnded(this, origin)) return;
         // Gọi tải lại thông tin profile và dữ liệu tài chính mới nhất
         if (userViewModel != null) {
             userViewModel.fetchProfile();

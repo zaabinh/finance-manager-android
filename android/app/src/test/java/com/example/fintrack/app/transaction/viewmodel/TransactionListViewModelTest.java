@@ -68,6 +68,45 @@ public class TransactionListViewModelTest {
         session.clear(session.current()); session.login("b", "r", true); page(0, 0, 1, "old");
         assertTrue(model.rows().isEmpty()); model.refresh(); assertEquals(1, repository.pages.size());
     }
+    @Test public void sessionEndedDuringReadStopsLoadingAndSignalsExpiryOnceWithoutData() {
+        TransactionListViewModel model = model(); model.query(query(null)); page(0, 0, 2, "first"); model.more();
+        java.util.List<Resource<java.util.List<Transaction>>> states = new java.util.ArrayList<>();
+        model.state().observeForever(states::add);
+        states.clear();
+        session.clear(session.current());
+        page(1, 1, 2, "second");
+        page(1, 1, 2, "second");
+        assertFalse(model.initialLoading()); assertFalse(model.pageLoading());
+        assertEquals(1, states.size());
+        Resource<java.util.List<Transaction>> state = states.get(0);
+        assertEquals(Resource.Status.ERROR, state.getStatus()); assertNull(state.getData());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, state.getError().code);
+        assertEquals(1, model.rows().size());
+    }
+    @Test public void sessionReplacedByNewLoginNeverDeliversOldData() {
+        TransactionListViewModel model = model(); model.query(query(null));
+        session.clear(session.current()); session.login("b", "r", true); page(0, 0, 1, "old");
+        assertTrue(model.rows().isEmpty()); assertNull(model.state().getValue().getData());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
+    }
+    @Test public void readThatCannotStartAfterSessionEndsSignalsExpiry() {
+        java.util.ArrayDeque<Runnable> queue = new java.util.ArrayDeque<>();
+        AppExecutors queued = new AppExecutors(queue::add, queue::add, Runnable::run, Runnable::run);
+        session.login("a", "r", true);
+        TransactionListViewModel model = new TransactionListViewModel(session, origin -> repository, queued);
+        model.query(query(null)); session.clear(session.current()); queue.remove().run();
+        assertTrue(repository.pages.isEmpty()); assertFalse(model.initialLoading());
+        assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
+    }
+    @Test public void clearedModelStaysSilentAfterSessionEnds() {
+        TransactionListViewModel model = model(); ViewModelStore owner = new ViewModelStore();
+        new ViewModelProvider(owner, new ViewModelProvider.Factory() {
+            @Override public <T extends ViewModel> T create(Class<T> type) { return type.cast(model); }
+        }).get(TransactionListViewModel.class);
+        model.query(query(null)); owner.clear(); session.clear(session.current());
+        page(0, 0, 1, "late");
+        assertEquals(Resource.Status.LOADING, model.state().getValue().getStatus());
+    }
     @Test public void clearingOwnerCancelsItsReadAndSuppressesLateResult() {
         TransactionListViewModel model = model(); ViewModelStore owner = new ViewModelStore();
         new ViewModelProvider(owner, new ViewModelProvider.Factory() {

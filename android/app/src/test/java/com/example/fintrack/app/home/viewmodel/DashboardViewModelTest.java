@@ -62,8 +62,15 @@ public class DashboardViewModelTest {
         assertEquals("EXCEEDED", result.getData().budget.worstStatus);
     }
 
+    private void assertExpired() {
+        Resource<DashboardResponse> state = model.summary().getValue();
+        assertEquals(Resource.Status.ERROR, state.getStatus());
+        assertEquals(AppError.SESSION_EXPIRED, state.getError().code);
+        assertNull(state.getData());
+    }
+
     @Test
-    public void responseOfASessionThatHasEndedIsDropped() {
+    public void responseOfASessionReplacedByANewLoginIsNotDeliveredButSignalsExpiry() {
         SessionSnapshot old = loggedIn("a1");
         model.refresh();
 
@@ -71,11 +78,38 @@ public class DashboardViewModelTest {
         store.clear(old);
         loggedIn("a2");
         call(0).succeed(summary(100));
-        assertEquals(Resource.Status.LOADING, model.summary().getValue().getStatus());
+        assertExpired();
+    }
 
+    @Test
+    public void sessionEndedDuringReadStopsLoadingAndSignalsExpiryOnce() {
+        loggedIn("a1");
         model.refresh();
+        model.refresh();
+        java.util.List<Resource<DashboardResponse>> states = new java.util.ArrayList<>();
+        model.summary().observeForever(states::add);
+        states.clear();
+
         store.clear(store.current());
         call(1).fail(new IOException("offline"));
+        call(0).succeed(summary(100)); // cancelled: never delivered
+        assertEquals(1, states.size());
+        assertExpired();
+
+        model.refresh(); // cannot start: no session
+        assertEquals(1, states.size());
+        assertEquals(2, api.count("dashboard"));
+    }
+
+    @Test
+    public void clearedModelStaysSilentAfterSessionEnds() {
+        loggedIn("a1");
+        model.refresh();
+
+        model.onCleared();
+        store.clear(store.current());
+        call(0).fail(new IOException("offline"));
+
         assertEquals(Resource.Status.LOADING, model.summary().getValue().getStatus());
     }
 

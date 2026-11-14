@@ -1,10 +1,9 @@
 package com.example.fintrack.app.notification.ui;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
@@ -16,17 +15,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.notification.adapter.NotificationAdapter;
 import com.example.fintrack.app.notification.model.NotificationItem;
+import com.example.fintrack.app.notification.provider.NotificationProvider;
 import com.example.fintrack.app.settings.ui.SettingNotificationActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationActivity extends AppCompatActivity {
-
-    private static final String PREF_NOTIF = "fintrack_notif_prefs";
-    private static final String KEY_ALL_READ = "all_notifications_read";
 
     private ImageView btnBack;
     private TextView btnMarkAllRead;
@@ -41,6 +39,7 @@ public class NotificationActivity extends AppCompatActivity {
 
     private List<NotificationItem> todayList = new ArrayList<>();
     private List<NotificationItem> yesterdayList = new ArrayList<>();
+    private NotificationProvider provider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +47,10 @@ public class NotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notification);
 
         initViews();
+        provider = FintrackApplication.container(this).notificationProvider();
         setupRecyclerViews();
-        loadNotifications();
+        if (provider == null) showNotConnected();
+        else loadNotifications();
         setupListeners();
     }
 
@@ -66,6 +67,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void setupRecyclerViews() {
         todayAdapter = new NotificationAdapter(item -> {
             item.setRead(true);
+            provider.markRead(item.getId());
             todayAdapter.notifyDataSetChanged();
             Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show();
         });
@@ -74,6 +76,7 @@ public class NotificationActivity extends AppCompatActivity {
 
         yesterdayAdapter = new NotificationAdapter(item -> {
             item.setRead(true);
+            provider.markRead(item.getId());
             yesterdayAdapter.notifyDataSetChanged();
             Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show();
         });
@@ -82,15 +85,11 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void loadNotifications() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NOTIF, Context.MODE_PRIVATE);
-        boolean isAllRead = prefs.getBoolean(KEY_ALL_READ, false);
-
         todayList.clear();
-        todayList.add(new NotificationItem("n1", "Vượt hạn mức Mua sắm", "18:31", "+300.000 đ", "Hôm nay", R.drawable.ic_receipt, isAllRead));
-        todayList.add(new NotificationItem("n2", "Hóa đơn & tiện ích đã dùng 88%", "07:31", null, "Hôm nay", R.drawable.ic_receipt, isAllRead));
-
         yesterdayList.clear();
-        yesterdayList.add(new NotificationItem("n3", "Nhắc ghi chi tiêu hôm nay", "21:00", null, "Hôm qua", R.drawable.ic_transactions, isAllRead));
+        String today = getString(R.string.section_today);
+        for (NotificationItem item : provider.notifications())
+            (today.equals(item.getSection()) ? todayList : yesterdayList).add(item);
 
         todayAdapter.setNotifications(todayList);
         yesterdayAdapter.setNotifications(yesterdayList);
@@ -98,6 +97,15 @@ public class NotificationActivity extends AppCompatActivity {
         // Màn hình trống chỉ hiển thị khi thực sự không có thông báo nào
         boolean hasNotifs = !todayList.isEmpty() || !yesterdayList.isEmpty();
         showPopulatedState(hasNotifs);
+    }
+
+    /** Real flavors: no notification source yet. Nothing fabricated is shown; notification settings stay reachable. */
+    private void showNotConnected() {
+        showPopulatedState(false);
+        // shortcut: the empty state's texts have no ids; the UI agent replaces this with a proper not-connected state.
+        ViewGroup content = (ViewGroup) btnOpenSettings.getParent();
+        ((TextView) content.getChildAt(1)).setText(R.string.notification_not_connected_title);
+        ((TextView) content.getChildAt(2)).setText(R.string.notification_not_connected_body);
     }
 
     private void showPopulatedState(boolean isPopulated) {
@@ -127,11 +135,8 @@ public class NotificationActivity extends AppCompatActivity {
             todayAdapter.notifyDataSetChanged();
             yesterdayAdapter.notifyDataSetChanged();
 
-            // Lưu trạng thái đã đọc local
-            getSharedPreferences(PREF_NOTIF, Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean(KEY_ALL_READ, true)
-                    .apply();
+            // Lưu trạng thái đã đọc theo tài khoản
+            provider.markAllRead();
 
             Toast.makeText(this, "Đã đánh dấu đọc tất cả thông báo", Toast.LENGTH_SHORT).show();
         });
