@@ -1,8 +1,17 @@
 package com.example.fintrack.app.finance.domain;
 
+import java.util.List;
+
 /** Extracted domain rules; no Android or persistence dependencies. */
 final class LedgerCalculations {
     private LedgerCalculations() { }
+    static void validateTotals(List<Wallet> wallets, List<Transaction> transactions, List<Budget> budgets) {
+        long magnitude = 0;
+        for (Wallet wallet : wallets) magnitude = Math.addExact(magnitude, wallet.openingBalance);
+        for (Transaction transaction : transactions) magnitude = Math.addExact(magnitude, transaction.amount);
+        long limits = 0;
+        for (Budget budget : budgets) limits = Math.addExact(limits, budget.limit);
+    }
     static long balance(FinanceBook book, FinanceSnapshot.Builder state, String walletId) {
         Wallet wallet = book.wallet(walletId);
         if (wallet == null) throw new FinanceFailure(FinanceProblem.WALLET);
