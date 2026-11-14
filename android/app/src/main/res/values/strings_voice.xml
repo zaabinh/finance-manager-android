@@ -21,8 +21,13 @@
     <string name="voice_destination_wallet_label">Đến ví</string>
     <string name="voice_btn_confirm">Xác nhận &amp; Lưu giao dịch</string>
     <string name="voice_btn_confirm_countdown">Xác nhận &amp; Lưu (%ds)</string>
-    <string name="voice_autosave_notice">Tự động lưu sau 3 giây. Chạm bất kỳ đâu để dừng.</string>
+    <string name="voice_autosave_notice">Tự động lưu sau 5 giây. Chạm bất kỳ đâu để dừng.</string>
     <string name="voice_autosave_paused">Đã dừng tự động lưu</string>
+    <string name="voice_autosave_enable_label">Tự động lưu sau khi nói</string>
+    <string name="voice_autosave_disabled_notice">Đã tắt tự động lưu. Hãy bấm nút để lưu khi kiểm tra xong.</string>
+    <string name="voice_saved_success_format">Đã lưu: %1$s · %2$s</string>
+    <string name="voice_action_undo">Hoàn tác</string>
+    <string name="voice_undo_success">Đã hoàn tác giao dịch. Bạn có thể kiểm tra và lưu lại.</string>
     <string name="voice_btn_edit_more">Chỉnh sửa chi tiết</string>
     <string name="voice_btn_retry">Nói lại</string>
     <string name="voice_btn_manual">Nhập thủ công</string>

@@ -43,6 +43,7 @@ import com.example.fintrack.app.voice.domain.VoiceTransactionParser;
 import com.example.fintrack.databinding.ActivityVoiceTransactionBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,6 +111,12 @@ public class VoiceTransactionActivity extends FinanceActivity {
             }
         }
     };
+
+    // Cài đặt Tự động lưu & Hoàn tác (Auto-save Settings & Undo)
+    private static final String PREFS_NAME = "fintrack_voice_prefs";
+    private static final String KEY_AUTOSAVE_ENABLED = "key_autosave_enabled";
+    private Transaction lastSavedTransaction;
+    private boolean isUndoing = false;
 
     // Bộ đếm ngược tự động lưu rảnh tay (Auto-save Countdown)
     private CountDownTimer autoSaveTimer;
@@ -184,6 +191,18 @@ public class VoiceTransactionActivity extends FinanceActivity {
         setupMicroAdjustmentChips();
         setupPresetAmountChips();
         setupExamplePromptChips();
+
+        boolean autoSaveEnabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(KEY_AUTOSAVE_ENABLED, true);
+        binding.cbAutoSaveEnable.setChecked(autoSaveEnabled);
+        binding.cbAutoSaveEnable.setOnCheckedChangeListener((btn, isChecked) -> {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean(KEY_AUTOSAVE_ENABLED, isChecked).apply();
+            if (!isChecked) {
+                cancelAutoSaveCountdown(false);
+                Toast.makeText(this, R.string.voice_autosave_disabled_notice, Toast.LENGTH_SHORT).show();
+            } else if (parsedAmount > 0 && isResultShowing) {
+                startAutoSaveCountdown();
+            }
+        });
 
         if (isResultShowing) {
             binding.layoutExamplePrompts.setVisibility(View.GONE);
@@ -836,21 +855,39 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
     private void startAutoSaveCountdown() {
         cancelAutoSaveCountdown(false);
+        if (binding == null || !binding.cbAutoSaveEnable.isChecked()) {
+            if (binding != null) {
+                binding.progressAutoSave.setVisibility(View.GONE);
+                binding.tvAutoSaveNotice.setVisibility(View.GONE);
+                binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+            }
+            return;
+        }
+
         isAutoSaveActive = true;
         binding.tvAutoSaveNotice.setVisibility(View.VISIBLE);
+        binding.progressAutoSave.setVisibility(View.VISIBLE);
+        binding.progressAutoSave.setMax(5000);
+        binding.progressAutoSave.setProgress(5000);
 
-        autoSaveTimer = new CountDownTimer(3000, 1000) {
+        autoSaveTimer = new CountDownTimer(5000, 50) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int sec = (int) Math.ceil(millisUntilFinished / 1000.0);
-                binding.btnConfirmTransaction.setText(getString(R.string.voice_btn_confirm_countdown, sec));
+                if (binding != null) {
+                    binding.progressAutoSave.setProgress((int) millisUntilFinished);
+                    int sec = (int) Math.ceil(millisUntilFinished / 1000.0);
+                    binding.btnConfirmTransaction.setText(getString(R.string.voice_btn_confirm_countdown, sec));
+                }
             }
 
             @Override
             public void onFinish() {
                 isAutoSaveActive = false;
-                binding.tvAutoSaveNotice.setVisibility(View.GONE);
-                binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+                if (binding != null) {
+                    binding.progressAutoSave.setVisibility(View.GONE);
+                    binding.tvAutoSaveNotice.setVisibility(View.GONE);
+                    binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+                }
                 saveTransactionDirectly();
             }
         }.start();
@@ -861,10 +898,15 @@ public class VoiceTransactionActivity extends FinanceActivity {
             autoSaveTimer.cancel();
             autoSaveTimer = null;
         }
+        if (binding != null && binding.progressAutoSave != null) {
+            binding.progressAutoSave.setVisibility(View.GONE);
+        }
         if (isAutoSaveActive) {
             isAutoSaveActive = false;
-            binding.tvAutoSaveNotice.setVisibility(View.GONE);
-            binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+            if (binding != null) {
+                binding.tvAutoSaveNotice.setVisibility(View.GONE);
+                binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+            }
             if (showNotice) {
                 Toast.makeText(this, R.string.voice_autosave_paused, Toast.LENGTH_SHORT).show();
             }
@@ -940,7 +982,49 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 note
         );
 
+        lastSavedTransaction = transaction;
         model.change(FinanceAction.transaction(transaction, false), true);
+    }
+
+    @Override
+    protected void completed() {
+        if (isUndoing) {
+            isUndoing = false;
+            Toast.makeText(this, R.string.voice_undo_success, Toast.LENGTH_SHORT).show();
+            binding.cardRecognitionResult.setVisibility(View.VISIBLE);
+            cancelAutoSaveCountdown(false);
+            return;
+        }
+
+        if (lastSavedTransaction != null) {
+            showUndoSnackbarAndFinish();
+        } else {
+            super.completed();
+        }
+    }
+
+    private void showUndoSnackbarAndFinish() {
+        HapticHelper.success(this);
+        String msg = getString(R.string.voice_saved_success_format,
+                lastSavedTransaction.note, FinanceUi.money(lastSavedTransaction.amount));
+        Snackbar snackbar = Snackbar.make(binding.getRoot(), msg, 5000);
+        snackbar.setAction(R.string.voice_action_undo, v -> undoLastTransaction());
+        snackbar.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                if (event != DISMISS_EVENT_ACTION && !isFinishing()) {
+                    setResult(RESULT_OK);
+                    finish();
+                }
+            }
+        });
+        snackbar.show();
+    }
+
+    private void undoLastTransaction() {
+        if (lastSavedTransaction == null) return;
+        isUndoing = true;
+        model.change(FinanceAction.deleteTransaction(lastSavedTransaction.id), true);
     }
 
     private void openEditInForm() {
@@ -979,14 +1063,6 @@ public class VoiceTransactionActivity extends FinanceActivity {
         binding.btnConfirmTransaction.setEnabled(!loading);
         binding.btnEditMore.setEnabled(!loading);
         binding.btnRetryVoice.setEnabled(!loading);
-    }
-
-    @Override
-    protected void completed() {
-        HapticHelper.success(this);
-        Toast.makeText(this, R.string.finance_saved, Toast.LENGTH_SHORT).show();
-        setResult(RESULT_OK);
-        finish();
     }
 
     @Override
