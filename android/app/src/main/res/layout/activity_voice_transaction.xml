@@ -283,6 +283,104 @@
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary"
                         android:textStyle="bold" />
 
+                    <!-- Quick Amount Adjustment Chips -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipAdd10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd20k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_20k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd50k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_50k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipMinus10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_minus_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd000"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_000"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/color_primary" />
+
+                            <TextView
+                                android:id="@+id/chipRemove0"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_remove_0"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
                     <!-- Note / Payee Field -->
                     <TextView
                         android:layout_width="match_parent"
@@ -332,6 +430,72 @@
 
                         <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
                     </LinearLayout>
+
+                    <!-- Quick Alternative Category Suggestion Chips -->
+                    <HorizontalScrollView
+                        android:id="@+id/scrollCategoryChips"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:id="@+id/layoutCategoryChips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipCategory1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Ăn uống"
+                                tools:visibility="visible" />
+
+                            <TextView
+                                android:id="@+id/chipCategory2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Đi lại"
+                                tools:visibility="visible" />
+
+                            <TextView
+                                android:id="@+id/chipCategory3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Mua sắm"
+                                tools:visibility="visible" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
 
                     <!-- Source Wallet Selector Row -->
                     <LinearLayout
@@ -399,6 +563,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_16"
                         android:text="@string/voice_btn_confirm" />
+
+                    <TextView
+                        android:id="@+id/tvAutoSaveNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:gravity="center"
+                        android:text="@string/voice_autosave_notice"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/color_primary"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                     <Button
                         android:id="@+id/btnEditMore"

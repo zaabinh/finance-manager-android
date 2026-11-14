@@ -20,6 +20,9 @@
     <string name="voice_source_wallet_label">Từ ví</string>
     <string name="voice_destination_wallet_label">Đến ví</string>
     <string name="voice_btn_confirm">Xác nhận &amp; Lưu giao dịch</string>
+    <string name="voice_btn_confirm_countdown">Xác nhận &amp; Lưu (%ds)</string>
+    <string name="voice_autosave_notice">Tự động lưu sau 3 giây. Chạm bất kỳ đâu để dừng.</string>
+    <string name="voice_autosave_paused">Đã dừng tự động lưu</string>
     <string name="voice_btn_edit_more">Chỉnh sửa chi tiết</string>
     <string name="voice_btn_retry">Nói lại</string>
     <string name="voice_btn_manual">Nhập thủ công</string>
@@ -31,4 +34,16 @@
     <string name="voice_amount_required">Vui lòng nhập số tiền hợp lệ lớn hơn 0.</string>
     <string name="voice_wallet_required">Vui lòng chọn ví thanh toán.</string>
     <string name="voice_destination_same_error">Ví nguồn và ví đích không được trùng nhau.</string>
+
+    <!-- App Shortcut -->
+    <string name="shortcut_voice_short">Nói để ghi</string>
+    <string name="shortcut_voice_long">Ghi chép giao dịch bằng giọng nói</string>
+
+    <!-- Micro-Adjustment Chips -->
+    <string name="voice_chip_add_10k">+10k</string>
+    <string name="voice_chip_add_20k">+20k</string>
+    <string name="voice_chip_add_50k">+50k</string>
+    <string name="voice_chip_minus_10k">-10k</string>
+    <string name="voice_chip_add_000">+000</string>
+    <string name="voice_chip_remove_0">Xóa 0</string>
 </resources>

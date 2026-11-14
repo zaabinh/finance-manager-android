@@ -122,6 +122,24 @@ public class VoiceTransactionParserTest {
     }
 
     @Test
+    public void parse_naturalDateAndPaymentMethod_extractsDateAndWalletHint() {
+        VoiceTransactionParser.ParsedResult yesterday = VoiceTransactionParser.parse("Hôm qua ăn tối 150k");
+        assertEquals(150_000L, yesterday.amount);
+        assertEquals("Ăn tối", yesterday.note);
+        assertTrue(yesterday.occurredAt < System.currentTimeMillis() - 80000000L);
+
+        VoiceTransactionParser.ParsedResult card = VoiceTransactionParser.parse("Quẹt thẻ 350k siêu thị");
+        assertEquals(350_000L, card.amount);
+        assertEquals("Siêu thị", card.note);
+        assertEquals("thẻ", card.sourceWalletHint);
+
+        VoiceTransactionParser.ParsedResult momo = VoiceTransactionParser.parse("Bắn momo 45k trà sữa");
+        assertEquals(45_000L, momo.amount);
+        assertEquals("Trà sữa", momo.note);
+        assertEquals("momo", momo.sourceWalletHint);
+    }
+
+    @Test
     public void parse_emptyOrNull_returnsSafeDefault() {
         VoiceTransactionParser.ParsedResult emptyResult = VoiceTransactionParser.parse("");
         assertNotNull(emptyResult);

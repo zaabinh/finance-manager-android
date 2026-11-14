@@ -21,17 +21,26 @@ public final class VoiceTransactionParser {
         public final String note;
         public final String rawTranscript;
         public final String destinationWalletHint;
+        public final String sourceWalletHint;
+        public final long occurredAt;
 
-        public ParsedResult(TransactionType type, long amount, String note, String rawTranscript, String destinationWalletHint) {
+        public ParsedResult(TransactionType type, long amount, String note, String rawTranscript,
+                            String destinationWalletHint, String sourceWalletHint, long occurredAt) {
             this.type = type;
             this.amount = amount;
             this.note = note != null ? note : "";
             this.rawTranscript = rawTranscript != null ? rawTranscript : "";
             this.destinationWalletHint = destinationWalletHint != null ? destinationWalletHint : "";
+            this.sourceWalletHint = sourceWalletHint != null ? sourceWalletHint : "";
+            this.occurredAt = occurredAt > 0 ? occurredAt : System.currentTimeMillis();
+        }
+
+        public ParsedResult(TransactionType type, long amount, String note, String rawTranscript, String destinationWalletHint) {
+            this(type, amount, note, rawTranscript, destinationWalletHint, "", System.currentTimeMillis());
         }
 
         public ParsedResult(TransactionType type, long amount, String note, String rawTranscript) {
-            this(type, amount, note, rawTranscript, "");
+            this(type, amount, note, rawTranscript, "", "", System.currentTimeMillis());
         }
     }
 
@@ -223,7 +232,7 @@ public final class VoiceTransactionParser {
             int idx = lower.indexOf(amountMatchStr.toLowerCase(Locale.ROOT));
             if (idx >= 0) {
                 String after = lower.substring(idx + amountMatchStr.length());
-                Pattern pCurrency = Pattern.compile("^\\s*(đồng|dong|vnd|vnđ|đ|d)\\b");
+                Pattern pCurrency = Pattern.compile("^\\s*(đồng|dong|vnd|vnđ|đ|d)(?![\\p{L}\\d])");
                 Matcher mCurrency = pCurrency.matcher(after);
                 if (mCurrency.find()) {
                     amountMatchStr = raw.substring(idx, idx + amountMatchStr.length() + mCurrency.end());
@@ -231,23 +240,52 @@ public final class VoiceTransactionParser {
             }
         }
 
-        // 3. Trích xuất gợi ý ví đích (dành riêng cho TRANSFER)
+        // 3. Trích xuất thời gian tự nhiên (hôm qua, hôm kia)
+        long occurredAt = System.currentTimeMillis();
+        if (lower.contains("hôm qua") || lower.contains("hom qua")) {
+            occurredAt -= 86400000L;
+        } else if (lower.contains("hôm kia") || lower.contains("hom kia")) {
+            occurredAt -= 2 * 86400000L;
+        }
+
+        // 4. Trích xuất gợi ý phương thức thanh toán / ví nguồn
+        String sourceWalletHint = "";
+        if (lower.contains("quẹt thẻ") || lower.contains("thẻ tín dụng") || lower.contains("thẻ visa") ||
+            lower.contains("visa") || lower.contains("mastercard") || lower.contains("bằng thẻ") || lower.contains("qua thẻ") ||
+            lower.matches(".*(?<![\\p{L}\\d])thẻ(?![\\p{L}\\d]).*")) {
+            sourceWalletHint = "thẻ";
+        } else if (lower.contains("momo") || lower.contains("ví momo")) {
+            sourceWalletHint = "momo";
+        } else if (lower.contains("tiền mặt")) {
+            sourceWalletHint = "tiền mặt";
+        } else if (lower.contains("zalo") || lower.contains("zalopay")) {
+            sourceWalletHint = "zalo";
+        } else if (lower.contains("chuyển khoản") || lower.contains("banking") || lower.contains("vcb") ||
+            lower.contains("vietcombank") || lower.contains("techcombank") || lower.contains("mb") || lower.contains("mbbank")) {
+            sourceWalletHint = "ngân hàng";
+        }
+
+        // 5. Trích xuất gợi ý ví đích (dành riêng cho TRANSFER)
         String destinationHint = "";
         if (type == TransactionType.TRANSFER) {
-            Pattern pDest = Pattern.compile("(?i)\\b(?:sang|vào|đến)\\s+(?:ví\\s+)?([\\p{L}0-9_\\s]+)$");
+            Pattern pDest = Pattern.compile("(?i)(?<![\\p{L}\\d])(?:sang|vào|đến)\\s+(?:ví\\s+)?([\\p{L}0-9_\\s]+)$");
             Matcher mDest = pDest.matcher(raw);
             if (mDest.find()) {
                 destinationHint = mDest.group(1).trim();
             }
         }
 
-        // 4. Trích xuất Ghi chú / Nội dung
+        // 6. Trích xuất Ghi chú / Nội dung
         String note = raw;
         if (!amountMatchStr.isEmpty()) {
             note = note.replaceAll("(?i)" + Pattern.quote(amountMatchStr), "");
         }
+        // Loại bỏ gợi ý thời gian tự nhiên khỏi ghi chú
+        note = note.replaceAll("(?i)(?<![\\p{L}\\d])(hôm qua|hôm kia|hôm nay|sáng nay|tối qua|trưa nay|chiều nay|hom qua|hom kia|hom nay)(?![\\p{L}\\d])", " ");
+        // Loại bỏ gợi ý phương thức thanh toán khỏi ghi chú
+        note = note.replaceAll("(?i)(?<![\\p{L}\\d])(quẹt thẻ|thẻ tín dụng|thẻ visa|visa|mastercard|bằng thẻ|qua thẻ|ví momo|bắn momo|momo|tiền mặt|zalopay|zalo)(?![\\p{L}\\d])", " ");
         // Loại bỏ các từ cú pháp thừa
-        note = note.replaceAll("(?i)\\b(chi|hết|mất|tiền|đã|đồng|dong|vnd|vnđ|d|đ|tổng cộng|hết thảy|vừa|mới|hôm nay|được)\\b", " ");
+        note = note.replaceAll("(?i)(?<![\\p{L}\\d])(chi|thu|bắn|hết|mất|tiền|đã|đồng|dong|vnd|vnđ|d|đ|tổng cộng|hết thảy|vừa|mới|được)(?![\\p{L}\\d])", " ");
         note = note.trim().replaceAll("\\s+", " ");
 
         if (note.isEmpty()) {
@@ -258,7 +296,7 @@ public final class VoiceTransactionParser {
             note = Character.toUpperCase(note.charAt(0)) + (note.length() > 1 ? note.substring(1) : "");
         }
 
-        return new ParsedResult(type, amount, note, raw, destinationHint);
+        return new ParsedResult(type, amount, note, raw, destinationHint, sourceWalletHint, occurredAt);
     }
 
     private static String parseWordsAmount(String lower) {

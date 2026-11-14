@@ -1,15 +1,19 @@
 package com.example.fintrack.app.voice.ui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,11 +23,14 @@ import androidx.core.content.ContextCompat;
 
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.model.CategoryIcons;
+import com.example.fintrack.app.core.ui.HapticHelper;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.domain.Transaction;
 import com.example.fintrack.app.finance.domain.TransactionType;
 import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
@@ -39,8 +46,8 @@ import java.util.UUID;
 
 /**
  * Màn hình Nhập giao dịch bằng giọng nói (Voice Transaction Input).
- * Sử dụng SpeechRecognizer nhận diện tiếng Việt, tự động dự đoán danh mục, số tiền, loại giao dịch,
- * và cho phép lưu trực tiếp vào Sổ tài chính hoặc mở form chỉnh sửa nâng cao.
+ * Tối ưu rảnh tay (Hands-Free): Đếm ngược tự lưu 3s, rung phản hồi xúc giác,
+ * nhận diện ví và mốc thời gian tự nhiên, cùng các chip điều chỉnh siêu tốc 1-chạm.
  */
 public class VoiceTransactionActivity extends FinanceActivity {
 
@@ -52,6 +59,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private static final String STATE_NOTE = "voice_parsed_note";
     private static final String STATE_TRANSCRIPT = "voice_transcript";
     private static final String STATE_RESULT_SHOWING = "voice_result_showing";
+    private static final String STATE_OCCURRED_AT = "voice_occurred_at";
 
     private ActivityVoiceTransactionBinding binding;
     private SpeechRecognizer speechRecognizer;
@@ -66,6 +74,11 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private long parsedAmount = 0;
     private String parsedNote = "";
     private String recognizedTranscript = "";
+    private long occurredAt = System.currentTimeMillis();
+
+    // Bộ đếm ngược tự động lưu rảnh tay (Auto-save Countdown)
+    private CountDownTimer autoSaveTimer;
+    private boolean isAutoSaveActive = false;
 
     // Bộ yêu cầu quyền truy cập Micro
     private final ActivityResultLauncher<String> permissionLauncher = registerForActivityResult(
@@ -126,9 +139,11 @@ public class VoiceTransactionActivity extends FinanceActivity {
             parsedNote = saved.getString(STATE_NOTE, "");
             recognizedTranscript = saved.getString(STATE_TRANSCRIPT, "");
             isResultShowing = saved.getBoolean(STATE_RESULT_SHOWING, false);
+            occurredAt = saved.getLong(STATE_OCCURRED_AT, System.currentTimeMillis());
         }
 
         setupListeners();
+        setupMicroAdjustmentChips();
 
         if (isResultShowing) {
             binding.cardRecognitionResult.setVisibility(View.VISIBLE);
@@ -142,8 +157,10 @@ public class VoiceTransactionActivity extends FinanceActivity {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void setupListeners() {
         binding.btnMicTrigger.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
             if (isListening) {
                 stopListening();
             } else {
@@ -155,17 +172,22 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 permissionLauncher.launch(Manifest.permission.RECORD_AUDIO));
 
         binding.btnRetryOnError.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
             binding.layoutVoiceError.setVisibility(View.GONE);
             checkPermissionAndStart();
         });
 
-        binding.btnManualFromVoice.setOnClickListener(v -> openManualForm(null, 0));
+        binding.btnManualFromVoice.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            openManualForm(null, 0);
+        });
 
         binding.btnTypeExpense.setOnClickListener(v -> selectType(TransactionType.EXPENSE));
         binding.btnTypeIncome.setOnClickListener(v -> selectType(TransactionType.INCOME));
         binding.btnTypeTransfer.setOnClickListener(v -> selectType(TransactionType.TRANSFER));
 
         binding.fieldResultCategory.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(true);
             if (model.saveLoading()) return;
             FinanceUi.category(this, selectedType, catId -> {
                 selectedCategoryId = catId;
@@ -174,6 +196,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
         });
 
         binding.fieldResultWallet.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(true);
             if (model.saveLoading()) return;
             FinanceUi.wallet(this, walletId -> {
                 selectedWalletId = walletId;
@@ -182,13 +205,38 @@ public class VoiceTransactionActivity extends FinanceActivity {
         });
 
         binding.fieldResultDestinationWallet.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(true);
             if (model.saveLoading()) return;
             chooseDestinationWallet();
         });
 
-        binding.btnConfirmTransaction.setOnClickListener(v -> saveTransactionDirectly());
-        binding.btnEditMore.setOnClickListener(v -> openEditInForm());
+        // Chạm vào ô nhập số tiền hoặc ghi chú sẽ tự hủy đếm ngược tự lưu để người dùng tùy ý sửa
+        binding.etResultAmount.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                cancelAutoSaveCountdown(true);
+            }
+            return false;
+        });
+
+        binding.etResultNote.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                cancelAutoSaveCountdown(true);
+            }
+            return false;
+        });
+
+        binding.btnConfirmTransaction.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            saveTransactionDirectly();
+        });
+
+        binding.btnEditMore.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            openEditInForm();
+        });
+
         binding.btnRetryVoice.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
             isResultShowing = false;
             binding.cardRecognitionResult.setVisibility(View.GONE);
             binding.tvVoiceTranscript.setVisibility(View.GONE);
@@ -197,7 +245,58 @@ public class VoiceTransactionActivity extends FinanceActivity {
         });
     }
 
+    private void setupMicroAdjustmentChips() {
+        // Chip cộng thêm tiền
+        binding.chipAdd10k.setOnClickListener(v -> adjustAmount(10_000));
+        binding.chipAdd20k.setOnClickListener(v -> adjustAmount(20_000));
+        binding.chipAdd50k.setOnClickListener(v -> adjustAmount(50_000));
+        binding.chipMinus10k.setOnClickListener(v -> adjustAmount(-10_000));
+
+        // Chip nhân nghìn (+000) khi người dùng nói tắt (vd: "45" -> 45.000)
+        binding.chipAdd000.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            long cur = readCurrentAmount();
+            if (cur > 0 && cur <= FinanceBook.MAX_AMOUNT / 1_000L) {
+                updateAmountUi(cur * 1_000L);
+            }
+        });
+
+        // Chip xóa 1 số 0 ở cuối
+        binding.chipRemove0.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            long cur = readCurrentAmount();
+            if (cur >= 10) {
+                updateAmountUi(cur / 10L);
+            }
+        });
+    }
+
+    private void adjustAmount(long delta) {
+        cancelAutoSaveCountdown(false);
+        long cur = readCurrentAmount();
+        long updated = Math.max(0, cur + delta);
+        if (updated <= FinanceBook.MAX_AMOUNT) {
+            updateAmountUi(updated);
+        }
+    }
+
+    private long readCurrentAmount() {
+        String str = binding.etResultAmount.getText().toString().trim();
+        try {
+            return !str.isEmpty() ? Long.parseLong(str) : 0L;
+        } catch (NumberFormatException ignored) {
+            return 0L;
+        }
+    }
+
+    private void updateAmountUi(long val) {
+        parsedAmount = val;
+        binding.etResultAmount.setText(val > 0 ? String.valueOf(val) : "");
+        binding.etResultAmount.setSelection(binding.etResultAmount.getText().length());
+    }
+
     private void selectType(TransactionType type) {
+        cancelAutoSaveCountdown(true);
         if (selectedType == type) return;
         selectedType = type;
         if (selectedType != TransactionType.TRANSFER && book != null) {
@@ -273,6 +372,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
         boolean isTransfer = selectedType == TransactionType.TRANSFER;
         binding.fieldResultCategory.setVisibility(isTransfer ? View.GONE : View.VISIBLE);
+        binding.scrollCategoryChips.setVisibility(isTransfer ? View.GONE : View.VISIBLE);
         binding.fieldResultDestinationWallet.setVisibility(isTransfer ? View.VISIBLE : View.GONE);
         binding.tvResultWalletLabel.setText(isTransfer ? R.string.voice_source_wallet_label : R.string.voice_wallet_label);
     }
@@ -287,6 +387,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
         if (book == null || selectedCategoryId == null) {
             binding.tvResultCategoryValue.setText("");
             binding.ivResultCategoryIcon.setImageResource(R.drawable.ic_category);
+            binding.scrollCategoryChips.setVisibility(View.GONE);
             return;
         }
         Category cat = book.category(selectedCategoryId);
@@ -297,6 +398,48 @@ public class VoiceTransactionActivity extends FinanceActivity {
             binding.tvResultCategoryValue.setText("");
             binding.ivResultCategoryIcon.setImageResource(R.drawable.ic_category);
         }
+
+        // Hiển thị 3 chip danh mục thay thế gợi ý 1-chạm
+        renderCategoryAlternativeChips();
+    }
+
+    private void renderCategoryAlternativeChips() {
+        if (book == null || selectedType == TransactionType.TRANSFER) {
+            binding.scrollCategoryChips.setVisibility(View.GONE);
+            return;
+        }
+
+        List<Category> alts = new ArrayList<>();
+        for (Category c : book.categories()) {
+            if (c.type == selectedType && c.archivedAt == null && !c.id.equals(selectedCategoryId)) {
+                alts.add(c);
+                if (alts.size() >= 3) break;
+            }
+        }
+
+        if (alts.isEmpty()) {
+            binding.scrollCategoryChips.setVisibility(View.GONE);
+            return;
+        }
+
+        binding.scrollCategoryChips.setVisibility(View.VISIBLE);
+        setupCategoryChip(binding.chipCategory1, alts.size() > 0 ? alts.get(0) : null);
+        setupCategoryChip(binding.chipCategory2, alts.size() > 1 ? alts.get(1) : null);
+        setupCategoryChip(binding.chipCategory3, alts.size() > 2 ? alts.get(2) : null);
+    }
+
+    private void setupCategoryChip(TextView chipView, Category category) {
+        if (category == null) {
+            chipView.setVisibility(View.GONE);
+            return;
+        }
+        chipView.setVisibility(View.VISIBLE);
+        chipView.setText(category.name);
+        chipView.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(true);
+            selectedCategoryId = category.id;
+            renderCategoryUi();
+        });
     }
 
     private void renderWalletUi() {
@@ -350,6 +493,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 binding.pbVoiceLoading.setVisibility(View.GONE);
                 binding.ivMicIcon.setVisibility(View.VISIBLE);
                 startPulseAnimation();
+                HapticHelper.tick(VoiceTransactionActivity.this);
             }
 
             @Override
@@ -372,6 +516,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 binding.tvVoiceStatus.setText(R.string.voice_state_processing);
                 binding.pbVoiceLoading.setVisibility(View.VISIBLE);
                 binding.ivMicIcon.setVisibility(View.INVISIBLE);
+                HapticHelper.doubleTick(VoiceTransactionActivity.this);
             }
 
             @Override
@@ -463,6 +608,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
         parsedAmount = parsed.amount;
         parsedNote = parsed.note;
         recognizedTranscript = parsed.rawTranscript;
+        occurredAt = parsed.occurredAt;
         isResultShowing = true;
 
         binding.layoutVoiceError.setVisibility(View.GONE);
@@ -471,6 +617,11 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
         binding.etResultAmount.setText(parsedAmount > 0 ? String.valueOf(parsedAmount) : "");
         binding.etResultNote.setText(parsedNote);
+
+        // Khớp ví nguồn từ phương thức thanh toán trong câu nói (vd: quẹt thẻ, momo, tiền mặt, banking)
+        if (book != null && !parsed.sourceWalletHint.isEmpty()) {
+            matchSourceWallet(parsed.sourceWalletHint);
+        }
 
         // Khớp ví đích nếu có gợi ý từ câu nói khi chuyển khoản
         if (selectedType == TransactionType.TRANSFER && !parsed.destinationWalletHint.isEmpty() && book != null) {
@@ -495,9 +646,83 @@ public class VoiceTransactionActivity extends FinanceActivity {
         binding.cardRecognitionResult.setVisibility(View.VISIBLE);
         binding.tvVoiceStatus.setText(R.string.voice_result_title);
         render();
+
+        // Kích hoạt đếm ngược tự động lưu rảnh tay 3 giây
+        if (parsedAmount > 0) {
+            startAutoSaveCountdown();
+        }
+    }
+
+    private void matchSourceWallet(String hint) {
+        if (book == null || hint == null || hint.isEmpty()) return;
+        String hintNorm = hint.toLowerCase(Locale.ROOT);
+
+        for (Wallet w : book.wallets()) {
+            if (w.archivedAt != null) continue;
+            String nameNorm = w.name != null ? w.name.toLowerCase(Locale.ROOT) : "";
+
+            if (hintNorm.equals("thẻ") && (nameNorm.contains("thẻ") || nameNorm.contains("card") || nameNorm.contains("visa") || nameNorm.contains("tín dụng"))) {
+                selectedWalletId = w.id;
+                return;
+            }
+            if (hintNorm.equals("momo") && nameNorm.contains("momo")) {
+                selectedWalletId = w.id;
+                return;
+            }
+            if (hintNorm.equals("tiền mặt") && (nameNorm.contains("tiền mặt") || w.walletType == WalletType.CASH)) {
+                selectedWalletId = w.id;
+                return;
+            }
+            if (hintNorm.equals("ngân hàng") && (w.walletType == WalletType.BANK || nameNorm.contains("vcb") || nameNorm.contains("vietcombank") || nameNorm.contains("bank"))) {
+                selectedWalletId = w.id;
+                return;
+            }
+            if (nameNorm.contains(hintNorm)) {
+                selectedWalletId = w.id;
+                return;
+            }
+        }
+    }
+
+    private void startAutoSaveCountdown() {
+        cancelAutoSaveCountdown(false);
+        isAutoSaveActive = true;
+        binding.tvAutoSaveNotice.setVisibility(View.VISIBLE);
+
+        autoSaveTimer = new CountDownTimer(3000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int sec = (int) Math.ceil(millisUntilFinished / 1000.0);
+                binding.btnConfirmTransaction.setText(getString(R.string.voice_btn_confirm_countdown, sec));
+            }
+
+            @Override
+            public void onFinish() {
+                isAutoSaveActive = false;
+                binding.tvAutoSaveNotice.setVisibility(View.GONE);
+                binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+                saveTransactionDirectly();
+            }
+        }.start();
+    }
+
+    private void cancelAutoSaveCountdown(boolean showNotice) {
+        if (autoSaveTimer != null) {
+            autoSaveTimer.cancel();
+            autoSaveTimer = null;
+        }
+        if (isAutoSaveActive) {
+            isAutoSaveActive = false;
+            binding.tvAutoSaveNotice.setVisibility(View.GONE);
+            binding.btnConfirmTransaction.setText(R.string.voice_btn_confirm);
+            if (showNotice) {
+                Toast.makeText(this, R.string.voice_autosave_paused, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void showErrorUi(String message) {
+        cancelAutoSaveCountdown(false);
         binding.tvVoiceStatus.setText(R.string.voice_state_error);
         binding.layoutVoiceError.setVisibility(View.VISIBLE);
         binding.tvVoiceErrorMessage.setText(message);
@@ -520,12 +745,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private void saveTransactionDirectly() {
         if (model.saveLoading()) return;
 
-        String amountStr = binding.etResultAmount.getText().toString().trim();
-        long amount = 0;
-        try {
-            if (!amountStr.isEmpty()) amount = Long.parseLong(amountStr);
-        } catch (NumberFormatException ignored) {}
-
+        long amount = readCurrentAmount();
         if (amount <= 0) {
             Toast.makeText(this, R.string.voice_amount_required, Toast.LENGTH_SHORT).show();
             return;
@@ -559,7 +779,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 catId,
                 selectedWalletId,
                 selectedType == TransactionType.TRANSFER ? selectedDestinationWalletId : null,
-                System.currentTimeMillis(),
+                occurredAt,
                 note,
                 note
         );
@@ -568,12 +788,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     }
 
     private void openEditInForm() {
-        String amountStr = binding.etResultAmount.getText().toString().trim();
-        long amount = 0;
-        try {
-            if (!amountStr.isEmpty()) amount = Long.parseLong(amountStr);
-        } catch (NumberFormatException ignored) {}
-
+        long amount = readCurrentAmount();
         String note = binding.etResultNote.getText().toString().trim();
         openManualForm(note, amount);
     }
@@ -612,6 +827,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
     @Override
     protected void completed() {
+        HapticHelper.success(this);
         Toast.makeText(this, R.string.finance_saved, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
         finish();
@@ -619,6 +835,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle out) {
+        cancelAutoSaveCountdown(false);
         super.onSaveInstanceState(out);
         out.putString(STATE_TYPE, selectedType.name());
         out.putString(STATE_WALLET, selectedWalletId);
@@ -628,10 +845,12 @@ public class VoiceTransactionActivity extends FinanceActivity {
         out.putString(STATE_NOTE, parsedNote);
         out.putString(STATE_TRANSCRIPT, recognizedTranscript);
         out.putBoolean(STATE_RESULT_SHOWING, isResultShowing);
+        out.putLong(STATE_OCCURRED_AT, occurredAt);
     }
 
     @Override
     protected void onDestroy() {
+        cancelAutoSaveCountdown(false);
         stopListening();
         super.onDestroy();
     }
