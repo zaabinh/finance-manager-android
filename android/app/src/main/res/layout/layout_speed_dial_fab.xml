@@ -8,7 +8,7 @@
 
     <!-- Dark Scrim Backdrop Overlay -->
     <View
-        android:id="@+id/speedDialScim"
+        android:id="@+id/speedDialScrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#99000000"
@@ -64,7 +64,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Item 2: Quét hoá đơn (Lower) -->
+        <!-- Item 2: Quét hoá đơn -->
         <LinearLayout
             android:id="@+id/btnOcrScan"
             android:layout_width="wrap_content"
@@ -99,6 +99,46 @@
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="3dp"
                 android:text="Quét hoá đơn"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Item 3: Giọng nói -->
+        <LinearLayout
+            android:id="@+id/btnVoiceInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_fab_sub_item"
+                android:elevation="6dp"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_mic"
+                    app:tint="@color/color_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_label_pill"
+                android:elevation="4dp"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp"
+                android:text="@string/quick_action_voice"
                 android:textColor="@color/text_primary"
                 android:textSize="11sp"
                 android:textStyle="bold" />

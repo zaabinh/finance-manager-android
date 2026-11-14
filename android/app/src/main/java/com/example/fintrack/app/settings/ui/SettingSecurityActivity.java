@@ -1,6 +1,8 @@
 package com.example.fintrack.app.settings.ui;
 
+import com.example.fintrack.app.auth.remote.TokenResponse;
 import com.example.fintrack.app.core.network.ErrorMapper;
+import com.example.fintrack.app.core.ui.SessionExpiry;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -75,6 +77,32 @@ public class SettingSecurityActivity extends AppCompatActivity {
                 String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.msg_logged_out_device);
                 Toast.makeText(this, getString(R.string.security_logout_local_with_error, msg), Toast.LENGTH_LONG).show();
                 redirectToLogin();
+            }
+        });
+
+        // Quan sát kết quả Đổi mật khẩu
+        authViewModel.getChangePasswordResult().observe(this, event -> {
+            Resource<TokenResponse> resource = event == null ? null : event.getContentIfNotHandled();
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case LOADING:
+                    btnChangePassword.setEnabled(false);
+                    btnChangePassword.setText(R.string.loading_processing);
+                    break;
+                case SUCCESS:
+                    btnChangePassword.setEnabled(true);
+                    btnChangePassword.setText(R.string.btn_change_password);
+                    Toast.makeText(this, R.string.msg_password_changed, Toast.LENGTH_SHORT).show();
+                    etCurrentPassword.setText("");
+                    etNewPassword.setText("");
+                    etConfirmPassword.setText("");
+                    break;
+                case ERROR:
+                    btnChangePassword.setEnabled(true);
+                    btnChangePassword.setText(R.string.btn_change_password);
+                    String msg = ErrorMapper.text(this, resource.getError());
+                    Toast.makeText(this, msg != null ? msg : getString(R.string.error_server), Toast.LENGTH_LONG).show();
+                    break;
             }
         });
 
@@ -161,11 +189,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             return;
         }
 
-        Toast.makeText(this, R.string.msg_password_changed, Toast.LENGTH_SHORT).show();
-
-        etCurrentPassword.setText("");
-        etNewPassword.setText("");
-        etConfirmPassword.setText("");
+        authViewModel.changePassword(currentPass, newPass);
     }
 
     private void confirmAction(String title, String message, Runnable onConfirm) {
@@ -178,9 +202,6 @@ public class SettingSecurityActivity extends AppCompatActivity {
     }
 
     private void redirectToLogin() {
-        Intent intent = new Intent(SettingSecurityActivity.this, LoginActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        SessionExpiry.redirectToLogin(this);
     }
 }
