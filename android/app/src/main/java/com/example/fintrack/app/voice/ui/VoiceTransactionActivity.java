@@ -118,6 +118,12 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private Transaction lastSavedTransaction;
     private boolean isUndoing = false;
 
+    // Trạng thái hội thoại gợi ý & bổ sung thông tin đa lượt (Conversational Guidance)
+    private enum MissingField { NONE, AMOUNT, NOTE, DESTINATION_WALLET }
+    private MissingField currentMissingField = MissingField.NONE;
+    private VoiceTransactionParser.ParsedResult currentParsedResult;
+    private boolean isSupplementListening = false;
+
     // Bộ đếm ngược tự động lưu rảnh tay (Auto-save Countdown)
     private CountDownTimer autoSaveTimer;
     private boolean isAutoSaveActive = false;
@@ -225,8 +231,20 @@ public class VoiceTransactionActivity extends FinanceActivity {
             if (isListening) {
                 stopListening();
             } else {
+                if (isResultShowing && currentMissingField != MissingField.NONE) {
+                    isSupplementListening = true;
+                } else {
+                    isSupplementListening = false;
+                    currentParsedResult = null;
+                }
                 checkPermissionAndStart();
             }
+        });
+
+        binding.btnSpeakSupplement.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            isSupplementListening = true;
+            checkPermissionAndStart();
         });
 
         binding.btnGrantPermission.setOnClickListener(v ->
@@ -298,6 +316,9 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
         binding.btnRetryVoice.setOnClickListener(v -> {
             cancelAutoSaveCountdown(false);
+            isSupplementListening = false;
+            currentMissingField = MissingField.NONE;
+            currentParsedResult = null;
             isResultShowing = false;
             binding.cardRecognitionResult.setVisibility(View.GONE);
             binding.tvVoiceTranscript.setVisibility(View.GONE);
@@ -364,14 +385,16 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private void applyPresetAmount(long amount) {
         cancelAutoSaveCountdown(false);
         updateAmountUi(amount);
-        binding.layoutAmountPresets.setVisibility(View.GONE);
-        binding.tvAmountMissingNotice.setVisibility(View.GONE);
-        binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
+        currentParsedResult = new VoiceTransactionParser.ParsedResult(
+                selectedType, parsedAmount, parsedNote, recognizedTranscript,
+                selectedDestinationWalletId != null ? selectedDestinationWalletId : "",
+                selectedWalletId != null ? selectedWalletId : "", occurredAt
+        );
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.hideSoftInputFromWindow(binding.etResultAmount.getWindowToken(), 0);
         }
-        startAutoSaveCountdown();
+        updateConversationalPrompt();
     }
 
     private void setupMicroAdjustmentChips() {
@@ -406,6 +429,12 @@ public class VoiceTransactionActivity extends FinanceActivity {
         long updated = Math.max(0, cur + delta);
         if (updated <= FinanceBook.MAX_AMOUNT) {
             updateAmountUi(updated);
+            currentParsedResult = new VoiceTransactionParser.ParsedResult(
+                    selectedType, parsedAmount, parsedNote, recognizedTranscript,
+                    selectedDestinationWalletId != null ? selectedDestinationWalletId : "",
+                    selectedWalletId != null ? selectedWalletId : "", occurredAt
+            );
+            updateConversationalPrompt();
         }
     }
 
@@ -436,6 +465,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
             selectedCategoryId = null;
         }
         render();
+        updateConversationalPrompt();
     }
 
     private void chooseDestinationWallet() {
@@ -457,6 +487,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 .setItems(names, (dialog, which) -> {
                     selectedDestinationWalletId = available.get(which).id;
                     renderWalletUi();
+                    updateConversationalPrompt();
                 })
                 .show();
     }
@@ -618,11 +649,25 @@ public class VoiceTransactionActivity extends FinanceActivity {
             @Override
             public void onReadyForSpeech(Bundle params) {
                 isListening = true;
-                binding.tvVoiceStatus.setText(R.string.voice_state_listening);
+                if (isSupplementListening) {
+                    if (currentMissingField == MissingField.AMOUNT) {
+                        binding.tvVoiceStatus.setText(R.string.voice_supplement_listening_amount);
+                    } else if (currentMissingField == MissingField.NOTE) {
+                        binding.tvVoiceStatus.setText(R.string.voice_supplement_listening_note);
+                    } else if (currentMissingField == MissingField.DESTINATION_WALLET) {
+                        binding.tvVoiceStatus.setText(R.string.voice_supplement_listening_dest);
+                    } else {
+                        binding.tvVoiceStatus.setText(R.string.voice_state_listening);
+                    }
+                } else {
+                    binding.tvVoiceStatus.setText(R.string.voice_state_listening);
+                }
                 binding.pbVoiceLoading.setVisibility(View.GONE);
                 binding.ivMicIcon.setVisibility(View.VISIBLE);
                 startPulseAnimation();
-                startRotatingHints();
+                if (!isSupplementListening) {
+                    startRotatingHints();
+                }
                 HapticHelper.tick(VoiceTransactionActivity.this);
             }
 
@@ -712,7 +757,17 @@ public class VoiceTransactionActivity extends FinanceActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_input_subtitle));
+        String prompt = getString(R.string.voice_input_subtitle);
+        if (isSupplementListening) {
+            if (currentMissingField == MissingField.AMOUNT) {
+                prompt = getString(R.string.voice_supplement_listening_amount);
+            } else if (currentMissingField == MissingField.NOTE) {
+                prompt = getString(R.string.voice_supplement_listening_note);
+            } else if (currentMissingField == MissingField.DESTINATION_WALLET) {
+                prompt = getString(R.string.voice_supplement_listening_dest);
+            }
+        }
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, prompt);
         try {
             systemSpeechLauncher.launch(intent);
         } catch (Exception e) {
@@ -755,14 +810,59 @@ public class VoiceTransactionActivity extends FinanceActivity {
     }
 
     private void handleRecognitionSuccess(List<String> candidates) {
-        VoiceTransactionParser.ParsedResult parsed = VoiceTransactionParser.parseBest(candidates);
-        selectedType = parsed.type;
-        parsedAmount = parsed.amount;
-        parsedNote = parsed.note;
-        recognizedTranscript = parsed.rawTranscript;
-        occurredAt = parsed.occurredAt;
-        isResultShowing = true;
+        if (isSupplementListening && currentParsedResult != null) {
+            isSupplementListening = false;
+            VoiceTransactionParser.ParsedResult merged = VoiceTransactionParser.mergeSupplement(currentParsedResult, candidates);
+            currentParsedResult = merged;
+            selectedType = merged.type;
+            parsedAmount = merged.amount;
+            parsedNote = merged.note;
+            recognizedTranscript = merged.rawTranscript;
+            occurredAt = merged.occurredAt;
 
+            if (book != null && !merged.sourceWalletHint.isEmpty()) {
+                matchSourceWallet(merged.sourceWalletHint);
+            }
+            if (selectedType == TransactionType.TRANSFER && !merged.destinationWalletHint.isEmpty() && book != null) {
+                matchDestinationWallet(merged.destinationWalletHint);
+            }
+
+            // Tự động dự đoán lại danh mục nếu ghi chú thay đổi
+            if (selectedType != TransactionType.TRANSFER && book != null) {
+                Category predicted = VoiceCategoryPredictor.predictCategory(
+                        book.categories(), selectedType, parsedNote, recognizedTranscript);
+                if (predicted != null) {
+                    selectedCategoryId = predicted.id;
+                }
+            }
+
+            Toast.makeText(this, R.string.voice_supplement_success_toast, Toast.LENGTH_SHORT).show();
+            HapticHelper.success(this);
+        } else {
+            isSupplementListening = false;
+            currentParsedResult = VoiceTransactionParser.parseBest(candidates);
+            selectedType = currentParsedResult.type;
+            parsedAmount = currentParsedResult.amount;
+            parsedNote = currentParsedResult.note;
+            recognizedTranscript = currentParsedResult.rawTranscript;
+            occurredAt = currentParsedResult.occurredAt;
+
+            if (book != null && !currentParsedResult.sourceWalletHint.isEmpty()) {
+                matchSourceWallet(currentParsedResult.sourceWalletHint);
+            }
+            if (selectedType == TransactionType.TRANSFER && !currentParsedResult.destinationWalletHint.isEmpty() && book != null) {
+                matchDestinationWallet(currentParsedResult.destinationWalletHint);
+            }
+            if (selectedType != TransactionType.TRANSFER && book != null) {
+                Category predicted = VoiceCategoryPredictor.predictCategory(
+                        book.categories(), selectedType, parsedNote, recognizedTranscript);
+                selectedCategoryId = predicted != null ? predicted.id : null;
+            } else {
+                selectedCategoryId = null;
+            }
+        }
+
+        isResultShowing = true;
         binding.layoutVoiceError.setVisibility(View.GONE);
         binding.layoutExamplePrompts.setVisibility(View.GONE);
         stopRotatingHints();
@@ -772,46 +872,49 @@ public class VoiceTransactionActivity extends FinanceActivity {
         binding.etResultAmount.setText(parsedAmount > 0 ? String.valueOf(parsedAmount) : "");
         binding.etResultNote.setText(parsedNote);
 
-        // Khớp ví nguồn từ phương thức thanh toán trong câu nói (vd: quẹt thẻ, momo, tiền mặt, banking)
-        if (book != null && !parsed.sourceWalletHint.isEmpty()) {
-            matchSourceWallet(parsed.sourceWalletHint);
-        }
-
-        // Khớp ví đích nếu có gợi ý từ câu nói khi chuyển khoản
-        if (selectedType == TransactionType.TRANSFER && !parsed.destinationWalletHint.isEmpty() && book != null) {
-            String hintNorm = parsed.destinationWalletHint.toLowerCase(Locale.ROOT);
-            for (Wallet w : book.wallets()) {
-                if (w.archivedAt == null && w.name != null && w.name.toLowerCase(Locale.ROOT).contains(hintNorm)) {
-                    selectedDestinationWalletId = w.id;
-                    break;
-                }
-            }
-        }
-
-        // Tự động dự đoán danh mục nếu là Chi tiêu hoặc Thu nhập
-        if (selectedType != TransactionType.TRANSFER && book != null) {
-            Category predicted = VoiceCategoryPredictor.predictCategory(
-                    book.categories(), selectedType, parsedNote, recognizedTranscript);
-            selectedCategoryId = predicted != null ? predicted.id : null;
-        } else {
-            selectedCategoryId = null;
-        }
-
         binding.cardRecognitionResult.setVisibility(View.VISIBLE);
         binding.tvVoiceStatus.setText(R.string.voice_result_title);
         render();
 
-        // Kích hoạt đếm ngược tự động lưu rảnh tay 3 giây nếu có đủ số tiền
-        if (parsedAmount > 0) {
-            binding.layoutAmountPresets.setVisibility(View.GONE);
-            binding.tvAmountMissingNotice.setVisibility(View.GONE);
-            binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
-            startAutoSaveCountdown();
-        } else {
-            // Trường hợp người dùng nói thiếu số tiền: hiển thị dãy chip gợi ý số tiền nhanh
+        updateConversationalPrompt();
+    }
+
+    private void matchDestinationWallet(String hint) {
+        if (book == null || hint == null || hint.isEmpty()) return;
+        String hintNorm = hint.toLowerCase(Locale.ROOT);
+        for (Wallet w : book.wallets()) {
+            if (w.archivedAt == null && w.name != null && w.name.toLowerCase(Locale.ROOT).contains(hintNorm)) {
+                selectedDestinationWalletId = w.id;
+                break;
+            }
+        }
+    }
+
+    private void updateConversationalPrompt() {
+        if (binding == null) return;
+
+        if (parsedAmount <= 0) {
+            currentMissingField = MissingField.AMOUNT;
+            binding.layoutConversationalPrompt.setVisibility(View.VISIBLE);
+            String question;
+            if (selectedType == TransactionType.EXPENSE) {
+                question = getString(R.string.voice_conversational_question_amount_expense,
+                        parsedNote != null && !parsedNote.isEmpty() ? parsedNote : getString(R.string.voice_input_title));
+            } else if (selectedType == TransactionType.INCOME) {
+                question = getString(R.string.voice_conversational_question_amount_income,
+                        parsedNote != null && !parsedNote.isEmpty() ? parsedNote : getString(R.string.voice_input_title));
+            } else {
+                question = getString(R.string.voice_conversational_question_amount_transfer);
+            }
+            binding.tvConversationalQuestion.setText(question);
+            binding.tvConversationalHint.setText(R.string.voice_conversational_hint_amount);
+            binding.btnSpeakSupplement.setText(R.string.voice_action_speak_amount);
+
             binding.layoutAmountAdjustment.setVisibility(View.GONE);
             binding.layoutAmountPresets.setVisibility(View.VISIBLE);
             binding.tvAmountMissingNotice.setVisibility(View.VISIBLE);
+            cancelAutoSaveCountdown(false);
+
             binding.etResultAmount.requestFocus();
             binding.etResultAmount.postDelayed(() -> {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -819,7 +922,51 @@ public class VoiceTransactionActivity extends FinanceActivity {
                     imm.showSoftInput(binding.etResultAmount, InputMethodManager.SHOW_IMPLICIT);
                 }
             }, 200);
+            return;
         }
+
+        if (VoiceTransactionParser.isGenericNote(parsedNote) && selectedType != TransactionType.TRANSFER) {
+            currentMissingField = MissingField.NOTE;
+            binding.layoutConversationalPrompt.setVisibility(View.VISIBLE);
+            String question;
+            if (selectedType == TransactionType.INCOME) {
+                question = getString(R.string.voice_conversational_question_note_income, FinanceUi.money(parsedAmount));
+            } else {
+                question = getString(R.string.voice_conversational_question_note_expense, FinanceUi.money(parsedAmount));
+            }
+            binding.tvConversationalQuestion.setText(question);
+            binding.tvConversationalHint.setText(R.string.voice_conversational_hint_note);
+            binding.btnSpeakSupplement.setText(R.string.voice_action_speak_note);
+
+            binding.layoutAmountPresets.setVisibility(View.GONE);
+            binding.tvAmountMissingNotice.setVisibility(View.GONE);
+            binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
+            startAutoSaveCountdown();
+            return;
+        }
+
+        if (selectedType == TransactionType.TRANSFER && (selectedDestinationWalletId == null ||
+                (selectedWalletId != null && selectedWalletId.equals(selectedDestinationWalletId)))) {
+            currentMissingField = MissingField.DESTINATION_WALLET;
+            binding.layoutConversationalPrompt.setVisibility(View.VISIBLE);
+            binding.tvConversationalQuestion.setText(getString(R.string.voice_conversational_question_dest_wallet, FinanceUi.money(parsedAmount)));
+            binding.tvConversationalHint.setText(R.string.voice_conversational_hint_dest_wallet);
+            binding.btnSpeakSupplement.setText(R.string.voice_action_speak_dest_wallet);
+
+            binding.layoutAmountPresets.setVisibility(View.GONE);
+            binding.tvAmountMissingNotice.setVisibility(View.GONE);
+            binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
+            cancelAutoSaveCountdown(false);
+            return;
+        }
+
+        // Đầy đủ thông tin
+        currentMissingField = MissingField.NONE;
+        binding.layoutConversationalPrompt.setVisibility(View.GONE);
+        binding.layoutAmountPresets.setVisibility(View.GONE);
+        binding.tvAmountMissingNotice.setVisibility(View.GONE);
+        binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
+        startAutoSaveCountdown();
     }
 
     private void matchSourceWallet(String hint) {

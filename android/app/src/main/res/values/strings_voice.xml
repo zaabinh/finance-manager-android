@@ -97,4 +97,22 @@
     <string name="voice_help_slang_title">3. Hỗ trợ từ lóng &amp; cách đọc dân dã</string>
     <string name="voice_help_slang_desc">k, ngàn, lít (100k), lốp (100k), vé (100k), sọi (10k), củ (1 triệu), chai (1 triệu), rưỡi (50k/500k), hăm lăm (25k), năm nhăm (55k), trăm hai (120k)...</string>
     <string name="voice_help_btn_got_it">Đã hiểu, thử ngay!</string>
+
+    <!-- Conversational Guidance & Supplement -->
+    <string name="voice_conversational_question_amount_expense">Bạn đã chi bao nhiêu cho \"%s\"?</string>
+    <string name="voice_conversational_question_amount_income">Bạn nhận được bao nhiêu từ \"%s\"?</string>
+    <string name="voice_conversational_question_amount_transfer">Bạn muốn chuyển bao nhiêu tiền?</string>
+    <string name="voice_conversational_hint_amount">Chạm nút dưới để nói số tiền (vd: "35 nghìn", "50k") hoặc chọn số tiền nhanh bên dưới:</string>
+    <string name="voice_action_speak_amount">Nói số tiền</string>
+    <string name="voice_conversational_question_note_expense">Bạn đã chi %s cho việc gì?</string>
+    <string name="voice_conversational_question_note_income">Bạn nhận được %s từ nguồn nào?</string>
+    <string name="voice_conversational_hint_note">Chạm nút dưới để nói nội dung (vd: "Cà phê sáng", "Đổ xăng", "Mua sách"):</string>
+    <string name="voice_action_speak_note">Nói nội dung</string>
+    <string name="voice_conversational_question_dest_wallet">Chuyển %s sang ví nào?</string>
+    <string name="voice_conversational_hint_dest_wallet">Chạm nút dưới để nói ví nhận (vd: "Sang MoMo", "Sang Tiền mặt"):</string>
+    <string name="voice_action_speak_dest_wallet">Nói ví nhận</string>
+    <string name="voice_supplement_listening_amount">Đang lắng nghe số tiền…</string>
+    <string name="voice_supplement_listening_note">Đang lắng nghe nội dung…</string>
+    <string name="voice_supplement_listening_dest">Đang lắng nghe ví nhận…</string>
+    <string name="voice_supplement_success_toast">Đã bổ sung thông tin thành công!</string>
 </resources>

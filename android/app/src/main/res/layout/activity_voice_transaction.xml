@@ -379,6 +379,68 @@
                         android:text="@string/voice_result_title"
                         android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
+                    <!-- Conversational Guidance & Supplement Prompt -->
+                    <LinearLayout
+                        android:id="@+id/layoutConversationalPrompt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:background="@drawable/bg_card_outlined"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_12"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ivConversationalIcon"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_mic"
+                                app:tint="@color/color_primary" />
+
+                            <TextView
+                                android:id="@+id/tvConversationalQuestion"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:layout_weight="1"
+                                android:text="Bạn đã chi bao nhiêu cho 'Ăn sáng'?"
+                                android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+                                android:textColor="@color/color_primary"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvConversationalHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="Chạm nút dưới để nói số tiền (vd: '35 nghìn', '50k') hoặc chọn số tiền nhanh bên dưới:"
+                            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                            android:textColor="@color/text_secondary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSpeakSupplement"
+                            style="@style/Widget.App.Button.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="@dimen/spacing_8"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="@dimen/spacing_12"
+                            android:text="@string/voice_action_speak_amount"
+                            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                            app:icon="@drawable/ic_mic"
+                            app:iconSize="16dp"
+                            app:iconTint="@color/color_primary" />
+                    </LinearLayout>
+
                     <!-- Type Selector (Chi tiêu, Thu nhập, Chuyển khoản) -->
                     <LinearLayout
                         android:layout_width="match_parent"

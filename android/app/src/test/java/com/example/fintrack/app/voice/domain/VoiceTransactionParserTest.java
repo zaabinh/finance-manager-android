@@ -211,4 +211,57 @@ public class VoiceTransactionParserTest {
         assertNotNull(nullResult);
         assertEquals(0L, nullResult.amount);
     }
+
+    @Test
+    public void mergeSupplement_amountMissing_supplementsAmountAndPreservesNote() {
+        // Lượt 1: Người dùng chỉ nói "Ăn sáng" (thiếu số tiền)
+        VoiceTransactionParser.ParsedResult base = VoiceTransactionParser.parse("Ăn sáng");
+        assertEquals(0L, base.amount);
+        assertEquals("Ăn sáng", base.note);
+
+        // Lượt 2: Người dùng nói bổ sung "35 nghìn"
+        VoiceTransactionParser.ParsedResult merged = VoiceTransactionParser.mergeSupplement(
+                base,
+                Arrays.asList("35 nghìn", "35k", "ba mươi lăm nghìn")
+        );
+
+        assertEquals(35_000L, merged.amount);
+        assertEquals("Ăn sáng", merged.note);
+        assertEquals(TransactionType.EXPENSE, merged.type);
+    }
+
+    @Test
+    public void mergeSupplement_genericNote_supplementsNoteAndPreservesAmount() {
+        // Lượt 1: Người dùng chỉ nói "Chi 50k" (thiếu nội dung chi tiết)
+        VoiceTransactionParser.ParsedResult base = VoiceTransactionParser.parse("Chi 50k");
+        assertEquals(50_000L, base.amount);
+        assertEquals("Chi tiêu", base.note);
+
+        // Lượt 2: Người dùng nói bổ sung "Cà phê sáng"
+        VoiceTransactionParser.ParsedResult merged = VoiceTransactionParser.mergeSupplement(
+                base,
+                Collections.singletonList("Cà phê sáng")
+        );
+
+        assertEquals(50_000L, merged.amount);
+        assertEquals("Cà phê sáng", merged.note);
+    }
+
+    @Test
+    public void mergeSupplement_transfer_supplementsDestinationWallet() {
+        // Lượt 1: Người dùng nói "Chuyển khoản 500k từ VCB" (thiếu ví đích)
+        VoiceTransactionParser.ParsedResult base = VoiceTransactionParser.parse("Chuyển khoản 500k từ VCB");
+        assertEquals(TransactionType.TRANSFER, base.type);
+        assertEquals(500_000L, base.amount);
+        assertEquals("", base.destinationWalletHint);
+
+        // Lượt 2: Người dùng nói bổ sung "Sang ví MoMo"
+        VoiceTransactionParser.ParsedResult merged = VoiceTransactionParser.mergeSupplement(
+                base,
+                Collections.singletonList("Sang ví MoMo")
+        );
+
+        assertEquals(500_000L, merged.amount);
+        assertEquals("MoMo", merged.destinationWalletHint);
+    }
 }

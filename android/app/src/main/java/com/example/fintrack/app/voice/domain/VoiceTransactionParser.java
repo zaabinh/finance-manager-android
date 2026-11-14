@@ -565,4 +565,106 @@ public final class VoiceTransactionParser {
         }
         return firstNonEmpty != null ? firstNonEmpty : parse(candidates.get(0));
     }
+
+    /**
+     * Kiểm tra xem ghi chú có phải là từ mặc định/chung chung (chưa có nội dung cụ thể) hay không.
+     */
+    public static boolean isGenericNote(String note) {
+        if (note == null || note.trim().isEmpty()) return true;
+        String clean = note.trim().toLowerCase(Locale.ROOT);
+        return clean.equals("chi tiêu") || clean.equals("chi tieu")
+                || clean.equals("thu nhập") || clean.equals("thu nhap")
+                || clean.equals("chuyển tiền") || clean.equals("chuyen tien")
+                || clean.equals("khoản chi") || clean.equals("khoan chi")
+                || clean.equals("khoản thu") || clean.equals("khoan thu")
+                || clean.equals("tiền") || clean.equals("tien")
+                || clean.equals("giao dịch") || clean.equals("giao dich");
+    }
+
+    /**
+     * Bóc tách gợi ý tên ví từ câu nói bổ sung (ví dụ: "sang momo", "vào ví tiền mặt", "momo").
+     */
+    public static String extractWalletHintFromSupplement(String text) {
+        if (text == null || text.trim().isEmpty()) return "";
+        String clean = text.trim();
+        Pattern p = Pattern.compile("(?i)(?:sang|vào|đến|qua)\\s+(?:ví\\s+)?([\\p{L}0-9_\\s]+)");
+        Matcher m = p.matcher(clean);
+        if (m.find()) {
+            return m.group(1).trim();
+        }
+        return clean.replaceAll("(?i)^(?:ví|vi)\\s+", "").trim();
+    }
+
+    /**
+     * Ghép nối ngữ cảnh hội thoại đa lượt (Multi-turn Conversational Merge):
+     * Bổ sung thông tin còn thiếu (số tiền, nội dung, ví nhận) từ câu nói lượt sau vào kết quả lượt trước.
+     */
+    public static ParsedResult mergeSupplement(ParsedResult base, List<String> supplementCandidates) {
+        if (base == null) {
+            return parseBest(supplementCandidates);
+        }
+        if (supplementCandidates == null || supplementCandidates.isEmpty()) {
+            return base;
+        }
+        ParsedResult supp = parseBest(supplementCandidates);
+
+        TransactionType type = base.type;
+        long amount = base.amount;
+        String note = base.note;
+        String destWallet = base.destinationWalletHint;
+        String srcWallet = base.sourceWalletHint;
+        long occurredAt = base.occurredAt;
+
+        // 1. Bổ sung số tiền nếu base đang thiếu số tiền (amount <= 0)
+        if (amount <= 0 && supp.amount > 0) {
+            amount = supp.amount;
+            if (isGenericNote(note) && !isGenericNote(supp.note)) {
+                note = supp.note;
+            }
+        } else if (supp.amount > 0 && isGenericNote(note)) {
+            // Base chỉ có số tiền chung chung, câu sau nói rõ hơn
+            amount = supp.amount;
+            if (!isGenericNote(supp.note)) {
+                note = supp.note;
+            }
+        }
+
+        // 2. Bổ sung nội dung nếu base chỉ có nội dung chung chung (generic note)
+        if (isGenericNote(note)) {
+            if (!isGenericNote(supp.note)) {
+                note = supp.note;
+            } else {
+                for (String c : supplementCandidates) {
+                    ParsedResult pr = parse(c);
+                    if (!isGenericNote(pr.note)) {
+                        note = pr.note;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. Bổ sung ví nhận (khi chuyển khoản)
+        if (type == TransactionType.TRANSFER && destWallet.isEmpty()) {
+            if (!supp.destinationWalletHint.isEmpty()) {
+                destWallet = supp.destinationWalletHint;
+            } else {
+                for (String c : supplementCandidates) {
+                    String hint = extractWalletHintFromSupplement(c);
+                    if (!hint.isEmpty()) {
+                        destWallet = hint;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 4. Bổ sung ví nguồn nếu base chưa có mà câu sau nhắc đến
+        if (srcWallet.isEmpty() && !supp.sourceWalletHint.isEmpty()) {
+            srcWallet = supp.sourceWalletHint;
+        }
+
+        String mergedTranscript = base.rawTranscript + " + " + supp.rawTranscript;
+        return new ParsedResult(type, amount, note, mergedTranscript, destWallet, srcWallet, occurredAt);
+    }
 }
