@@ -89,7 +89,7 @@ public class ChatbotActivity extends FinanceActivity implements ChatAdapter.OnCh
     }
 
     private void setupListeners() {
-        binding.btnBack.setOnClickListener(v -> finish());
+        binding.toolbarChatbot.setNavigationOnClickListener(v -> finish());
 
         binding.btnClearHistory.setOnClickListener(v -> showClearHistoryDialog());
 
