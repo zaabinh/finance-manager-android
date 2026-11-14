@@ -31,6 +31,7 @@ public class FinanceRepository {
     private final MockFinanceStore mock;
     private final FinanceApiBundle api;
     private final com.example.fintrack.app.user.remote.UserApiService users;
+    private volatile String cachedTimeZone;
     /** Server-backed repository. The services must come from a client guarded for one account (see AppContainer). */
     public FinanceRepository(FinanceApiBundle api, com.example.fintrack.app.user.remote.UserApiService users) {
         this.mock = null; this.api = api; this.users = users;
@@ -47,9 +48,16 @@ public class FinanceRepository {
         if (mock != null) return mock.read();
         FinanceSnapshot.Builder state = new FinanceSnapshot.Builder();
         state.serverSnapshot = true;
-        com.example.fintrack.app.user.remote.UserProfileResponse profile = request.required(users.getProfile()).getData();
-        if (profile == null || profile.getTimeZone() == null) throw new FinanceFailure(FinanceProblem.SERVER);
-        state.timeZone = profile.getTimeZone();
+        String tz = cachedTimeZone;
+        if (tz == null && users != null) {
+            com.example.fintrack.app.user.remote.UserProfileResponse profile = request.required(users.getProfile()).getData();
+            if (profile != null && profile.getTimeZone() != null) {
+                tz = profile.getTimeZone();
+                cachedTimeZone = tz;
+            }
+        }
+        if (tz == null) tz = java.util.TimeZone.getDefault().getID();
+        state.timeZone = tz;
         if (scope != Scope.CATEGORIES)
             for (WalletResponse wallet : request.required(api.wallets.wallets())) state.wallets.add(wallet.domain());
         if (scope != Scope.WALLETS)
@@ -141,28 +149,31 @@ public class FinanceRepository {
     }
     private static final class ReadRequest implements RequestHandle {
         private volatile boolean canceled;
-        private Call<?> active;
+        private final java.util.Set<Call<?>> activeCalls = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
         <T> T required(Call<T> call) {
             boolean stopped;
             synchronized (this) {
                 stopped = canceled;
-                if (!stopped) active = call;
+                if (!stopped) activeCalls.add(call);
             }
             if (stopped) { call.cancel(); throw new java.util.concurrent.CancellationException(); }
             try { return FinanceAction.required(call); }
-            finally { synchronized (this) { active = null; } }
+            finally { synchronized (this) { activeCalls.remove(call); } }
         }
         synchronized <T> void deliver(Resource<T> result, Consumer<Resource<T>> callback) {
             if (!canceled) callback.accept(result);
         }
         @Override public void cancel() {
-            Call<?> call;
+            java.util.List<Call<?>> calls;
             synchronized (this) {
                 if (canceled) return;
                 canceled = true;
-                call = active;
+                calls = new java.util.ArrayList<>(activeCalls);
+                activeCalls.clear();
             }
-            if (call != null) call.cancel();
+            for (Call<?> call : calls) {
+                if (call != null) call.cancel();
+            }
         }
     }
 }

@@ -7,7 +7,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <include layout="@layout/view_transaction_type_segmented" />
+    <include
+        android:id="@+id/typeSegmented"
+        layout="@layout/view_transaction_type_segmented" />
 
     <TextView
         android:layout_width="match_parent"

@@ -17,6 +17,7 @@ import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.databinding.ActivityCategoryAddBinding;
 import com.example.fintrack.databinding.ActivityCategoryEditBinding;
+import com.example.fintrack.databinding.FormCategoryFieldsBinding;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -42,20 +43,22 @@ abstract class CategoryFormActivity extends FinanceActivity {
 
     @Override protected View contentView() {
         View root;
+        FormCategoryFieldsBinding fields;
         if (editing()) {
             ActivityCategoryEditBinding b = ActivityCategoryEditBinding.inflate(getLayoutInflater());
             root = b.getRoot(); toolbar = b.toolbarForm; order = b.etCategorySortOrder; status = b.switchStatus; statusLabel = b.tvStatusLabel;
             save = b.btnSaveChanges; delete = b.btnDeleteCategory;
+            fields = b.fields;
         } else {
             ActivityCategoryAddBinding b = ActivityCategoryAddBinding.inflate(getLayoutInflater());
             root = b.getRoot(); toolbar = b.toolbarForm; order = b.etCategorySortOrder; status = b.switchStatus; statusLabel = b.tvStatusLabel;
             save = b.btnCreateCategory; cancel = b.btnCancel;
+            fields = b.fields;
         }
-        // form_category_fields is included without an android:id, so ViewBinding does not expose its views.
-        name = root.findViewById(R.id.etCategoryName);
-        icons = root.findViewById(R.id.rvIconPicker); colors = root.findViewById(R.id.rvColorPicker);
-        expense = root.findViewById(R.id.btnTypeExpense); income = root.findViewById(R.id.btnTypeIncome);
-        root.findViewById(R.id.btnTypeTransfer).setVisibility(View.GONE);
+        name = fields.etCategoryName;
+        icons = fields.rvIconPicker; colors = fields.rvColorPicker;
+        expense = fields.typeSegmented.btnTypeExpense; income = fields.typeSegmented.btnTypeIncome;
+        fields.typeSegmented.btnTypeTransfer.setVisibility(View.GONE);
         return root;
     }
 

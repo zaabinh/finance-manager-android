@@ -21,6 +21,7 @@ import com.example.fintrack.app.core.ui.MoneyInput;
 import com.example.fintrack.app.wallet.model.WalletDraft;
 import com.example.fintrack.databinding.ActivityWalletAddBinding;
 import com.example.fintrack.databinding.ActivityWalletEditBinding;
+import com.example.fintrack.databinding.FormWalletFieldsBinding;
 import com.google.android.material.chip.ChipGroup;
 
 /** Forms use the authenticated finance repository and command lifecycle. */
@@ -28,6 +29,7 @@ public abstract class WalletFormActivity extends FinanceActivity {
     private static final String STATE_WALLET_INITIALIZED = "walletInitialized", STATE_WALLET_TYPE = "walletType";
     // The add and edit layouts are different binding classes; the shared views are held once here.
     private View root;
+    private FormWalletFieldsBinding fields;
     private Toolbar toolbar;
     private EditText name, opening, order;
     private CheckBox assets;
@@ -42,26 +44,27 @@ public abstract class WalletFormActivity extends FinanceActivity {
         if (editing()) {
             ActivityWalletEditBinding b = ActivityWalletEditBinding.inflate(getLayoutInflater());
             root = b.getRoot(); toolbar = b.toolbarForm; order = b.etWalletSortOrder; assets = b.cbWalletIncludeAssets; save = b.btnSaveChanges;
+            fields = b.fields;
         } else {
             ActivityWalletAddBinding b = ActivityWalletAddBinding.inflate(getLayoutInflater());
             root = b.getRoot(); toolbar = b.toolbarForm; order = b.etWalletSortOrder; assets = b.cbWalletIncludeAssets;
             save = b.btnCreateWallet; cancel = b.btnCancel;
+            fields = b.fields;
         }
-        // form_wallet_fields is included without an android:id, so ViewBinding does not expose its views.
-        name = root.findViewById(R.id.etWalletName); opening = root.findViewById(R.id.etBalance);
-        typeValue = root.findViewById(R.id.tvWalletTypeValue); typeIcon = root.findViewById(R.id.ivWalletTypeIcon);
+        name = fields.etWalletName; opening = fields.etBalance;
+        typeValue = fields.tvWalletTypeValue; typeIcon = fields.ivWalletTypeIcon;
         return root;
     }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
         id = getIntent().getStringExtra(WalletDetailActivity.EXTRA_WALLET_ID);
-        MoneyInput.attach(opening, root.<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
+        MoneyInput.attach(opening, fields.amountSuggestions.chipGroupAmountSuggestions);
         if (saved != null) {
             initialized = saved.getBoolean(STATE_WALLET_INITIALIZED);
             type = WalletType.valueOf(saved.getString(STATE_WALLET_TYPE, "CASH"));
         }
         toolbar.setNavigationOnClickListener(view -> finish());
-        root.findViewById(R.id.fieldWalletType).setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
+        fields.fieldWalletType.setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
         save.setOnClickListener(v -> save());
         if (cancel != null) cancel.setOnClickListener(v -> finish());
         showType();

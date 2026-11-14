@@ -25,7 +25,9 @@
             android:orientation="vertical"
             android:padding="@dimen/spacing_16">
 
-            <include layout="@layout/form_wallet_fields" />
+            <include
+                android:id="@+id/fields"
+                layout="@layout/form_wallet_fields" />
 
             <TextView
                 android:layout_width="match_parent"

@@ -11,8 +11,6 @@ import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.adapter.CategoryAdapter;
-import com.example.fintrack.app.category.model.CategoryIcons;
-import com.example.fintrack.app.category.model.CategoryItem;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
@@ -32,11 +30,11 @@ public class CategoryListActivity extends FinanceActivity {
     @Override protected void bind(Bundle saved) {
         if (saved != null) type = TransactionType.valueOf(saved.getString(STATE_CATEGORY_TYPE,"EXPENSE"));
         adapter = new CategoryAdapter(new CategoryAdapter.OnCategoryClickListener() {
-            @Override public void onCategoryClick(CategoryItem category) {
-                startActivity(new Intent(CategoryListActivity.this,CategoryEditActivity.class).putExtra(CategoryEditActivity.EXTRA_CATEGORY_ID,category.getId()));
+            @Override public void onCategoryClick(Category category) {
+                startActivity(new Intent(CategoryListActivity.this,CategoryEditActivity.class).putExtra(CategoryEditActivity.EXTRA_CATEGORY_ID,category.id));
             }
-            @Override public void onStatusToggle(CategoryItem category,boolean active) {
-                if (!model.saveLoading()) model.change(FinanceAction.categoryStatus(category.getId(),active),false);
+            @Override public void onStatusToggle(Category category,boolean active) {
+                if (!model.saveLoading()) model.change(FinanceAction.categoryStatus(category.id,active),false);
             }
         });
         binding.rvCategories.setLayoutManager(new LinearLayoutManager(this)); binding.rvCategories.setAdapter(adapter);
@@ -54,12 +52,10 @@ public class CategoryListActivity extends FinanceActivity {
     @Override protected void render() {
         if (adapter == null || book == null) return;
         String query=binding.etSearchCategory.getText().toString().trim().toLowerCase(Locale.ROOT);
-        List<CategoryItem> items=new ArrayList<>();
+        List<Category> items=new ArrayList<>();
         for (Category c:book.categories()) {
             if(c.type==type && c.name.toLowerCase(Locale.ROOT).contains(query)) {
-                CategoryItem item = new CategoryItem(c.id,c.name,c.type.name(),CategoryIcons.resource(c.iconKey),"",c.archivedAt==null);
-                item.setColorHex(c.colorHex);
-                items.add(item);
+                items.add(c);
             }
         }
         adapter.setCategories(items);
