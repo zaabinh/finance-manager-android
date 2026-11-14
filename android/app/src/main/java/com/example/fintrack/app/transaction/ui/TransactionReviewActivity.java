@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
@@ -20,6 +21,8 @@ import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.app.ocr.ui.OcrCameraActivity;
+import com.example.fintrack.app.transaction.domain.TransactionParser;
 import com.example.fintrack.app.transaction.viewmodel.TransactionReceiptViewModel;
 import com.example.fintrack.databinding.ActivityTransactionReviewBinding;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -29,17 +32,21 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 /**
- * Màn hình xem lại kết quả trích xuất thông tin hóa đơn từ OCR (số tiền, cửa hàng, ngày tháng, danh mục).
+ * Màn hình xem lại kết quả trích xuất thông tin hóa đơn từ OCR (số tiền, cửa hàng, ngày tháng, danh mục, ghi chú).
  */
 public final class TransactionReviewActivity extends FinanceActivity {
     private static final String STATE_ID = "id", STATE_CATEGORY = "category", STATE_WALLET = "wallet",
-            STATE_PAYEE = "payee", STATE_DATE = "date", STATE_APPLIED = "applied";
+            STATE_PAYEE = "payee", STATE_DATE = "date", STATE_NOTE = "note", STATE_APPLIED = "applied",
+            STATE_OCR_DATE = "ocrDate", STATE_OCR_CATEGORY = "ocrCategory", STATE_ITEM_COUNT = "itemCount";
+
     /** Receipt image URIs (strings); one screen reviews the image at EXTRA_INDEX, then opens the next. */
     public static final String EXTRA_IMAGES = "images", EXTRA_INDEX = "index";
     private ArrayList<String> images;
     private int index;
-    private String id = UUID.randomUUID().toString(), category, wallet, payee = "";
+    private String id = UUID.randomUUID().toString(), category, wallet, payee = "", note = "", ocrCategory;
     private long date = System.currentTimeMillis();
+    private Long ocrDate = null;
+    private int itemCount = 0;
     private boolean applied, reading = true, unreadable;
 
     private ActivityTransactionReviewBinding binding;
@@ -47,7 +54,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
 
     @Override protected void bind(Bundle saved) {
         binding.toolbarReceiptReview.setNavigationOnClickListener(view -> finish());
-        // The suggestion chips live in an include without an android:id, so ViewBinding does not expose them.
+        // Gắn bộ hỗ trợ nhập số tiền nhanh
         com.example.fintrack.app.core.ui.MoneyInput.attach(binding.amountInput.etAmount, binding.getRoot().<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         images = getIntent().getStringArrayListExtra(EXTRA_IMAGES);
         index = getIntent().getIntExtra(EXTRA_INDEX, 0);
@@ -58,21 +65,29 @@ public final class TransactionReviewActivity extends FinanceActivity {
             category = saved.getString(STATE_CATEGORY);
             wallet = saved.getString(STATE_WALLET);
             payee = saved.getString(STATE_PAYEE, "");
+            note = saved.getString(STATE_NOTE, "");
             date = saved.getLong(STATE_DATE);
             applied = saved.getBoolean(STATE_APPLIED);
+            if (saved.containsKey(STATE_OCR_DATE)) ocrDate = saved.getLong(STATE_OCR_DATE);
+            ocrCategory = saved.getString(STATE_OCR_CATEGORY);
+            itemCount = saved.getInt(STATE_ITEM_COUNT, 0);
         }
 
         MaterialToolbar toolbar = binding.toolbarReceiptReview;
         toolbar.setTitle(getString(R.string.receipt_review_title_batch, index + 1, images.size()));
 
+        // Hiển thị thumbnail ảnh hóa đơn gốc và hỗ trợ chạm để phóng to
+        Uri imageUri = Uri.parse(images.get(index));
+        try {
+            binding.ivReceiptPreview.setImageURI(imageUri);
+            binding.cardReceiptPreview.setOnClickListener(v -> viewReceiptImage(imageUri));
+        } catch (Exception ignored) {
+            binding.cardReceiptPreview.setVisibility(View.GONE);
+        }
+
         // Menu xem ảnh gốc hóa đơn
         toolbar.getMenu().add(R.string.finance_view_receipt).setOnMenuItemClickListener(item -> {
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(images.get(index)), "image/*")
-                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
-            } catch (android.content.ActivityNotFoundException error) {
-                android.widget.Toast.makeText(this, R.string.finance_camera_error, android.widget.Toast.LENGTH_LONG).show();
-            }
+            viewReceiptImage(imageUri);
             return true;
         });
 
@@ -80,22 +95,66 @@ public final class TransactionReviewActivity extends FinanceActivity {
         binding.amountInput.tvAmountSign.setVisibility(View.GONE);
         binding.tvReviewFeedback.setText(getString(R.string.finance_receipt_check));
 
-        // Thiết lập sự kiện chọn danh mục, ví, thời gian và cửa hàng
+        // Thiết lập sự kiện chọn danh mục, ví, thời gian, cửa hàng và ghi chú
         binding.fieldCategory.setOnClickListener(view -> FinanceUi.category(this, TransactionType.EXPENSE, value -> { category = value; render(); }));
         binding.fieldWallet.setOnClickListener(view -> FinanceUi.wallet(this, value -> { wallet = value; render(); }));
-        binding.fieldDate.setOnClickListener(view -> FinanceUi.dateTime(this, date, value -> { date = value; render(); }));
+        binding.fieldDate.setOnClickListener(view -> FinanceUi.dateTime(this, date, value -> { date = value; ocrDate = value; render(); }));
         binding.fieldStore.setOnClickListener(view -> {
-            EditText edit = new EditText(this); edit.setText(payee); edit.setHint(R.string.transaction_store_label);
-            new MaterialAlertDialogBuilder(this).setTitle(R.string.transaction_store_label).setView(edit)
-                    .setNegativeButton(R.string.btn_cancel, null).setPositiveButton(R.string.picker_confirm, (dialog, which) -> { payee = edit.getText().toString(); render(); }).show();
+            EditText edit = new EditText(this);
+            edit.setText(payee);
+            edit.setHint(R.string.transaction_store_label);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.transaction_store_label)
+                    .setView(edit)
+                    .setNegativeButton(R.string.btn_cancel, null)
+                    .setPositiveButton(R.string.picker_confirm, (dialog, which) -> {
+                        payee = edit.getText().toString().trim();
+                        render();
+                    }).show();
+        });
+
+        binding.fieldNote.setOnClickListener(view -> {
+            EditText edit = new EditText(this);
+            edit.setText(note);
+            edit.setHint(R.string.transaction_note_hint);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.transaction_note_label)
+                    .setView(edit)
+                    .setNegativeButton(R.string.btn_cancel, null)
+                    .setPositiveButton(R.string.picker_confirm, (dialog, which) -> {
+                        note = edit.getText().toString().trim();
+                        render();
+                    }).show();
         });
 
         binding.btnConfirmReceipt.setOnClickListener(view -> save());
         binding.btnAddReceipt.setOnClickListener(view -> completed());
         binding.btnAddReceipt.setText(getString(R.string.finance_skip_receipt));
-        binding.btnRescan.setOnClickListener(view -> finish());
-        binding.stateUnreadable.btnStatePrimary.setOnClickListener(view -> finish());
-        binding.btnManualEntry.setOnClickListener(view -> { startActivity(new Intent(this, TransactionFormActivity.class)); finish(); });
+
+        // Nút quét lại: mở lại màn hình camera OCR
+        binding.btnRescan.setOnClickListener(view -> {
+            startActivity(new Intent(this, OcrCameraActivity.class));
+            finish();
+        });
+
+        binding.stateUnreadable.btnStatePrimary.setOnClickListener(view -> {
+            startActivity(new Intent(this, OcrCameraActivity.class));
+            finish();
+        });
+
+        // Nút nhập tay thay thế: chuyển sang form nhập tay với các dữ liệu đã nhận diện được
+        binding.btnManualEntry.setOnClickListener(view -> {
+            Intent intent = new Intent(this, TransactionFormActivity.class);
+            long parsedAmt = 0;
+            try {
+                parsedAmt = Long.parseLong(binding.amountInput.etAmount.getText().toString().replaceAll("[.,]", ""));
+            } catch (Exception ignored) {}
+            if (parsedAmt > 0) intent.putExtra(TransactionFormActivity.EXTRA_AMOUNT, parsedAmt);
+            if (!payee.isEmpty()) intent.putExtra(TransactionFormActivity.EXTRA_PAYEE, payee);
+            if (!note.isEmpty()) intent.putExtra(TransactionFormActivity.EXTRA_NOTE, note);
+            startActivity(intent);
+            finish();
+        });
 
         // Đọc dữ liệu từ ảnh bằng OCR ViewModel
         TransactionReceiptViewModel receipt = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(TransactionReceiptViewModel.class);
@@ -103,52 +162,165 @@ public final class TransactionReviewActivity extends FinanceActivity {
             reading = resource.getStatus() == Resource.Status.LOADING;
             unreadable = resource.getStatus() == Resource.Status.ERROR;
             if (resource.getData() != null && !applied) {
-                payee = resource.getData().payee;
-                if (resource.getData().amount > 0) binding.amountInput.etAmount.setText(Long.toString(resource.getData().amount));
+                TransactionParser.Draft d = resource.getData();
+                if (d.payee != null && !d.payee.isEmpty()) payee = d.payee;
+                if (d.amount > 0) binding.amountInput.etAmount.setText(Long.toString(d.amount));
+                if (d.date != null) {
+                    date = d.date;
+                    ocrDate = d.date;
+                }
+                if (d.categoryHint != null) {
+                    ocrCategory = d.categoryHint;
+                    resolveCategory(d.categoryHint);
+                }
+                if (d.note != null && !d.note.isEmpty() && note.isEmpty()) {
+                    note = d.note;
+                }
+                itemCount = d.itemCount;
                 applied = true;
             }
             render();
             loading(model.saveLoading());
         });
-        receipt.read(Uri.parse(images.get(index)));
+        receipt.read(imageUri);
+    }
+
+    private void viewReceiptImage(Uri uri) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(uri, "image/*")
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
+        } catch (android.content.ActivityNotFoundException error) {
+            Toast.makeText(this, R.string.finance_camera_error, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void resolveCategory(String categoryHint) {
+        if (category != null || book == null || categoryHint == null) return;
+        Category cat = book.category(categoryHint);
+        if (cat != null && cat.type == TransactionType.EXPENSE) {
+            category = cat.id;
+            return;
+        }
+        for (Category c : book.categories()) {
+            if (c.archivedAt == null && c.type == TransactionType.EXPENSE) {
+                if (c.id.equalsIgnoreCase(categoryHint) || c.name.equalsIgnoreCase(categoryHint)) {
+                    category = c.id;
+                    return;
+                }
+            }
+        }
     }
 
     @Override protected void render() {
+        FinanceUi.visible(binding.cardReceiptPreview, !unreadable && !reading);
         FinanceUi.visible(binding.groupReviewFields, !unreadable && !reading);
         FinanceUi.visible(binding.stateUnreadable.getRoot(), unreadable);
         FinanceUi.visible(binding.feedbackReview, !unreadable);
         FinanceUi.visible(binding.btnManualEntry, unreadable);
         FinanceUi.visible(binding.btnConfirmReceipt, !unreadable && !reading);
-        binding.tvReviewFeedback.setText(getString(reading ? R.string.receipt_import_reading : R.string.finance_receipt_check));
 
         if (unreadable) {
+            binding.tvReviewFeedback.setText(getString(R.string.receipt_unreadable_title));
             binding.stateUnreadable.tvStateTitle.setText(getString(R.string.receipt_unreadable_title));
             binding.stateUnreadable.tvStateBody.setText(getString(R.string.receipt_unreadable_body));
             binding.stateUnreadable.btnStatePrimary.setText(getString(R.string.receipt_retake));
+            return;
         }
 
-        if (book == null) return;
-        if (wallet == null && !book.wallets().isEmpty()) wallet = book.wallets().get(0).id;
+        if (reading) {
+            binding.tvReviewFeedback.setText(getString(R.string.receipt_import_reading));
+            return;
+        }
 
-        binding.tvStoreValue.setText(payee);
+        if (book != null) {
+            if (category == null && ocrCategory != null) {
+                resolveCategory(ocrCategory);
+            }
+            if (wallet == null && !book.wallets().isEmpty()) {
+                wallet = book.wallets().get(0).id;
+            }
+        }
+
+        // Tên cửa hàng
+        binding.tvStoreValue.setText(payee.isEmpty() ? getString(R.string.transaction_category_placeholder) : payee);
+
+        // Ngày giờ
         binding.tvDateValue.setText(FinanceUi.date(date));
-        Category catObj = book.category(category);
+        if (ocrDate != null) {
+            binding.tvDateLabel.setText(R.string.transaction_date_label);
+            binding.fieldDate.setBackgroundResource(R.drawable.bg_field_selector);
+        } else {
+            binding.tvDateLabel.setText(R.string.receipt_date_suggested_label);
+            binding.fieldDate.setBackgroundResource(R.drawable.bg_field_selector_uncertain);
+        }
+
+        // Danh mục
+        Category catObj = book != null ? book.category(category) : null;
         binding.tvCategoryValue.setText(catObj == null ? "" : catObj.name);
-        Wallet walletObj = book.wallet(wallet);
+        if (category != null) {
+            binding.tvCategoryLabel.setText(R.string.transaction_category_label);
+            binding.fieldCategory.setBackgroundResource(R.drawable.bg_field_selector);
+        } else {
+            binding.tvCategoryLabel.setText(R.string.receipt_category_suggested_label);
+            binding.fieldCategory.setBackgroundResource(R.drawable.bg_field_selector_uncertain);
+        }
+
+        // Ví tiền
+        Wallet walletObj = book != null ? book.wallet(wallet) : null;
         binding.tvWalletValue.setText(walletObj == null ? "" : walletObj.name);
+
+        // Ghi chú
+        binding.tvNoteValue.setText(note.isEmpty() ? getString(R.string.transaction_note_hint) : note);
+
+        // Đếm số lượng trường chưa chắc chắn để hiển thị cảnh báo viền vàng
+        int uncertain = 0;
+        long amountVal = 0;
+        try {
+            amountVal = Long.parseLong(binding.amountInput.etAmount.getText().toString().replaceAll("[.,]", ""));
+        } catch (Exception ignored) {}
+        if (amountVal <= 0) uncertain++;
+        if (payee.isEmpty()) uncertain++;
+        if (category == null) uncertain++;
+        if (ocrDate == null) uncertain++;
+
+        if (uncertain > 0) {
+            binding.tvReviewFeedback.setText(getString(R.string.receipt_review_uncertain, uncertain));
+        } else if (itemCount > 1) {
+            binding.tvReviewFeedback.setText(getString(R.string.receipt_review_multi_item, itemCount));
+        } else {
+            binding.tvReviewFeedback.setText(getString(R.string.finance_receipt_check));
+        }
     }
 
     // Lưu giao dịch được trích xuất từ hóa đơn vào cơ sở dữ liệu
     private void save() {
         if (reading || book == null || model.saveLoading()) return;
         long amount;
-        try { amount = FinanceBook.parseAmount(binding.amountInput.etAmount.getText().toString()); }
-        catch (FinanceFailure error) {
-            binding.amountInput.tvAmountError.setVisibility(View.VISIBLE); binding.amountInput.tvAmountError.setText(getString(R.string.finance_amount_error)); return;
+        try {
+            amount = FinanceBook.parseAmount(binding.amountInput.etAmount.getText().toString());
+        } catch (FinanceFailure error) {
+            binding.amountInput.tvAmountError.setVisibility(View.VISIBLE);
+            binding.amountInput.tvAmountError.setText(getString(R.string.finance_amount_error));
+            return;
         }
         binding.amountInput.tvAmountError.setVisibility(View.GONE);
 
-        Transaction value = new Transaction(id, TransactionType.EXPENSE, amount, category, wallet, null, date, "", payee);
+        if (category == null || category.isEmpty()) {
+            Toast.makeText(this, R.string.finance_category_empty, Toast.LENGTH_SHORT).show();
+            FinanceUi.category(this, TransactionType.EXPENSE, value -> { category = value; render(); });
+            return;
+        }
+
+        if (wallet == null || wallet.isEmpty()) {
+            if (!book.wallets().isEmpty()) {
+                wallet = book.wallets().get(0).id;
+            } else {
+                Toast.makeText(this, R.string.finance_wallet_empty, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        Transaction value = new Transaction(id, TransactionType.EXPENSE, amount, category, wallet, null, date, note, payee);
         model.change(FinanceAction.transaction(value, false), true);
     }
 
@@ -171,7 +343,11 @@ public final class TransactionReviewActivity extends FinanceActivity {
         out.putString(STATE_CATEGORY, category);
         out.putString(STATE_WALLET, wallet);
         out.putString(STATE_PAYEE, payee);
+        out.putString(STATE_NOTE, note);
         out.putLong(STATE_DATE, date);
         out.putBoolean(STATE_APPLIED, applied);
+        if (ocrDate != null) out.putLong(STATE_OCR_DATE, ocrDate);
+        if (ocrCategory != null) out.putString(STATE_OCR_CATEGORY, ocrCategory);
+        out.putInt(STATE_ITEM_COUNT, itemCount);
     }
 }

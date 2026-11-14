@@ -27,6 +27,59 @@
             android:paddingTop="@dimen/spacing_8"
             android:paddingBottom="@dimen/spacing_16">
 
+            <!-- Card hiển thị ảnh hóa đơn gốc để người dùng đối chiếu trực tiếp -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardReceiptPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_12"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="@color/bg_card_surface"
+                app:cardCornerRadius="@dimen/radius_card"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/neutral_border"
+                app:strokeWidth="@dimen/divider_height">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="160dp">
+
+                    <ImageView
+                        android:id="@+id/ivReceiptPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/finance_view_receipt"
+                        android:scaleType="centerCrop" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="@dimen/spacing_8"
+                        android:background="@drawable/bg_badge_neutral"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="@dimen/spacing_8"
+                        android:paddingVertical="4dp">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_marginEnd="4dp"
+                            android:src="@drawable/ic_search"
+                            app:tint="@color/text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/finance_view_receipt"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <LinearLayout
                 android:id="@+id/feedbackReview"
                 style="@style/Widget.App.FeedbackInline.Warning"
@@ -157,6 +210,32 @@
                             style="@style/Widget.App.FieldSelector.Value"
                             android:hint="@string/transaction_wallet_placeholder"
                             tools:text="Techcombank" />
+                    </LinearLayout>
+
+                    <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/fieldNote"
+                    style="@style/Widget.App.FieldSelector"
+                    android:layout_marginTop="@dimen/spacing_12">
+
+                    <ImageView
+                        style="@style/Widget.App.FieldSelector.Icon"
+                        android:src="@drawable/ic_pencil" />
+
+                    <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                        <TextView
+                            android:id="@+id/tvNoteLabel"
+                            style="@style/Widget.App.FieldSelector.Label"
+                            android:text="@string/transaction_note_label" />
+
+                        <TextView
+                            android:id="@+id/tvNoteValue"
+                            style="@style/Widget.App.FieldSelector.Value"
+                            android:hint="@string/transaction_note_hint"
+                            tools:text="Cà phê sữa đá" />
                     </LinearLayout>
 
                     <ImageView style="@style/Widget.App.FieldSelector.Chevron" />

@@ -27,7 +27,8 @@ import java.util.ArrayList;
 
 /**
  * Màn hình chụp / chọn ảnh hóa đơn OCR.
- * Lấy ảnh thực tế từ Camera (FileProvider + TakePicture) hoặc Gallery và truyền URI thật sang TransactionReviewActivity để trích xuất dữ liệu.
+ * Lấy ảnh thực tế từ Camera (FileProvider + TakePicture) hoặc Thư viện (đơn lẻ hoặc hàng loạt)
+ * và truyền URI thật sang TransactionReviewActivity để trích xuất dữ liệu.
  */
 public class OcrCameraActivity extends AppCompatActivity {
 
@@ -53,15 +54,27 @@ public class OcrCameraActivity extends AppCompatActivity {
             }
     );
 
-    // Gallery Image Picker Launcher
-    private final ActivityResultLauncher<String> galleryLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
-                if (uri != null) {
-                    launchReviewWithUri(uri);
-                } else {
-                    Toast.makeText(this, R.string.ocr_pick_cancelled, Toast.LENGTH_SHORT).show();
+    // Gallery Image Picker Launcher (hỗ trợ chọn 1 hoặc nhiều ảnh hóa đơn cùng lúc)
+    private final ActivityResultLauncher<String[]> galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenMultipleDocuments(),
+            uris -> {
+                if (uris != null && !uris.isEmpty()) {
+                    ArrayList<String> images = new ArrayList<>();
+                    for (Uri uri : uris) {
+                        try {
+                            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        } catch (SecurityException ignored) {}
+                        images.add(uri.toString());
+                    }
+                    if (!images.isEmpty()) {
+                        Intent intent = new Intent(this, TransactionReviewActivity.class);
+                        intent.putStringArrayListExtra(TransactionReviewActivity.EXTRA_IMAGES, images);
+                        startActivity(intent);
+                        finish();
+                        return;
+                    }
                 }
+                Toast.makeText(this, R.string.ocr_pick_cancelled, Toast.LENGTH_SHORT).show();
             }
     );
 
@@ -103,8 +116,8 @@ public class OcrCameraActivity extends AppCompatActivity {
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        // Chọn ảnh thực tế từ thư viện thiết bị
-        btnGalleryPick.setOnClickListener(v -> galleryLauncher.launch("image/*"));
+        // Chọn ảnh thực tế từ thư viện thiết bị (hỗ trợ chọn 1 hoặc nhiều ảnh)
+        btnGalleryPick.setOnClickListener(v -> galleryLauncher.launch(new String[]{"image/*"}));
 
         // Bấm nút chụp: Chụp ảnh bằng ứng dụng Camera hệ thống thông qua FileProvider
         btnShutterCapture.setOnClickListener(v -> {
