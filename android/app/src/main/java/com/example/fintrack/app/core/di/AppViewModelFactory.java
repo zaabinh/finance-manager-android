@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.finance.data.FinanceRepository;
+import com.example.fintrack.app.home.viewmodel.DashboardViewModel;
 import com.example.fintrack.app.transaction.viewmodel.TransactionListViewModel;
 import com.example.fintrack.app.transaction.viewmodel.TransactionReceiptViewModel;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
@@ -34,6 +35,8 @@ public final class AppViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass == AuthViewModel.class)
             return (T) new AuthViewModel(container.authRepository(), container.userRepository(), container.sessionStore());
         if (modelClass == UserViewModel.class) return (T) new UserViewModel(container.userRepository(), container.sessionStore());
+        if (modelClass == DashboardViewModel.class)
+            return (T) new DashboardViewModel(container.dashboardRepository(), container.sessionStore());
         if (modelClass == FinanceViewModel.class)
             return (T) new FinanceViewModel(container.sessionStore(), container::financeRepository, container.executors(), financeScope, financeDetailId);
         if (modelClass == TransactionListViewModel.class)

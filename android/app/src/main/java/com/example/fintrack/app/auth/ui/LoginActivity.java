@@ -254,6 +254,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        authViewModel.login(usernameOrEmail, password);
+        boolean rememberMe = ((android.widget.CheckBox) findViewById(R.id.cbRememberMe)).isChecked();
+        authViewModel.login(usernameOrEmail, password, rememberMe);
     }
 }

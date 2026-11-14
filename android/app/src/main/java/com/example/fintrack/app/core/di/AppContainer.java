@@ -17,6 +17,8 @@ import com.example.fintrack.app.core.session.SessionStore;
 import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.data.MockFinanceStore;
 import com.example.fintrack.app.finance.remote.FinanceApiBundle;
+import com.example.fintrack.app.home.remote.DashboardApiService;
+import com.example.fintrack.app.home.repository.DashboardRepository;
 import com.example.fintrack.app.transaction.remote.TransactionApiService;
 import com.example.fintrack.app.user.remote.UserApiService;
 import com.example.fintrack.app.user.repository.UserRepository;
@@ -48,6 +50,7 @@ public class AppContainer {
     private UserApiService userApi;
     private AuthRepository authRepository;
     private UserRepository userRepository;
+    private DashboardRepository dashboardRepository;
     private SessionSnapshot financeOrigin;
     private FinanceRepository financeRepository;
 
@@ -79,6 +82,13 @@ public class AppContainer {
     public synchronized UserRepository userRepository() {
         if (userRepository == null) userRepository = new UserRepository(userApi(), executors.main());
         return userRepository;
+    }
+
+    /** Like the user API, each dashboard request is issued as the session that is current when it is enqueued. */
+    public synchronized DashboardRepository dashboardRepository() {
+        if (dashboardRepository == null)
+            dashboardRepository = new DashboardRepository(retrofit().create(DashboardApiService.class), executors.main());
+        return dashboardRepository;
     }
 
     /**

@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.fintrack.app.auth.repository.AuthRepository;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
+import com.example.fintrack.app.home.viewmodel.DashboardViewModel;
 import com.example.fintrack.app.user.repository.UserRepository;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
@@ -26,9 +27,11 @@ public class AppViewModelFactoryTest {
 
         assertSame(container.authRepository(), container.authRepository());
         assertSame(container.userRepository(), container.userRepository());
+        assertSame(container.dashboardRepository(), container.dashboardRepository());
         assertSame(DIRECT, container.executors());
         assertNotSame(container.viewModelFactory().create(AuthViewModel.class), container.viewModelFactory().create(AuthViewModel.class));
         assertNotSame(container.viewModelFactory().create(UserViewModel.class), container.viewModelFactory().create(UserViewModel.class));
+        assertNotSame(container.viewModelFactory().create(DashboardViewModel.class), container.viewModelFactory().create(DashboardViewModel.class));
     }
 
     @Test

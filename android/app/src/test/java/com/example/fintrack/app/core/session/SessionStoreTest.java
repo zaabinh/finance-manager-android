@@ -163,4 +163,71 @@ public class SessionStoreTest {
         assertTrue(next.generation > restored.generation + 1);
         assertFalse(restartedAgain.isCurrent(session));
     }
+
+    // --- "Ghi nhớ tôi" ---
+
+    @Test
+    public void loginWithoutRememberMeLastsForTheProcessAndEndsAtTheNextStart() {
+        SessionSnapshot session = store.login("a1", "r1", true, false);
+        assertTrue(store.updateProfile(session, "user-1", "user-1@example.com", "Name"));
+        assertTrue(store.updateTokens(session, "a2", "r2"));
+        assertTrue(store.completeSetup(session));
+
+        // Same process: still logged in, and no later write turned the flag back on.
+        assertTrue(store.isCurrent(session));
+        assertFalse(store.current().rememberMe);
+        assertFalse(storage.saved.rememberMe);
+
+        // New process: the first read ends that login and persists the logout.
+        SessionStore restarted = new SessionStore(storage);
+        SessionSnapshot now = restarted.current();
+        assertFalse(now.loggedIn);
+        assertNull(now.accessToken);
+        assertNull(now.refreshToken);
+        assertNull(now.userId);
+        assertTrue(now.setupCompleted);
+        assertTrue(now.generation > session.generation);
+        assertFalse(restarted.isCurrent(session));
+        assertSame(now, storage.saved);
+        // The flag is back to its default, like after a logout.
+        assertTrue(now.rememberMe);
+        int saves = storage.saves;
+        assertSame(now, restarted.current());
+        assertEquals(saves, storage.saves);
+    }
+
+    @Test
+    public void rememberedLoginSurvivesARestartAndLogoutResetsTheFlag() {
+        SessionSnapshot remembered = store.login("a1", "r1", true, true);
+        assertTrue(new SessionStore(storage).isCurrent(remembered));
+        assertTrue(store.login("a2", "r2", true).rememberMe); // the default
+
+        SessionSnapshot session = store.login("a3", "r3", true, false);
+        assertTrue(store.clear(session));
+        assertTrue(store.current().rememberMe);
+        // The next login decides again.
+        assertTrue(new SessionStore(storage).isCurrent(store.login("a4", "r4", true, true)));
+    }
+
+    @Test
+    public void failedSaveWhileEndingAnUnrememberedLoginKeepsNothingInMemory() {
+        store.login("a1", "r1", true, false);
+        SessionSnapshot persisted = storage.saved;
+        boolean[] broken = {true};
+        SessionStore restarted = new SessionStore(new SessionStorage() {
+            @Override public SessionSnapshot load() { return storage.load(); }
+            @Override public void save(SessionSnapshot state) {
+                if (broken[0]) throw new IllegalStateException("disk");
+                storage.save(state);
+            }
+        });
+
+        org.junit.Assert.assertThrows(IllegalStateException.class, restarted::current);
+        assertSame(persisted, storage.saved);
+
+        // The logged-in session was never handed out; the next read ends it.
+        broken[0] = false;
+        assertFalse(restarted.current().loggedIn);
+        assertFalse(storage.saved.loggedIn);
+    }
 }

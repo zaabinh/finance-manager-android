@@ -25,6 +25,7 @@ public final class EncryptedSessionStorage implements SessionStorage {
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_REMEMBER_ME = "remember_me";
 
     private final Context appContext;
     private SharedPreferences pref;
@@ -40,7 +41,9 @@ public final class EncryptedSessionStorage implements SessionStorage {
         return new SessionSnapshot(pref.getLong(KEY_GENERATION, 0), pref.getBoolean(KEY_IS_LOGGED_IN, false),
                 pref.getString(KEY_ACCESS_TOKEN, null), pref.getString(KEY_REFRESH_TOKEN, null),
                 pref.getString(KEY_USER_ID, null), pref.getString(KEY_USER_EMAIL, null), pref.getString(KEY_USER_NAME, null),
-                pref.getBoolean(KEY_IS_SETUP_COMPLETED, false));
+                pref.getBoolean(KEY_IS_SETUP_COMPLETED, false),
+                // A session saved before "Ghi nhớ tôi" existed has no key and stays remembered.
+                pref.getBoolean(KEY_REMEMBER_ME, true));
     }
 
     @Override
@@ -48,8 +51,8 @@ public final class EncryptedSessionStorage implements SessionStorage {
         SharedPreferences.Editor editor = pref().edit()
                 .putLong(KEY_GENERATION, state.generation)
                 .putBoolean(KEY_IS_SETUP_COMPLETED, state.setupCompleted);
-        if (state.loggedIn) editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        else editor.remove(KEY_IS_LOGGED_IN);
+        if (state.loggedIn) editor.putBoolean(KEY_IS_LOGGED_IN, true).putBoolean(KEY_REMEMBER_ME, state.rememberMe);
+        else editor.remove(KEY_IS_LOGGED_IN).remove(KEY_REMEMBER_ME);
         put(editor, KEY_ACCESS_TOKEN, state.accessToken);
         put(editor, KEY_REFRESH_TOKEN, state.refreshToken);
         put(editor, KEY_USER_ID, state.userId);

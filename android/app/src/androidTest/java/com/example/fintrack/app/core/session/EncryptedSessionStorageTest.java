@@ -33,7 +33,7 @@ public class EncryptedSessionStorageTest {
 
     @Test
     public void savedSessionIsReadBackByANewInstance() {
-        new EncryptedSessionStorage(context).save(new SessionSnapshot(41, true, "access", "refresh", "user-1", "user@example.com", "Minh Anh", true));
+        new EncryptedSessionStorage(context).save(new SessionSnapshot(41, true, "access", "refresh", "user-1", "user@example.com", "Minh Anh", true, true));
 
         SessionSnapshot loaded = new EncryptedSessionStorage(context).load();
 
@@ -45,6 +45,24 @@ public class EncryptedSessionStorageTest {
         assertEquals("user@example.com", loaded.email);
         assertEquals("Minh Anh", loaded.name);
         assertTrue(loaded.setupCompleted);
+        assertTrue(loaded.rememberMe);
+    }
+
+    @Test
+    public void loginWithoutRememberMeIsPersistedAndEndsAtTheNextStart() {
+        SessionStore store = new SessionStore(new EncryptedSessionStorage(context));
+        SessionSnapshot session = store.login("access", "refresh", true, false);
+
+        assertFalse(new EncryptedSessionStorage(context).load().rememberMe);
+        assertTrue(store.isCurrent(session));
+
+        // A new process: the first read ends the login and the flag is back to its default.
+        assertFalse(new SessionStore(new EncryptedSessionStorage(context)).current().loggedIn);
+        SessionSnapshot loaded = new EncryptedSessionStorage(context).load();
+        assertFalse(loaded.loggedIn);
+        assertNull(loaded.accessToken);
+        assertTrue(loaded.setupCompleted);
+        assertTrue(loaded.rememberMe);
     }
 
     @Test

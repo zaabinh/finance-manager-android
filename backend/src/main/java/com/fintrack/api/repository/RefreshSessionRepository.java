@@ -20,16 +20,17 @@ public class RefreshSessionRepository {
         return new Session(rs.getObject("id", UUID.class), rs.getObject("user_id", UUID.class),
                 rs.getObject("family_id", UUID.class), rs.getTimestamp("expires_at").toInstant(),
                 revokedAt == null ? null : revokedAt.toInstant(), reason == null ? null : RevokeReason.valueOf(reason),
-                rs.getObject("replaced_by_session_id", UUID.class), rs.getBytes("successor_token_ciphertext"));
+                rs.getObject("replaced_by_session_id", UUID.class), rs.getBytes("successor_token_ciphertext"),
+                rs.getBoolean("remember_me"));
     };
     private final JdbcTemplate jdbc;
     public RefreshSessionRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
-    public UUID create(UUID userId, UUID familyId, String tokenHash, Instant expiresAt, ClientMetadata client) {
+    public UUID create(UUID userId, UUID familyId, String tokenHash, Instant expiresAt, boolean rememberMe, ClientMetadata client) {
         return jdbc.queryForObject("""
-                INSERT INTO fintrack.refresh_sessions(user_id,family_id,token_hash,expires_at,user_agent,ip_address)
-                VALUES (?,?,?,?,?,CAST(? AS inet)) RETURNING id
-                """, UUID.class, userId, familyId, tokenHash, Timestamp.from(expiresAt), client.userAgent(), client.ipAddress());
+                INSERT INTO fintrack.refresh_sessions(user_id,family_id,token_hash,expires_at,remember_me,user_agent,ip_address)
+                VALUES (?,?,?,?,?,?,CAST(? AS inet)) RETURNING id
+                """, UUID.class, userId, familyId, tokenHash, Timestamp.from(expiresAt), rememberMe, client.userAgent(), client.ipAddress());
     }
     public Optional<Session> find(String hash, boolean lock) {
         return jdbc.query("SELECT * FROM fintrack.refresh_sessions WHERE token_hash = ?" + (lock ? " FOR UPDATE" : ""),
@@ -65,7 +66,11 @@ public class RefreshSessionRepository {
                 """, Timestamp.from(now), reason.name(), userId);
     }
     public record Session(UUID id, UUID userId, UUID familyId, Instant expiresAt, Instant revokedAt,
-            RevokeReason revokeReason, UUID replacementId, byte[] sealedSuccessor) {
+            RevokeReason revokeReason, UUID replacementId, byte[] sealedSuccessor, boolean rememberMe) {
+        public Session(UUID id, UUID userId, UUID familyId, Instant expiresAt, Instant revokedAt,
+                RevokeReason revokeReason, UUID replacementId, byte[] sealedSuccessor) {
+            this(id, userId, familyId, expiresAt, revokedAt, revokeReason, replacementId, sealedSuccessor, true);
+        }
         public boolean revoked() { return revokedAt != null; }
         public boolean activeAt(Instant now) { return revokedAt == null && expiresAt.isAfter(now); }
         @Override public String toString() { return "Session[id=" + id + ", familyId=" + familyId + "]"; }

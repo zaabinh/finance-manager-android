@@ -199,12 +199,12 @@ class NotificationsPostgresIT {
         var enable=new NotificationSettingsV2Service.Patch();enable.emailFinanceEnabled=true;
         assertThatThrownBy(()->tx.execute(s->settings.patch(fresh,enable))).isInstanceOfSatisfying(AppException.class,e->assertThat(e.getStatus().value()).isEqualTo(409));
         tx.execute(s->settings.patch(user,enable));
-        var v1=new UserService(new UserRepository(jdbc),new UserPreferencesRepository(jdbc),new NotificationSettingsRepository(jdbc),mock(PasswordEncoder.class),mock(RefreshTokenRotatingService.class));
+        var v1=new UserService(new UserRepository(jdbc),new UserPreferencesRepository(jdbc),new NotificationSettingsRepository(jdbc),mock(PasswordEncoder.class),mock(RefreshTokenRotatingService.class),mock(com.fintrack.api.service.wallet.WalletService.class));
         tx.execute(s->v1.updateMyNotificationSettings(user,new UpdateNotificationSettingsRequest(null,null,null,null,(short)90,null,null)));
         assertThat(settings.get(user).emailFinanceEnabled()).isTrue();assertThat(settings.get(user).budgetAlertThresholdPercent()).isEqualTo(90);
     }
     @Test void concurrentV1AndV2PartialSettingsKeepConsentAndBothChanges() throws Exception {
-        var v1=new UserService(new UserRepository(jdbc),new UserPreferencesRepository(jdbc),new NotificationSettingsRepository(jdbc),mock(PasswordEncoder.class),mock(RefreshTokenRotatingService.class));
+        var v1=new UserService(new UserRepository(jdbc),new UserPreferencesRepository(jdbc),new NotificationSettingsRepository(jdbc),mock(PasswordEncoder.class),mock(RefreshTokenRotatingService.class),mock(com.fintrack.api.service.wallet.WalletService.class));
         CountDownLatch gate=new CountDownLatch(1);
         try(var pool=Executors.newFixedThreadPool(2)) {
             var a=pool.submit(()->{await(gate);tx.execute(s->v1.updateMyNotificationSettings(user,new UpdateNotificationSettingsRequest(null,null,null,null,(short)90,null,null)));});

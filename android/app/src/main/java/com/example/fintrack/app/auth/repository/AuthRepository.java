@@ -23,31 +23,32 @@ public class AuthRepository {
     public AuthRepository(AuthApiService apiService, Executor delivery) {
         this.apiService = apiService; this.delivery = delivery;
     }
-    public RequestHandle login(String usernameOrEmail, String password, Consumer<Resource<LoginResponse>> result) {
-        return ApiCalls.enqueue(apiService.login(new LoginRequest(usernameOrEmail, password)), true, delivery, result);
+    public RequestHandle login(String usernameOrEmail, String password, boolean rememberMe, Consumer<Resource<LoginResponse>> result) {
+        return ApiCalls.enqueue(apiService.login(new LoginRequest(usernameOrEmail, password, rememberMe)), true, delivery, result);
     }
+    // The endpoints below answer 2xx with an empty body (Call<Void>): that is success, not a network error.
     public RequestHandle register(String username, String email, String password, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.register(new RegisterRequest(username, email, password)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.register(new RegisterRequest(username, email, password)), false, delivery, result);
     }
     public RequestHandle verifyEmail(String email, String otp, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.verifyEmail(new VerifyEmailRequest(email, otp)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.verifyEmail(new VerifyEmailRequest(email, otp)), false, delivery, result);
     }
     public RequestHandle resendVerification(String email, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.resendVerification(new ResendOtpRequest(email)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.resendVerification(new ResendOtpRequest(email)), false, delivery, result);
     }
     public RequestHandle resendOtp(String email, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.resendVerification(new ResendOtpRequest(email)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.resendVerification(new ResendOtpRequest(email)), false, delivery, result);
     }
     public RequestHandle forgotPassword(String email, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.forgotPassword(new ResendOtpRequest(email)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.forgotPassword(new ResendOtpRequest(email)), false, delivery, result);
     }
     public RequestHandle resetPassword(String email, String otp, String newPassword, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.resetPassword(new ResetPasswordRequest(email, otp, newPassword)), false, delivery, result);
     }
     public RequestHandle changePassword(String currentPassword, String newPassword, Consumer<Resource<TokenResponse>> result) {
         return ApiCalls.enqueue(apiService.changePassword(new ChangePasswordRequest(currentPassword, newPassword)), true, delivery, result);
     }
     public RequestHandle logout(String refreshToken, Consumer<Resource<Void>> result) {
-        return ApiCalls.enqueue(apiService.logout(new RefreshTokenRequest(refreshToken)), false, delivery, result);
+        return ApiCalls.enqueueBody(apiService.logout(new RefreshTokenRequest(refreshToken)), false, delivery, result);
     }
 }

@@ -302,9 +302,9 @@
 
                 </LinearLayout>
 
-                <!-- Action 2 -->
+                <!-- Action 2: Thêm ví -->
                 <LinearLayout
-                    android:id="@+id/btnActionBudget"
+                    android:id="@+id/btnActionAddWallet"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -316,37 +316,17 @@
                     android:paddingEnd="2dp">
 
                     <FrameLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_chip"
+                        android:padding="12dp">
 
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_chip"
-                            android:padding="12dp">
-
-                            <ImageView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_target"
-                                app:tint="@color/color_primary" />
-
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="top|center_horizontal"
-                            android:layout_marginTop="-6dp"
-                            android:background="@drawable/bg_badge_sap_co"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="1dp"
-                            android:paddingBottom="1dp"
-                            android:text="@string/badge_coming_soon"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_wallet"
+                            app:tint="@color/color_primary" />
 
                     </FrameLayout>
 
@@ -356,7 +336,7 @@
                         android:layout_marginTop="@dimen/spacing_8"
                         android:gravity="center"
                         android:maxLines="2"
-                        android:text="@string/quick_action_budget"
+                        android:text="@string/quick_action_add_wallet"
                         android:textColor="@color/text_primary"
                         android:textSize="11sp"
                         android:textStyle="bold" />

@@ -126,12 +126,13 @@ public class AuthViewModel extends ViewModel {
     /**
      * Thực hiện đăng nhập: lưu token thành một phiên mới, tải hồ sơ của phiên đó rồi phát sự kiện điều hướng.
      * Lần gọi mới thay thế lần đang chạy: phản hồi của lần cũ không ghi phiên và không điều hướng.
+     * rememberMe ("Ghi nhớ tôi") được gửi cho server và lưu cùng phiên: false thì phiên kết thúc khi đóng ứng dụng.
      */
-    public void login(String usernameOrEmail, String password) {
+    public void login(String usernameOrEmail, String password, boolean rememberMe) {
         int attempt = ++loginAttempt;
         discardLoginSession();
         loginResult.setValue(Resource.loading(null)); // Đặt trạng thái là Đang tải
-        authRepository.login(usernameOrEmail, password, result -> {
+        authRepository.login(usernameOrEmail, password, rememberMe, result -> {
             if (attempt != loginAttempt) return;
             LoginResponse login = result.getData();
             if (result.getStatus() != Resource.Status.SUCCESS || login == null || login.getToken() == null
@@ -140,7 +141,7 @@ public class AuthViewModel extends ViewModel {
                 return;
             }
             SessionSnapshot session = sessionStore.login(login.getToken().getAccessToken(),
-                    login.getToken().getRefreshToken(), login.isOnboardingCompleted());
+                    login.getToken().getRefreshToken(), login.isOnboardingCompleted(), rememberMe);
             loginSession = session;
             loginResult.setValue(result);
             // Gửi ngay trên luồng này nên request mang đúng phiên vừa tạo.

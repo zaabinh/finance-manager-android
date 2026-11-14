@@ -31,6 +31,26 @@ public final class ApiCalls {
         });
         return completion;
     }
+    /**
+     * For endpoints that answer without the ApiResponse envelope: plain JSON, or {@code Call<Void>} for the
+     * auth endpoints whose 2xx answer has an empty body (which the JSON converter would report as a failure).
+     */
+    public static <T> RequestHandle enqueueBody(Call<T> call, boolean required, Executor delivery,
+                                                Consumer<Resource<T>> callback) {
+        Completion<T> completion = new Completion<>(call, delivery, callback);
+        call.enqueue(new Callback<T>() {
+            @Override public void onResponse(Call<T> ignored, Response<T> response) {
+                if (!response.isSuccessful()) completion.deliver(Resource.error(HttpErrorParser.parse(response), null));
+                else if (required && response.body() == null) completion.deliver(Resource.error(new AppError(
+                        AppError.Category.HTTP, response.code(), "LOCAL_MISSING_DATA", null, null, null), null));
+                else completion.deliver(Resource.success(response.body()));
+            }
+            @Override public void onFailure(Call<T> ignored, Throwable error) {
+                completion.deliver(Resource.error(HttpErrorParser.from(error), null));
+            }
+        });
+        return completion;
+    }
     private static final class Completion<T> implements RequestHandle {
         private final Call<?> call;
         private final Executor delivery;

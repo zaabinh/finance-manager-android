@@ -131,7 +131,8 @@ public class AuthService implements AuthOperations {
             );
             
         limiter.clearLoginFailures(identifier, client);
-        return new LoginResponse(user.onboardingCompleted(), refreshTokens.generateTokenPair(user.id(), user.role(), null, client));
+        return new LoginResponse(user.onboardingCompleted(),
+                refreshTokens.generateTokenPair(user.id(), user.role(), null, client, !Boolean.FALSE.equals(request.rememberMe())));
     }
 
     @Override 

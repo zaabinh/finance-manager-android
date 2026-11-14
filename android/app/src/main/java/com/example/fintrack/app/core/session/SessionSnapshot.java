@@ -13,9 +13,11 @@ public final class SessionSnapshot {
     public final String email;
     public final String name;
     public final boolean setupCompleted;
+    /** "Ghi nhớ tôi": false means this login ends when the app process is closed. True when logged out. */
+    public final boolean rememberMe;
 
     public SessionSnapshot(long generation, boolean loggedIn, String accessToken, String refreshToken,
-            String userId, String email, String name, boolean setupCompleted) {
+            String userId, String email, String name, boolean setupCompleted, boolean rememberMe) {
         this.generation = generation;
         this.loggedIn = loggedIn;
         this.accessToken = accessToken;
@@ -24,5 +26,6 @@ public final class SessionSnapshot {
         this.email = email;
         this.name = name;
         this.setupCompleted = setupCompleted;
+        this.rememberMe = rememberMe;
     }
 }
