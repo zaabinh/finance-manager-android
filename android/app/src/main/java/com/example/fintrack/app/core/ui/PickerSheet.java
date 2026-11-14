@@ -16,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.model.CategoryIcons;
+import com.example.fintrack.databinding.ItemPickerOptionBinding;
+import com.example.fintrack.databinding.SheetPickerBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,21 +63,21 @@ public final class PickerSheet {
     /** addNewText 0 hides the add-new row; addNew runs after the sheet is dismissed. */
     public static BottomSheetDialog show(AppCompatActivity host, @StringRes int title, List<Option> options, String selectedId,
             @StringRes int addNewText, Runnable addNew, Consumer<String> confirmed) {
-        View content = LayoutInflater.from(host).inflate(R.layout.sheet_picker, null);
-        ((TextView) content.findViewById(R.id.tvPickerTitle)).setText(title);
-        View confirm = content.findViewById(R.id.btnPickerConfirm);
+        SheetPickerBinding binding = SheetPickerBinding.inflate(LayoutInflater.from(host));
+        binding.tvPickerTitle.setText(title);
+        View confirm = binding.btnPickerConfirm;
         String[] selection = {initialSelection(options, selectedId)};
         confirm.setEnabled(selection[0] != null);
-        RecyclerView list = content.findViewById(R.id.rvPickerOptions);
+        RecyclerView list = binding.rvPickerOptions;
         list.setAdapter(new Adapter(options, selection, () -> confirm.setEnabled(selection[0] != null)));
         // Cap the list so the confirm button stays on screen; the list scrolls inside.
         int max = host.getResources().getDisplayMetrics().heightPixels / 2;
         int rows = options.size() * host.getResources().getDimensionPixelSize(R.dimen.selector_min_height);
         if (rows > max) list.getLayoutParams().height = max;
-        BottomSheetDialog dialog = SheetDialog.show(host, content);
-        content.findViewById(R.id.btnPickerClose).setOnClickListener(v -> dialog.dismiss());
+        BottomSheetDialog dialog = SheetDialog.show(host, binding.getRoot());
+        binding.btnPickerClose.setOnClickListener(v -> dialog.dismiss());
         confirm.setOnClickListener(v -> { dialog.dismiss(); if (selection[0] != null) confirmed.accept(selection[0]); });
-        TextView add = content.findViewById(R.id.btnPickerAddNew);
+        TextView add = binding.btnPickerAddNew;
         if (addNewText != 0 && addNew != null) {
             add.setText(addNewText); add.setVisibility(View.VISIBLE);
             add.setOnClickListener(v -> { dialog.dismiss(); addNew.run(); });
@@ -89,7 +91,7 @@ public final class PickerSheet {
             this.options = options; this.selection = selection; this.changed = changed;
         }
         @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
-            return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_picker_option, parent, false));
+            return new Holder(ItemPickerOptionBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
         }
         @Override public void onBindViewHolder(@NonNull Holder h, int position) {
             Option o = options.get(position);
@@ -102,7 +104,7 @@ public final class PickerSheet {
         @Override public int getItemCount() { return options.size(); }
         static final class Holder extends RecyclerView.ViewHolder {
             final TextView label; final ImageView icon;
-            Holder(View v) { super(v); label = v.findViewById(R.id.tvOptionLabel); icon = v.findViewById(R.id.ivOptionIcon); }
+            Holder(ItemPickerOptionBinding b) { super(b.getRoot()); label = b.tvOptionLabel; icon = b.ivOptionIcon; }
         }
     }
 }

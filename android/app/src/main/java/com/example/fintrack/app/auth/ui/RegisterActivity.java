@@ -22,6 +22,7 @@ import androidx.core.widget.TextViewCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthRegisterBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.util.PasswordValidator;
@@ -37,6 +38,8 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String KEY_REGISTERED_EMAIL = "key_registered_email";
+
+    private ActivityAuthRegisterBinding binding;
 
     // Các thành phần giao diện (UI Views)
     private EditText etUsername;
@@ -65,7 +68,8 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_register);
+        binding = ActivityAuthRegisterBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         if (savedInstanceState != null) {
             registeredEmail = savedInstanceState.getString(KEY_REGISTERED_EMAIL, "");
@@ -79,22 +83,22 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        etUsername = findViewById(R.id.etUsername);
-        etEmail = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        ivTogglePassword = findViewById(R.id.ivTogglePassword);
-        ivToggleConfirmPassword = findViewById(R.id.ivToggleConfirmPassword);
-        cbTerms = findViewById(R.id.cbTerms);
-        btnRegister = findViewById(R.id.btnRegister);
-        tvSignIn = findViewById(R.id.tvSignIn);
+        etUsername = binding.etUsername;
+        etEmail = binding.etEmail;
+        etPassword = binding.etPassword;
+        etConfirmPassword = binding.etConfirmPassword;
+        ivTogglePassword = binding.ivTogglePassword;
+        ivToggleConfirmPassword = binding.ivToggleConfirmPassword;
+        cbTerms = binding.cbTerms;
+        btnRegister = binding.btnRegister;
+        tvSignIn = binding.tvSignIn;
 
-        tvPasswordStrengthLabel = findViewById(R.id.tvPasswordStrengthLabel);
-        pbPasswordStrength = findViewById(R.id.pbPasswordStrength);
-        ruleMinLength = findViewById(R.id.ruleMinLength);
-        ruleLowercase = findViewById(R.id.ruleLowercase);
-        ruleUppercase = findViewById(R.id.ruleUppercase);
-        ruleDigitOrSpecial = findViewById(R.id.ruleDigitOrSpecial);
+        tvPasswordStrengthLabel = binding.tvPasswordStrengthLabel;
+        pbPasswordStrength = binding.pbPasswordStrength;
+        ruleMinLength = binding.ruleMinLength;
+        ruleLowercase = binding.ruleLowercase;
+        ruleUppercase = binding.ruleUppercase;
+        ruleDigitOrSpecial = binding.ruleDigitOrSpecial;
     }
 
     private void setupListeners() {

@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySetupNotificationBinding;
 import com.example.fintrack.app.settings.ui.SettingNotificationActivity;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -34,6 +35,11 @@ public class SetupNotificationActivity extends AppCompatActivity {
     public static final String EXTRA_DAILY_REMINDER = "extra_daily_reminder";
     public static final String EXTRA_BUDGET_ALERT = "extra_budget_alert";
     public static final String EXTRA_BUDGET_THRESHOLD = "extra_budget_threshold";
+    private static final String STATE_HOUR = "state_hour";
+    private static final String STATE_MINUTE = "state_minute";
+    private static final String STATE_THRESHOLD = "state_threshold";
+
+    private ActivitySetupNotificationBinding binding;
 
     private ImageView ivBack;
     private SwitchMaterial switchEnableNotif;
@@ -53,23 +59,40 @@ public class SetupNotificationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setup_notification);
+        binding = ActivitySetupNotificationBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        if (savedInstanceState != null) {
+            selectedHour = savedInstanceState.getInt(STATE_HOUR, selectedHour);
+            selectedMinute = savedInstanceState.getInt(STATE_MINUTE, selectedMinute);
+            selectedThreshold = savedInstanceState.getInt(STATE_THRESHOLD, selectedThreshold);
+        }
 
         initViews();
         setupListeners();
+        tvReminderTime.setText(String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute));
+        tvBudgetThreshold.setText(selectedThreshold + "%");
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_HOUR, selectedHour);
+        outState.putInt(STATE_MINUTE, selectedMinute);
+        outState.putInt(STATE_THRESHOLD, selectedThreshold);
     }
 
     private void initViews() {
-        ivBack = findViewById(R.id.ivBack);
-        switchEnableNotif = findViewById(R.id.switchEnableNotif);
-        switchDailyReminder = findViewById(R.id.switchDailyReminder);
-        llTimePickerRow = findViewById(R.id.llTimePickerRow);
-        tvReminderTime = findViewById(R.id.tvReminderTime);
-        switchBudgetAlert = findViewById(R.id.switchBudgetAlert);
-        rowBudgetThreshold = findViewById(R.id.rowBudgetThreshold);
-        tvBudgetThreshold = findViewById(R.id.tvBudgetThreshold);
-        btnContinue = findViewById(R.id.btnContinue);
-        tvSkip = findViewById(R.id.tvSkip);
+        ivBack = binding.ivBack;
+        switchEnableNotif = binding.switchEnableNotif;
+        switchDailyReminder = binding.switchDailyReminder;
+        llTimePickerRow = binding.llTimePickerRow;
+        tvReminderTime = binding.tvReminderTime;
+        switchBudgetAlert = binding.switchBudgetAlert;
+        rowBudgetThreshold = binding.rowBudgetThreshold;
+        tvBudgetThreshold = binding.tvBudgetThreshold;
+        btnContinue = binding.btnContinue;
+        tvSkip = binding.tvSkip;
     }
 
     private void checkAndRequestNotificationPermission() {
@@ -87,9 +110,9 @@ public class SetupNotificationActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIF_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Đã cấp quyền Thông báo", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.notif_permission_granted, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.notif_permission_denied, Toast.LENGTH_LONG).show();
             }
         }
     }

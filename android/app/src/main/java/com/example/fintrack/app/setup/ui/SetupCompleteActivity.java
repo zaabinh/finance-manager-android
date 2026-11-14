@@ -9,12 +9,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySetupCompleteBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
 // Màn hình hoàn tất cài đặt (SetupCompleteActivity)
 public class SetupCompleteActivity extends AppCompatActivity {
+
+    private ActivitySetupCompleteBinding binding;
 
     // Khai báo các thành phần giao diện (UI)
     private TextView tvSummaryName;         // Hiển thị tên người dùng
@@ -29,7 +32,8 @@ public class SetupCompleteActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setup_complete); // Gắn giao diện XML vào Activity
+        binding = ActivitySetupCompleteBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot()); // Gắn giao diện XML vào Activity
 
         userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
@@ -50,9 +54,9 @@ public class SetupCompleteActivity extends AppCompatActivity {
 
     // Ánh xạ ID từ file XML sang biến trong Java
     private void initViews() {
-        tvSummaryName = findViewById(R.id.tvSummaryName);
-        tvSummaryReminderTime = findViewById(R.id.tvSummaryReminderTime);
-        btnEnterApp = findViewById(R.id.btnEnterApp);
+        tvSummaryName = binding.tvSummaryName;
+        tvSummaryReminderTime = binding.tvSummaryReminderTime;
+        btnEnterApp = binding.btnEnterApp;
     }
 
     // Đưa dữ liệu tên và thời gian lên TextView để người dùng xem lại

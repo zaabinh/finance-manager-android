@@ -7,20 +7,29 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.databinding.ActivityCategoryAddBinding;
+import com.example.fintrack.databinding.ActivityCategoryEditBinding;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /** Uses the same repository, session checks and command lifecycle as finance pickers. */
 abstract class CategoryFormActivity extends FinanceActivity {
+    // The add and edit layouts are different binding classes; the shared views are held once here.
+    private Toolbar toolbar;
     private EditText name, order;
     private SwitchMaterial status;
-    private Button save;
-    private RecyclerView icons;
+    private TextView statusLabel;
+    private Button save, cancel, delete;
+    private RecyclerView icons, colors;
+    private MaterialButton expense, income;
     private CategoryAppearance appearance;
     private String id, iconKey, manualColor, colorHex;
     private int sortOrder;
@@ -28,6 +37,25 @@ abstract class CategoryFormActivity extends FinanceActivity {
     private boolean initialized, restoredForm, bindingStatus;
     protected abstract boolean editing();
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.CATEGORIES; }
+
+    @Override protected View contentView() {
+        View root;
+        if (editing()) {
+            ActivityCategoryEditBinding b = ActivityCategoryEditBinding.inflate(getLayoutInflater());
+            root = b.getRoot(); toolbar = b.toolbarForm; order = b.etCategorySortOrder; status = b.switchStatus; statusLabel = b.tvStatusLabel;
+            save = b.btnSaveChanges; delete = b.btnDeleteCategory;
+        } else {
+            ActivityCategoryAddBinding b = ActivityCategoryAddBinding.inflate(getLayoutInflater());
+            root = b.getRoot(); toolbar = b.toolbarForm; order = b.etCategorySortOrder; status = b.switchStatus; statusLabel = b.tvStatusLabel;
+            save = b.btnCreateCategory; cancel = b.btnCancel;
+        }
+        // form_category_fields is included without an android:id, so ViewBinding does not expose its views.
+        name = root.findViewById(R.id.etCategoryName);
+        icons = root.findViewById(R.id.rvIconPicker); colors = root.findViewById(R.id.rvColorPicker);
+        expense = root.findViewById(R.id.btnTypeExpense); income = root.findViewById(R.id.btnTypeIncome);
+        root.findViewById(R.id.btnTypeTransfer).setVisibility(View.GONE);
+        return root;
+    }
 
     @Override protected void bind(Bundle saved) {
         id = getIntent().getStringExtra("CATEGORY_ID");
@@ -38,27 +66,21 @@ abstract class CategoryFormActivity extends FinanceActivity {
             iconKey = saved.getString("iconKey"); manualColor = saved.getString("manualColor");
             restoredForm = saved.getBoolean("categoryLoaded");
         }
-        name = findViewById(R.id.etCategoryName);
-        order = findViewById(R.id.etCategorySortOrder);
-        status = findViewById(R.id.switchStatus);
-        icons = findViewById(R.id.rvIconPicker);
-        save = findViewById(editing() ? R.id.btnSaveChanges : R.id.btnCreateCategory);
-        toolbar(R.id.toolbarForm);
-        findViewById(R.id.btnTypeTransfer).setVisibility(View.GONE);
+        toolbar.setNavigationOnClickListener(view -> finish());
         if (!editing()) {
-            findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
+            cancel.setOnClickListener(v -> finish());
             // Lifecycle is changed explicitly after creation, not through unsupported POST fields.
             ((View)status.getParent()).setVisibility(View.GONE);
         } else {
-            findViewById(R.id.btnDeleteCategory).setOnClickListener(v ->
+            delete.setOnClickListener(v ->
                     confirmDelete(() -> model.change(FinanceAction.categoryArchive(id), true)));
         }
         status.setOnCheckedChangeListener((button, active) -> {
             if (!bindingStatus && initialized && !model.busy())
                 model.change(FinanceAction.categoryStatus(id, active), false);
         });
-        findViewById(R.id.btnTypeExpense).setOnClickListener(v -> { type = TransactionType.EXPENSE; showType(); appearance.setType(type); });
-        findViewById(R.id.btnTypeIncome).setOnClickListener(v -> { type = TransactionType.INCOME; showType(); appearance.setType(type); });
+        expense.setOnClickListener(v -> { type = TransactionType.EXPENSE; showType(); appearance.setType(type); });
+        income.setOnClickListener(v -> { type = TransactionType.INCOME; showType(); appearance.setType(type); });
         save.setOnClickListener(v -> {
             if (!initialized || model.busy()) return;
             String value = name.getText().toString().trim();
@@ -77,11 +99,11 @@ abstract class CategoryFormActivity extends FinanceActivity {
     }
 
     private void showType() {
-        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeExpense)).setChecked(type == TransactionType.EXPENSE);
-        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeIncome)).setChecked(type == TransactionType.INCOME);
+        expense.setChecked(type == TransactionType.EXPENSE);
+        income.setChecked(type == TransactionType.INCOME);
     }
     private void showIcons(String manual) {
-        appearance = new CategoryAppearance(this, icons, findViewById(R.id.rvColorPicker), type, iconKey, manual);
+        appearance = new CategoryAppearance(this, icons, colors, type, iconKey, manual);
     }
     @Override protected void render() {
         if (name == null) return;
@@ -99,14 +121,14 @@ abstract class CategoryFormActivity extends FinanceActivity {
         bindingStatus = true;
         status.setChecked(active);
         bindingStatus = false;
-        text(R.id.tvStatusLabel,getString(active ? R.string.status_active : R.string.status_disabled));
+        statusLabel.setText(getString(active ? R.string.status_active : R.string.status_disabled));
         name.setEnabled(active);
         order.setEnabled(active);
-        findViewById(R.id.btnTypeExpense).setEnabled(active); findViewById(R.id.btnTypeIncome).setEnabled(active);
-        icons.setVisibility(active ? View.VISIBLE : View.GONE);
-        findViewById(R.id.rvColorPicker).setVisibility(active ? View.VISIBLE : View.GONE);
+        expense.setEnabled(active); income.setEnabled(active);
+        FinanceUi.visible(icons, active);
+        FinanceUi.visible(colors, active);
         save.setEnabled(active && !model.busy());
-        if(editing()) findViewById(R.id.btnDeleteCategory).setEnabled(active && !model.busy());
+        if(editing()) delete.setEnabled(active && !model.busy());
     }
     @Override protected void loading(boolean busy) {
         if (save != null) FinanceUi.progress(save, busy);

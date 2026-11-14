@@ -5,7 +5,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import com.example.fintrack.R;
+import android.view.View;
+import com.example.fintrack.databinding.ActivityTransactionImportBinding;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import java.util.ArrayList;
 
@@ -26,17 +27,18 @@ public final class TransactionImportActivity extends FinanceActivity {
         if (!batch.isEmpty()) review(batch);
     });
 
-    @Override protected int layout() { return R.layout.activity_transaction_import; }
+    private ActivityTransactionImportBinding binding;
+    @Override protected View contentView() { binding = ActivityTransactionImportBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
 
     @Override protected void bind(Bundle saved) {
-        toolbar(R.id.toolbarTransactionImport);
+        binding.toolbarTransactionImport.setNavigationOnClickListener(view -> finish());
         if (saved != null && saved.getString("camera") != null) cameraUri = Uri.parse(saved.getString("camera"));
 
         // Nút chọn ảnh từ thư viện
-        findViewById(R.id.optionLibrary).setOnClickListener(view -> gallery.launch(new String[]{"image/*"}));
+        binding.optionLibrary.setOnClickListener(view -> gallery.launch(new String[]{"image/*"}));
 
         // Nút mở camera chụp ảnh hóa đơn
-        findViewById(R.id.optionCamera).setOnClickListener(view -> startActivity(new Intent(this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class)));
+        binding.optionCamera.setOnClickListener(view -> startActivity(new Intent(this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class)));
     }
 
     // Chuyển sang màn hình xem lại kết quả quét hóa đơn

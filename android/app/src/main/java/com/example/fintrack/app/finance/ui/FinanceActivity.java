@@ -5,7 +5,6 @@ import com.example.fintrack.app.finance.domain.FinanceProblem;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -14,7 +13,6 @@ import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.ui.SessionExpiry;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionSnapshot;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
@@ -26,7 +24,8 @@ public abstract class FinanceActivity extends AppCompatActivity {
     protected FinanceBook book;
     private SessionSnapshot origin; // phiên đăng nhập lúc mở màn hình
 
-    protected abstract int layout(); // Khai báo layout XML của màn hình con
+    /** Inflates the screen's ViewBinding (kept in a subclass field) and returns its root; called once from onCreate. */
+    protected abstract View contentView();
     protected abstract void bind(Bundle saved); // Khởi tạo các view và sự kiện
     protected abstract void render(); // Cập nhật giao diện khi dữ liệu tài chính thay đổi
     protected void loading(boolean loading) { } // Xử lý hiệu ứng loading
@@ -40,7 +39,7 @@ public abstract class FinanceActivity extends AppCompatActivity {
         super.onCreate(saved);
         origin = FintrackApplication.container(this).sessionStore().current();
         if (!authenticated()) return; // Kiểm tra đăng nhập
-        setContentView(layout());
+        setContentView(contentView());
         FinanceUi.insets(findViewById(android.R.id.content));
         model = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory().forFinance(readScope(), detailId())).get(FinanceViewModel.class);
         bind(saved);
@@ -95,9 +94,6 @@ public abstract class FinanceActivity extends AppCompatActivity {
     }
 
     @Override protected void onResume() { super.onResume(); if (authenticated() && model != null) model.refresh(); }
-    protected void toolbar(int id) { ((MaterialToolbar) findViewById(id)).setNavigationOnClickListener(view -> finish()); }
-    protected void text(int id, CharSequence value) { ((TextView) findViewById(id)).setText(value); }
-    protected void visible(int id, boolean value) { findViewById(id).setVisibility(value ? View.VISIBLE : View.GONE); }
 
     /** Hiển thị hộp thoại xác nhận xóa dữ liệu */
     protected void confirmDelete(Runnable action) {

@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySetupBasicInfoBinding;
 import com.example.fintrack.app.settings.ui.SettingUserActivity;
 
 import java.util.Arrays;
@@ -24,6 +25,9 @@ public class SetupBasicInfoActivity extends AppCompatActivity {
     // Khóa (Key) để đóng gói và gửi tên người dùng sang màn hình tiếp theo
     public static final String EXTRA_DISPLAY_NAME = "extra_display_name";
     public static final String EXTRA_TIME_ZONE = "extra_time_zone";
+    private static final String STATE_TIME_ZONE = "state_time_zone";
+
+    private ActivitySetupBasicInfoBinding binding;
 
     // Khai báo các thành phần giao diện (UI)
     private ImageView ivBack;       // Nút quay lại (mũi tên back)
@@ -35,18 +39,28 @@ public class SetupBasicInfoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setup_basic_info); // Gắn giao diện XML vào Activity
+        binding = ActivitySetupBasicInfoBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot()); // Gắn giao diện XML vào Activity
+
+        if (savedInstanceState != null)
+            selectedTimeZone = savedInstanceState.getString(STATE_TIME_ZONE, selectedTimeZone);
 
         initViews();       // Ánh xạ các thành phần giao diện
         setupListeners();  // Gán sự kiện bấm nút
     }
 
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_TIME_ZONE, selectedTimeZone);
+    }
+
     // Ánh xạ ID từ file XML sang biến trong Java
     private void initViews() {
-        ivBack = findViewById(R.id.ivBack);
-        etDisplayName = findViewById(R.id.etDisplayName);
-        btnContinue = findViewById(R.id.btnContinue);
-        tvTimezoneValue = findViewById(R.id.tvTimezoneValue);
+        ivBack = binding.ivBack;
+        etDisplayName = binding.etDisplayName;
+        btnContinue = binding.btnContinue;
+        tvTimezoneValue = binding.tvTimezoneValue;
         showTimezone();
     }
 

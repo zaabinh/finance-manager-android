@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthForgotPasswordBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
@@ -27,6 +28,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     private static final String KEY_REQUESTED_EMAIL = "key_requested_email"; // Khóa lưu tạm email khi xoay màn hình
 
+    private ActivityAuthForgotPasswordBinding binding;
+
     // Các thành phần giao diện (Ô nhập email, nút Gửi yêu cầu, chữ quay lại đăng nhập)
     private EditText etEmail;
     private Button btnSend;
@@ -38,7 +41,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_forgot_password);
+        binding = ActivityAuthForgotPasswordBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Khôi phục lại email nếu Activity bị hủy và tạo lại (ví dụ: khi xoay ngang/dọc điện thoại)
         if (savedInstanceState != null) {
@@ -55,9 +59,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     /** Ánh xạ các thành phần giao diện từ file XML */
     private void initViews() {
-        etEmail = findViewById(R.id.etEmail);
-        btnSend = findViewById(R.id.btnSend);
-        tvBackToLogin = findViewById(R.id.tvBackToLogin);
+        etEmail = binding.etEmail;
+        btnSend = binding.btnSend;
+        tvBackToLogin = binding.tvBackToLogin;
     }
 
     /** Cài đặt các sự kiện tương tác bấm nút */

@@ -3,7 +3,6 @@ package com.example.fintrack.app.category.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -11,6 +10,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ItemIconPickerBinding;
 
 import java.util.List;
 
@@ -54,8 +54,7 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Gắn giao diện XML của từng ô icon (item_icon_picker) vào ViewHolder
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_icon_picker, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(ItemIconPickerBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
@@ -83,14 +82,13 @@ public class IconPickerAdapter extends RecyclerView.Adapter<IconPickerAdapter.Vi
      * Lớp ViewHolder: Ánh xạ và quản lý các thành phần giao diện của một ô icon đơn lẻ
      */
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private final FrameLayout flIconContainer; // Khung chứa nền của icon
+        private final View flIconContainer; // Khung chứa nền của icon
         private final ImageView ivPickerIcon;      // Hình ảnh icon
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            // Ánh xạ các ID từ file layout item_icon_picker.xml
-            flIconContainer = itemView.findViewById(R.id.flIconContainer);
-            ivPickerIcon = itemView.findViewById(R.id.ivPickerIcon);
+        public ViewHolder(@NonNull ItemIconPickerBinding binding) {
+            super(binding.getRoot());
+            flIconContainer = binding.flIconContainer;
+            ivPickerIcon = binding.ivPickerIcon;
         }
 
         /**

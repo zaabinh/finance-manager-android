@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthChangePasswordBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.util.PasswordValidator;
@@ -29,6 +30,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
     // Các khóa để lưu tạm email và mã OTP khi xoay màn hình
     private static final String KEY_EMAIL = "key_email";
     private static final String KEY_OTP = "key_otp";
+
+    private ActivityAuthChangePasswordBinding binding;
 
     // Các thành phần giao diện (Ô nhập mật khẩu mới, xác nhận mật khẩu, nút bấm, icon ẩn/hiện mật khẩu)
     private EditText etNewPassword;
@@ -47,7 +50,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_change_password);
+        binding = ActivityAuthChangePasswordBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
@@ -76,11 +80,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     /** Ánh xạ các thành phần giao diện từ file XML */
     private void initViews() {
-        etNewPassword = findViewById(R.id.etNewPassword);
-        etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword);
-        ivToggleNewPassword = findViewById(R.id.ivToggleNewPassword);
-        ivToggleConfirmNewPassword = findViewById(R.id.ivToggleConfirmNewPassword);
-        btnSubmit = findViewById(R.id.btnSubmit);
+        etNewPassword = binding.etNewPassword;
+        etConfirmNewPassword = binding.etConfirmNewPassword;
+        ivToggleNewPassword = binding.ivToggleNewPassword;
+        ivToggleConfirmNewPassword = binding.ivToggleConfirmNewPassword;
+        btnSubmit = binding.btnSubmit;
     }
 
     /** Cài đặt các sự kiện tương tác bấm nút và ẩn/hiện mật khẩu */

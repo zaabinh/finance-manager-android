@@ -1,20 +1,21 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.budget.domain.BudgetFormValidator;
 import com.example.fintrack.app.finance.domain.Budget;
 import com.example.fintrack.app.finance.domain.FinanceBook;
-import com.example.fintrack.app.finance.domain.FinanceFailure;
 import com.example.fintrack.app.finance.domain.MonthlyBudget;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.EditText;
+import android.view.View;
 import android.widget.Toast;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.example.fintrack.databinding.ActivityBudgetFormBinding;
+import com.google.android.material.chip.ChipGroup;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -34,16 +35,24 @@ public final class BudgetFormActivity extends FinanceActivity {
 
     public static final String EXTRA_ID = "budget_id";
     public static final String EXTRA_MONTHLY_ID = "monthly_budget_id";
+    private ActivityBudgetFormBinding binding;
+    // view_budget_shortfall is included without an android:id, so ViewBinding does not expose it.
+    private View shortfallPanel;
     private String id, monthlyId, category, month;
     private boolean editing, initialized;
 
     @Override
-    protected int layout() { return R.layout.activity_budget_form; }
+    protected View contentView() {
+        binding = ActivityBudgetFormBinding.inflate(getLayoutInflater());
+        shortfallPanel = binding.getRoot().findViewById(R.id.panelShortfall);
+        return binding.getRoot();
+    }
 
     @Override
     protected void bind(Bundle saved) {
-        toolbar(R.id.toolbarBudgetForm);
-        com.example.fintrack.app.core.ui.MoneyInput.attach(findViewById(R.id.etAmount), findViewById(R.id.chipGroupAmountSuggestions));
+        binding.toolbarBudgetForm.setNavigationOnClickListener(view -> finish());
+        com.example.fintrack.app.core.ui.MoneyInput.attach(binding.amountInputBudget.etAmount,
+                binding.getRoot().<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         editing = getIntent().hasExtra(EXTRA_ID);
         monthlyId = getIntent().getStringExtra(EXTRA_MONTHLY_ID);
         if (monthlyId == null) {
@@ -53,15 +62,15 @@ public final class BudgetFormActivity extends FinanceActivity {
         id = editing ? getIntent().getStringExtra(EXTRA_ID) : UUID.randomUUID().toString();
         if (saved != null) { initialized = saved.getBoolean("initialized"); id = saved.getString("id"); category = saved.getString("category"); month = saved.getString("month"); }
 
-        ((MaterialToolbar) findViewById(R.id.toolbarBudgetForm)).setTitle(editing ? R.string.budget_edit_title : R.string.budget_add_title);
-        text(R.id.tvAmountLabel, getString(R.string.budget_limit_label)); visible(R.id.tvAmountSign, false);
-        text(R.id.btnSaveBudget, getString(editing ? R.string.btn_save_changes : R.string.btn_create_budget));
+        binding.toolbarBudgetForm.setTitle(editing ? R.string.budget_edit_title : R.string.budget_add_title);
+        binding.amountInputBudget.tvAmountLabel.setText(getString(R.string.budget_limit_label)); binding.amountInputBudget.tvAmountSign.setVisibility(View.GONE);
+        binding.btnSaveBudget.setText(getString(editing ? R.string.btn_save_changes : R.string.btn_create_budget));
 
-        findViewById(R.id.fieldBudgetCategory).setOnClickListener(view -> BudgetUi.pickExpenseCategory(this, book, usedCategories(),
-                value -> { category = value; BudgetUi.hideShortfall(this); render(); }));
+        binding.fieldBudgetCategory.setOnClickListener(view -> BudgetUi.pickExpenseCategory(this, book, usedCategories(),
+                value -> { category = value; BudgetUi.hideShortfall(shortfallPanel); render(); }));
         // The month belongs to the parent monthly budget and is not editable here.
-        findViewById(R.id.fieldBudgetPeriod).setClickable(false);
-        findViewById(R.id.btnSaveBudget).setOnClickListener(view -> save());
+        binding.fieldBudgetPeriod.setClickable(false);
+        binding.btnSaveBudget.setOnClickListener(view -> save());
     }
 
     /** Categories already budgeted in this month, except the one being edited. */
@@ -85,50 +94,45 @@ public final class BudgetFormActivity extends FinanceActivity {
             if (editing) {
                 Budget value = book.budget(id);
                 if (value == null || value.archivedAt != null) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); return; }
-                category = value.categoryId; text(R.id.etAmount, Long.toString(value.limit));
+                category = value.categoryId; binding.amountInputBudget.etAmount.setText(Long.toString(value.limit));
             }
             initialized = true;
         }
-        text(R.id.tvBudgetCatValue, book.category(category) == null ? getString(R.string.transaction_category_placeholder) : book.category(category).name);
-        text(R.id.tvBudgetPeriodValue, FinanceUi.monthLabel(month));
+        binding.tvBudgetCatValue.setText(book.category(category) == null ? getString(R.string.transaction_category_placeholder) : book.category(category).name);
+        binding.tvBudgetPeriodValue.setText(FinanceUi.monthLabel(month));
     }
 
     /** Xử lý kiểm tra dữ liệu và lưu ngân sách danh mục */
     private void save() {
         if (book == null || model.busy() || month == null) return;
 
-        if (category == null || category.trim().isEmpty()) {
-            Toast.makeText(this, R.string.error_required_category, Toast.LENGTH_SHORT).show();
+        BudgetFormValidator.Result result = BudgetFormValidator.category(id, monthlyId, category, month, usedCategories(),
+                binding.amountInputBudget.etAmount.getText().toString());
+        if (!result.valid()) {
+            switch (result.error) {
+                case MISSING_CATEGORY: Toast.makeText(this, R.string.error_required_category, Toast.LENGTH_SHORT).show(); break;
+                case DUPLICATE_CATEGORY: Toast.makeText(this, R.string.error_duplicate_budget, Toast.LENGTH_SHORT).show(); break;
+                default:
+                    binding.amountInputBudget.tvAmountError.setText(getString(R.string.finance_amount_error));
+                    binding.amountInputBudget.tvAmountError.setVisibility(View.VISIBLE);
+                    binding.amountInputBudget.etAmount.requestFocus();
+            }
             return;
         }
-        if (usedCategories().contains(category)) {
-            Toast.makeText(this, R.string.error_duplicate_budget, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        long limit;
-        try { limit = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
-        catch (FinanceFailure error) {
-            text(R.id.tvAmountError, getString(R.string.finance_amount_error)); visible(R.id.tvAmountError, true);
-            findViewById(R.id.etAmount).requestFocus(); return;
-        }
-        visible(R.id.tvAmountError, false);
-        BudgetUi.hideShortfall(this);
-
-        Budget value = new Budget(id, category, month, limit);
-        value = value.withMonthlyBudgetId(monthlyId);
-        model.change(FinanceAction.budget(value, editing), true);
+        binding.amountInputBudget.tvAmountError.setVisibility(View.GONE);
+        BudgetUi.hideShortfall(shortfallPanel);
+        model.change(FinanceAction.budget(result.budget, editing), true);
     }
 
     @Override
     protected CharSequence failure(FinanceViewModel.Command command) {
-        CharSequence text = BudgetUi.failure(this, book, command);
+        CharSequence text = BudgetUi.failure(this, book, command, shortfallPanel);
         boolean shortfall = command.failure != null && FinanceBook.BUDGET_EXCEEDS_AVAILABLE_BALANCE.equals(command.failure.code);
         return text != null || shortfall ? text : super.failure(command);
     }
 
     @Override
-    protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveBudget), loading); }
+    protected void loading(boolean loading) { FinanceUi.progress(binding.btnSaveBudget, loading); }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {

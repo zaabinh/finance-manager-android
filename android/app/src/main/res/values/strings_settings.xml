@@ -65,4 +65,18 @@
     <string name="currency_vnd_read_only">VND (₫)</string>
     <string name="budget_alert_threshold">Ngưỡng cảnh báo ngân sách</string>
     <string name="notification_settings_saved">Đã lưu cài đặt thông báo</string>
+    <string name="about_dialog_title">Đồng - Quản lý tài chính</string>
+    <string name="about_dialog_message">Phiên bản: v1.0.0\n\nNgười bạn đồng hành tài chính cá nhân của bạn. Giúp bạn theo dõi số dư, ghi chép giao dịch, đặt ngân sách và phân tích tài chính hiệu quả.</string>
+    <string name="about_dialog_close">Đóng</string>
+    <string name="security_logout_local_with_error">Đã đăng xuất thiết bị local. (%1$s)</string>
+    <string name="security_deactivated">Đã vô hiệu hóa tài khoản thành công.</string>
+    <string name="security_deactivate_failed">Vô hiệu hóa tài khoản thất bại</string>
+    <string name="security_current_password_hint">Nhập mật khẩu hiện tại</string>
+    <string name="security_deactivate_title">Xác nhận vô hiệu hóa tài khoản</string>
+    <string name="security_deactivate_message">Tài khoản của bạn sẽ bị vô hiệu hóa. Nhập mật khẩu hiện tại để xác nhận:</string>
+    <string name="security_deactivate_confirm">Xác nhận</string>
+    <string name="ocr_pick_cancelled">Đã hủy chọn ảnh</string>
+    <string name="ocr_camera_granted">Đã cấp quyền Camera</string>
+    <string name="ocr_camera_denied_use_gallery">Bạn có thể chọn ảnh hóa đơn sẵn có từ Thư viện</string>
+    <string name="ocr_camera_permission_needed">Vui lòng cấp quyền Camera hoặc chọn ảnh từ Thư viện</string>
 </resources>

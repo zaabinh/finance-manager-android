@@ -7,9 +7,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.core.ui.SheetDialog;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.databinding.SheetCategoryBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 
@@ -24,13 +26,15 @@ public final class CategorySheet {
 
     private CategorySheet(AppCompatActivity host, TransactionType initial, Listener listener) {
         type = initial == TransactionType.INCOME ? TransactionType.INCOME : TransactionType.EXPENSE;
-        View content = LayoutInflater.from(host).inflate(R.layout.sheet_category, null);
+        View content = SheetCategoryBinding.inflate(LayoutInflater.from(host)).getRoot();
+        // form_category_fields, sheet_header and sheet_form_actions are included without an android:id, so
+        // ViewBinding does not expose their views.
         ((TextView) content.findViewById(R.id.tvSheetTitle)).setText(R.string.sheet_category_title);
         content.findViewById(R.id.btnTypeTransfer).setVisibility(View.GONE);
         EditText name = content.findViewById(R.id.etCategoryName);
         MaterialButton expense = content.findViewById(R.id.btnTypeExpense), income = content.findViewById(R.id.btnTypeIncome);
-        appearance = new CategoryAppearance(host, content.findViewById(R.id.rvIconPicker),
-                content.findViewById(R.id.rvColorPicker), type, null, null);
+        appearance = new CategoryAppearance(host, content.<RecyclerView>findViewById(R.id.rvIconPicker),
+                content.<RecyclerView>findViewById(R.id.rvColorPicker), type, null, null);
         Runnable showType = () -> {
             expense.setChecked(type == TransactionType.EXPENSE); income.setChecked(type == TransactionType.INCOME);
         };

@@ -47,6 +47,7 @@
 
     <!-- Main Outer White Story Card -->
     <ScrollView
+        android:id="@+id/scrollAnalytics"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -785,5 +786,40 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
+
+    <!-- Not-connected state (real flavors): shown instead of every chart and figure -->
+    <LinearLayout
+        android:id="@+id/layoutNotConnected"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_32"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <TextView
+            android:id="@+id/tvNotConnectedTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/analytics_not_connected_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_title_section"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvNotConnectedBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_8"
+            android:gravity="center"
+            android:text="@string/analytics_not_connected_body"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_body_secondary" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

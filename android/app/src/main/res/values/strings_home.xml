@@ -54,4 +54,7 @@
     <string name="home_create_budget">Tạo ngân sách &gt;</string>
     <string name="hidden_balance">••••••••</string>
     <string name="hidden_amount">••••••</string>
+    <string name="greeting_default">Chào bạn</string>
+    <string name="home_amount_placeholder">–</string>
+    <string name="home_budget_title">Ngân sách tháng này</string>
 </resources>

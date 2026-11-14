@@ -20,6 +20,7 @@ import androidx.core.splashscreen.SplashScreen;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthLoginBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
@@ -30,6 +31,8 @@ import com.example.fintrack.app.home.ui.HomeDashboardActivity;
  * Màn hình đăng nhập người dùng.
  */
 public class LoginActivity extends AppCompatActivity {
+
+    private ActivityAuthLoginBinding binding;
 
     // UI Elements
     private EditText etUsernameOrEmail;
@@ -60,7 +63,8 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_auth_login);
+        binding = ActivityAuthLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         if (savedInstanceState != null)
             pendingVerificationEmail = savedInstanceState.getString(KEY_PENDING_VERIFICATION_EMAIL);
 
@@ -78,12 +82,12 @@ public class LoginActivity extends AppCompatActivity {
      * Ánh xạ các View từ XML layout
      */
     private void initViews() {
-        etUsernameOrEmail = findViewById(R.id.etUsernameOrEmail);
-        etPassword = findViewById(R.id.etPassword);
-        ivTogglePassword = findViewById(R.id.ivTogglePassword);
-        tvForgotPassword = findViewById(R.id.tvForgotPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-        tvSignUp = findViewById(R.id.tvSignUp);
+        etUsernameOrEmail = binding.etUsernameOrEmail;
+        etPassword = binding.etPassword;
+        ivTogglePassword = binding.ivTogglePassword;
+        tvForgotPassword = binding.tvForgotPassword;
+        btnLogin = binding.btnLogin;
+        tvSignUp = binding.tvSignUp;
     }
 
     /**
@@ -254,7 +258,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        boolean rememberMe = ((android.widget.CheckBox) findViewById(R.id.cbRememberMe)).isChecked();
+        boolean rememberMe = binding.cbRememberMe.isChecked();
         authViewModel.login(usernameOrEmail, password, rememberMe);
     }
 }

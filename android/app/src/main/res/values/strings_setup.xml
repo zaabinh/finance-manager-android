@@ -72,4 +72,6 @@
     <string name="summary_default_wallet">Ví mặc định</string>
     <string name="summary_daily_reminder">Nhắc nhớ hằng ngày</string>
     <string name="btn_enter_app">Vào ứng dụng</string>
+    <string name="notif_permission_granted">Đã cấp quyền Thông báo</string>
+    <string name="notif_permission_denied">Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.</string>
 </resources>

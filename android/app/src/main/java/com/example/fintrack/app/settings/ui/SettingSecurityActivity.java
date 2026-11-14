@@ -8,14 +8,13 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySettingSecurityBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.auth.util.PasswordValidator;
@@ -33,6 +32,8 @@ import java.util.Objects;
  */
 public class SettingSecurityActivity extends AppCompatActivity {
 
+    private ActivitySettingSecurityBinding binding;
+
     private EditText etCurrentPassword;
     private EditText etNewPassword;
     private EditText etConfirmPassword;
@@ -43,7 +44,8 @@ public class SettingSecurityActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting_security);
+        binding = ActivitySettingSecurityBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
         userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
@@ -54,10 +56,10 @@ public class SettingSecurityActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        etCurrentPassword = findViewById(R.id.etCurrentPassword);
-        etNewPassword = findViewById(R.id.etNewPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        btnChangePassword = findViewById(R.id.btnChangePassword);
+        etCurrentPassword = binding.etCurrentPassword;
+        etNewPassword = binding.etNewPassword;
+        etConfirmPassword = binding.etConfirmPassword;
+        btnChangePassword = binding.btnChangePassword;
     }
 
     private void setupObservers() {
@@ -71,7 +73,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             } else if (resource.getStatus() == Resource.Status.ERROR) {
                 // Đăng xuất local vẫn được thực hiện, nhưng thông báo rõ trạng thái server
                 String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.msg_logged_out_device);
-                Toast.makeText(this, "Đã đăng xuất thiết bị local. (" + msg + ")", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.security_logout_local_with_error, msg), Toast.LENGTH_LONG).show();
                 redirectToLogin();
             }
         });
@@ -81,52 +83,44 @@ public class SettingSecurityActivity extends AppCompatActivity {
             Resource<Void> resource = event == null ? null : event.getContentIfNotHandled();
             if (resource == null) return;
             if (resource.getStatus() == Resource.Status.SUCCESS) {
-                Toast.makeText(this, "Đã vô hiệu hóa tài khoản thành công.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.security_deactivated, Toast.LENGTH_LONG).show();
                 redirectToLogin();
             } else if (resource.getStatus() == Resource.Status.ERROR) {
-                String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : "Vô hiệu hóa tài khoản thất bại";
+                String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.security_deactivate_failed);
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void setupListeners() {
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
-
-        TextView btnLogoutThisDevice = findViewById(R.id.btnLogoutThisDevice);
-        TextView btnDeleteAccount = findViewById(R.id.btnDeleteAccount);
+        binding.btnBack.setOnClickListener(v -> finish());
 
         btnChangePassword.setOnClickListener(v -> handleChangePassword());
 
-        if (btnLogoutThisDevice != null) {
-            btnLogoutThisDevice.setOnClickListener(v -> confirmAction(
-                    getString(R.string.logout_this_device),
-                    getString(R.string.msg_logged_out_device),
-                    () -> authViewModel.logout()
-            ));
-        }
+        binding.btnLogoutThisDevice.setOnClickListener(v -> confirmAction(
+                getString(R.string.logout_this_device),
+                getString(R.string.msg_logged_out_device),
+                () -> authViewModel.logout()
+        ));
 
-        if (btnDeleteAccount != null) {
-            btnDeleteAccount.setOnClickListener(v -> promptPasswordForDeactivation());
-        }
+        binding.btnDeleteAccount.setOnClickListener(v -> promptPasswordForDeactivation());
     }
 
     /** Mở Dialog yêu cầu nhập mật khẩu hiện tại trước khi vô hiệu hóa tài khoản */
     private void promptPasswordForDeactivation() {
         final EditText etPasswordInput = new EditText(this);
-        etPasswordInput.setHint("Nhập mật khẩu hiện tại");
+        etPasswordInput.setHint(R.string.security_current_password_hint);
         etPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
         int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
         etPasswordInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Xác nhận vô hiệu hóa tài khoản")
-                .setMessage("Tài khoản của bạn sẽ bị vô hiệu hóa. Nhập mật khẩu hiện tại để xác nhận:")
+                .setTitle(R.string.security_deactivate_title)
+                .setMessage(R.string.security_deactivate_message)
                 .setView(etPasswordInput)
                 .setNegativeButton(R.string.btn_cancel, null)
-                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                .setPositiveButton(R.string.security_deactivate_confirm, (dialog, which) -> {
                     String password = etPasswordInput.getText().toString().trim();
                     if (TextUtils.isEmpty(password)) {
                         Toast.makeText(this, R.string.error_required_field, Toast.LENGTH_SHORT).show();

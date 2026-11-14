@@ -35,6 +35,8 @@ import java.util.function.Consumer;
 /** Shared lifecycle/error handling. All disk work stays in the repository executor. */
 public final class FinanceUi {
     private FinanceUi() { }
+    /** VISIBLE when on, GONE otherwise. */
+    public static void visible(View view, boolean on) { view.setVisibility(on ? View.VISIBLE : View.GONE); }
     public static String money(long centsOrUnits) {
         return String.format(Locale.ROOT, "%,d đ", centsOrUnits).replace(',', '.');
     }

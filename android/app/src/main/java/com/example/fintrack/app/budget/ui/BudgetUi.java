@@ -8,6 +8,7 @@ import com.example.fintrack.app.finance.domain.WalletType;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.fintrack.R;
@@ -47,12 +48,12 @@ final class BudgetUi {
     /**
      * Localised text for budget error codes. Shortfall shows the inline panel instead of a toast (returns null).
      */
-    static CharSequence failure(Activity activity, FinanceBook book, FinanceViewModel.Command command) {
+    static CharSequence failure(Activity activity, FinanceBook book, FinanceViewModel.Command command, View panel) {
         String code = command.failure == null ? null : command.failure.code;
         if (FinanceBook.BUDGET_EXCEEDS_AVAILABLE_BALANCE.equals(code)) {
             long shortfall = command.failure.shortfallMinor == null ? 0 : command.failure.shortfallMinor;
-            if (activity.findViewById(R.id.panelShortfall) == null) return activity.getString(R.string.budget_shortfall, FinanceUi.money(shortfall));
-            showShortfall(activity, book, shortfall);
+            if (panel == null) return activity.getString(R.string.budget_shortfall, FinanceUi.money(shortfall));
+            showShortfall(activity, book, shortfall, panel);
             return null;
         }
         if (FinanceBook.BUDGET_MONTH_MISSING.equals(code)) return activity.getString(R.string.budget_month_missing);
@@ -62,12 +63,13 @@ final class BudgetUi {
         return null;
     }
 
-    static void hideShortfall(Activity activity) { activity.findViewById(R.id.panelShortfall).setVisibility(android.view.View.GONE); }
+    static void hideShortfall(View panel) { panel.setVisibility(View.GONE); }
 
-    static void showShortfall(Activity activity, FinanceBook book, long shortfall) {
-        activity.findViewById(R.id.panelShortfall).setVisibility(android.view.View.VISIBLE);
-        ((TextView) activity.findViewById(R.id.tvShortfall)).setText(activity.getString(R.string.budget_shortfall, FinanceUi.money(shortfall)));
-        activity.findViewById(R.id.btnTransferFromSavings).setOnClickListener(view -> transferFromSavings(activity, book, shortfall));
+    /** panel is the view_budget_shortfall root (included without an android:id, so it comes from the screen root). */
+    static void showShortfall(Activity activity, FinanceBook book, long shortfall, View panel) {
+        panel.setVisibility(View.VISIBLE);
+        ((TextView) panel.findViewById(R.id.tvShortfall)).setText(activity.getString(R.string.budget_shortfall, FinanceUi.money(shortfall)));
+        panel.findViewById(R.id.btnTransferFromSavings).setOnClickListener(view -> transferFromSavings(activity, book, shortfall));
     }
 
     /** Opens the transfer form prefilled: source = the active SAVINGS wallet with the largest balance, amount = shortfall. */

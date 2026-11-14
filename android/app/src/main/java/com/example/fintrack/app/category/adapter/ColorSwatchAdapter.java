@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.fintrack.R;
+import com.example.fintrack.databinding.ItemColorSwatchBinding;
 import java.util.List;
 
 /** Round colour swatches; the selected one shows a check and ring. Users never see hex codes. */
@@ -26,7 +26,7 @@ public class ColorSwatchAdapter extends RecyclerView.Adapter<ColorSwatchAdapter.
     public void setSelected(String hex) { selected = hex; notifyDataSetChanged(); }
 
     @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_color_swatch, parent, false));
+        return new Holder(ItemColorSwatchBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override public void onBindViewHolder(@NonNull Holder h, int position) {
@@ -44,10 +44,9 @@ public class ColorSwatchAdapter extends RecyclerView.Adapter<ColorSwatchAdapter.
 
     static final class Holder extends RecyclerView.ViewHolder {
         final View touch, color, ring, check;
-        Holder(View v) {
-            super(v);
-            touch = v.findViewById(R.id.flSwatch); color = v.findViewById(R.id.viewSwatchColor);
-            ring = v.findViewById(R.id.viewSwatchRing); check = v.findViewById(R.id.ivSwatchCheck);
+        Holder(ItemColorSwatchBinding b) {
+            super(b.getRoot());
+            touch = b.flSwatch; color = b.viewSwatchColor; ring = b.viewSwatchRing; check = b.ivSwatchCheck;
         }
     }
 }

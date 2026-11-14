@@ -7,15 +7,13 @@ import com.example.fintrack.app.finance.domain.MonthlyBudget;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.databinding.ItemBudgetBinding;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import java.util.List;
 
@@ -31,7 +29,7 @@ public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudg
 
     @NonNull @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
-        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_budget, parent, false));
+        return new Holder(ItemBudgetBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
@@ -42,19 +40,20 @@ public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudg
         long total = book.monthlyTotal(monthly);
         int count = book.categoryBudgets(monthly).size();
 
-        holder.text(R.id.tvBudgetCategoryName, FinanceUi.monthLabel(monthly.month).toString());
-        holder.text(R.id.tvBudgetPeriod, context.getResources().getQuantityString(R.plurals.monthly_budget_category_count, count, count));
-        holder.text(R.id.tvBudgetPercentage, usage.percentage + "%");
-        holder.text(R.id.tvBudgetSpent, FinanceUi.money(usage.spent));
-        holder.text(R.id.tvBudgetLimit, "/ " + FinanceUi.money(total));
-        holder.text(R.id.tvBudgetStatus, context.getString(usage.exceeded ? R.string.finance_budget_exceeded
+        ItemBudgetBinding row = holder.binding;
+        row.tvBudgetCategoryName.setText(FinanceUi.monthLabel(monthly.month));
+        row.tvBudgetPeriod.setText(context.getResources().getQuantityString(R.plurals.monthly_budget_category_count, count, count));
+        row.tvBudgetPercentage.setText(usage.percentage + "%");
+        row.tvBudgetSpent.setText(FinanceUi.money(usage.spent));
+        row.tvBudgetLimit.setText("/ " + FinanceUi.money(total));
+        row.tvBudgetStatus.setText(context.getString(usage.exceeded ? R.string.finance_budget_exceeded
                 : usage.warning ? R.string.finance_budget_warning : R.string.finance_budget_remaining,
                 FinanceUi.money(usage.remaining < 0 ? -usage.remaining : usage.remaining)));
-        LinearProgressIndicator progress = holder.itemView.findViewById(R.id.progressBudget);
+        LinearProgressIndicator progress = row.progressBudget;
         progress.setProgress(usage.progress);
         progress.setIndicatorColor(context.getColor(usage.exceeded ? R.color.status_error
                 : usage.warning ? R.color.status_warning : R.color.color_primary));
-        ((ImageView) holder.itemView.findViewById(R.id.ivBudgetCategoryIcon)).setImageResource(R.drawable.ic_calendar);
+        row.ivBudgetCategoryIcon.setImageResource(R.drawable.ic_calendar);
         holder.itemView.setOnClickListener(view -> view.getContext().startActivity(new Intent(view.getContext(), BudgetDetailActivity.class)
                 .putExtra(BudgetDetailActivity.EXTRA_MONTHLY_ID, monthly.id)));
     }
@@ -62,7 +61,7 @@ public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudg
     @Override public int getItemCount() { return items.size(); }
 
     static final class Holder extends RecyclerView.ViewHolder {
-        Holder(View view) { super(view); }
-        void text(int id, String value) { ((TextView) itemView.findViewById(id)).setText(value); }
+        final ItemBudgetBinding binding;
+        Holder(ItemBudgetBinding binding) { super(binding.getRoot()); this.binding = binding; }
     }
 }

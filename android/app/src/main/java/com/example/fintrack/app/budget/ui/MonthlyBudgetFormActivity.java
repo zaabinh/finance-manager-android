@@ -1,5 +1,6 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.budget.domain.BudgetFormValidator;
 import com.example.fintrack.app.finance.domain.Budget;
 import com.example.fintrack.app.finance.domain.Category;
 import com.example.fintrack.app.finance.domain.FinanceBook;
@@ -8,21 +9,17 @@ import com.example.fintrack.app.finance.domain.FinanceFailure;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
+import com.example.fintrack.databinding.ActivityMonthlyBudgetFormBinding;
+import com.example.fintrack.databinding.ItemMonthlyBudgetRowBinding;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -36,16 +33,23 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
         return com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS;
     }
 
+    private ActivityMonthlyBudgetFormBinding binding;
+    // view_budget_shortfall is included without an android:id, so ViewBinding does not expose it.
+    private View shortfallPanel;
     private String id, month;
     private final ArrayList<String> categories = new ArrayList<>();
     private final ArrayList<String> limits = new ArrayList<>();
     private boolean monthChosen;
 
-    @Override protected int layout() { return R.layout.activity_monthly_budget_form; }
+    @Override protected View contentView() {
+        binding = ActivityMonthlyBudgetFormBinding.inflate(getLayoutInflater());
+        shortfallPanel = binding.getRoot().findViewById(R.id.panelShortfall);
+        return binding.getRoot();
+    }
 
     @Override
     protected void bind(Bundle saved) {
-        toolbar(R.id.toolbarMonthlyBudgetForm);
+        binding.toolbarMonthlyBudgetForm.setNavigationOnClickListener(view -> finish());
         id = UUID.randomUUID().toString();
         if (getIntent().hasExtra("month")) { month = getIntent().getStringExtra("month"); monthChosen = true; }
         if (saved != null) {
@@ -54,11 +58,11 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
             ArrayList<String> c = saved.getStringArrayList(KEY_CATEGORIES), l = saved.getStringArrayList(KEY_LIMITS);
             if (c != null && l != null && c.size() == l.size()) { categories.addAll(c); limits.addAll(l); }
         }
-        findViewById(R.id.fieldMonthlyBudgetPeriod).setOnClickListener(view -> FinanceUi.month(this, currentMonth(),
-                value -> { month = value; monthChosen = true; BudgetUi.hideShortfall(this); render(); }));
-        findViewById(R.id.btnAddBudgetRow).setOnClickListener(view -> BudgetUi.pickExpenseCategory(this, book, new HashSet<>(categories),
+        binding.fieldMonthlyBudgetPeriod.setOnClickListener(view -> FinanceUi.month(this, currentMonth(),
+                value -> { month = value; monthChosen = true; BudgetUi.hideShortfall(shortfallPanel); render(); }));
+        binding.btnAddBudgetRow.setOnClickListener(view -> BudgetUi.pickExpenseCategory(this, book, new HashSet<>(categories),
                 category -> { categories.add(category); limits.add(""); rebuildRows(); }));
-        findViewById(R.id.btnSaveMonthlyBudget).setOnClickListener(view -> save());
+        binding.btnSaveMonthlyBudget.setOnClickListener(view -> save());
         rebuildRows();
     }
 
@@ -71,41 +75,36 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
     protected void render() {
         if (book == null) return;
         if (!monthChosen) month = book.monthAt(System.currentTimeMillis());
-        text(R.id.tvMonthlyBudgetPeriodValue, FinanceUi.monthLabel(currentMonth()));
+        binding.tvMonthlyBudgetPeriodValue.setText(FinanceUi.monthLabel(currentMonth()));
         // Only refresh category names; rebuilding would drop focus while the user types.
-        LinearLayout container = findViewById(R.id.containerBudgetRows);
-        for (int i = 0; i < container.getChildCount() && i < categories.size(); i++) {
+        for (int i = 0; i < binding.containerBudgetRows.getChildCount() && i < categories.size(); i++) {
             Category category = book.category(categories.get(i));
-            ((TextView) container.getChildAt(i).findViewById(R.id.tvRowCategory)).setText(category == null
-                    ? getString(R.string.transaction_category_placeholder) : category.name);
+            ItemMonthlyBudgetRowBinding row = ItemMonthlyBudgetRowBinding.bind(binding.containerBudgetRows.getChildAt(i));
+            row.tvRowCategory.setText(category == null ? getString(R.string.transaction_category_placeholder) : category.name);
         }
     }
 
     /** Rows are rebuilt from the saved lists so input survives rotation and book refreshes. */
     private void rebuildRows() {
-        LinearLayout container = findViewById(R.id.containerBudgetRows);
-        container.removeAllViews();
-        LayoutInflater inflater = LayoutInflater.from(this);
+        binding.containerBudgetRows.removeAllViews();
         for (int i = 0; i < categories.size(); i++) {
             final int index = i;
-            View row = inflater.inflate(R.layout.item_monthly_budget_row, container, false);
+            ItemMonthlyBudgetRowBinding row = ItemMonthlyBudgetRowBinding.inflate(getLayoutInflater(), binding.containerBudgetRows, false);
             Category category = book == null ? null : book.category(categories.get(i));
-            ((TextView) row.findViewById(R.id.tvRowCategory)).setText(category == null
-                    ? getString(R.string.transaction_category_placeholder) : category.name);
-            EditText limit = row.findViewById(R.id.etRowLimit);
-            com.example.fintrack.app.core.ui.MoneyInput.attach(limit);
-            limit.setText(limits.get(i));
-            limit.addTextChangedListener(new TextWatcher() {
+            row.tvRowCategory.setText(category == null ? getString(R.string.transaction_category_placeholder) : category.name);
+            com.example.fintrack.app.core.ui.MoneyInput.attach(row.etRowLimit);
+            row.etRowLimit.setText(limits.get(i));
+            row.etRowLimit.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
                 @Override public void afterTextChanged(Editable s) {
-                    if (index < limits.size()) { limits.set(index, s.toString()); BudgetUi.hideShortfall(MonthlyBudgetFormActivity.this); updateTotal(); }
+                    if (index < limits.size()) { limits.set(index, s.toString()); BudgetUi.hideShortfall(shortfallPanel); updateTotal(); }
                 }
             });
-            row.findViewById(R.id.btnRemoveRow).setOnClickListener(view -> {
-                categories.remove(index); limits.remove(index); BudgetUi.hideShortfall(this); rebuildRows();
+            row.btnRemoveRow.setOnClickListener(view -> {
+                categories.remove(index); limits.remove(index); BudgetUi.hideShortfall(shortfallPanel); rebuildRows();
             });
-            container.addView(row);
+            binding.containerBudgetRows.addView(row.getRoot());
         }
         updateTotal();
     }
@@ -117,41 +116,38 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
             try { total = Math.addExact(total, FinanceBook.parseAmount(value.trim())); }
             catch (FinanceFailure | ArithmeticException ignored) { }
         }
-        text(R.id.tvMonthlyBudgetTotal, getString(R.string.monthly_budget_live_total, FinanceUi.money(total)));
+        binding.tvMonthlyBudgetTotal.setText(getString(R.string.monthly_budget_live_total, FinanceUi.money(total)));
     }
 
     private void save() {
         if (book == null || model.busy()) return;
-        if (categories.isEmpty()) { Toast.makeText(this, R.string.monthly_budget_category_required, Toast.LENGTH_SHORT).show(); return; }
-        if (book.monthlyBudgetFor(currentMonth()) != null) { Toast.makeText(this, R.string.monthly_budget_exists, Toast.LENGTH_SHORT).show(); return; }
-        List<Budget> lines = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        LinearLayout container = findViewById(R.id.containerBudgetRows);
-        for (int i = 0; i < categories.size(); i++) {
-            long limit;
-            try { limit = FinanceBook.parseAmount(limits.get(i).trim()); }
-            catch (FinanceFailure error) {
-                Toast.makeText(this, R.string.finance_amount_error, Toast.LENGTH_SHORT).show();
-                container.getChildAt(i).findViewById(R.id.etRowLimit).requestFocus(); return;
+        BudgetFormValidator.Result result = BudgetFormValidator.monthly(currentMonth(), book.monthlyBudgetFor(currentMonth()) != null,
+                categories, limits, () -> UUID.randomUUID().toString());
+        if (!result.valid()) {
+            switch (result.error) {
+                case NO_CATEGORIES: Toast.makeText(this, R.string.monthly_budget_category_required, Toast.LENGTH_SHORT).show(); break;
+                case MONTH_EXISTS: Toast.makeText(this, R.string.monthly_budget_exists, Toast.LENGTH_SHORT).show(); break;
+                default:
+                    Toast.makeText(this, R.string.finance_amount_error, Toast.LENGTH_SHORT).show();
+                    ItemMonthlyBudgetRowBinding.bind(binding.containerBudgetRows.getChildAt(result.row)).etRowLimit.requestFocus();
             }
-            if (!seen.add(categories.get(i))) continue;
-            lines.add(new Budget(UUID.randomUUID().toString(), categories.get(i), currentMonth(), limit));
+            return;
         }
-        BudgetUi.hideShortfall(this);
-        model.change(FinanceAction.monthlyBudget(id, currentMonth(), lines), true);
+        BudgetUi.hideShortfall(shortfallPanel);
+        model.change(FinanceAction.monthlyBudget(id, currentMonth(), result.lines), true);
     }
 
     @Override
     protected CharSequence failure(FinanceViewModel.Command command) {
         String code = command.failure == null ? null : command.failure.code;
         if (FinanceBook.BUDGET_PERIOD_CONFLICT.equals(code)) return getString(R.string.monthly_budget_exists);
-        CharSequence text = BudgetUi.failure(this, book, command);
+        CharSequence text = BudgetUi.failure(this, book, command, shortfallPanel);
         // Shortfall is shown inline (text null); the form keeps all input.
         return text != null || FinanceBook.BUDGET_EXCEEDS_AVAILABLE_BALANCE.equals(code) ? text : super.failure(command);
     }
 
     @Override
-    protected void loading(boolean loading) { FinanceUi.progress((android.widget.Button) findViewById(R.id.btnSaveMonthlyBudget), loading); }
+    protected void loading(boolean loading) { FinanceUi.progress(binding.btnSaveMonthlyBudget, loading); }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {

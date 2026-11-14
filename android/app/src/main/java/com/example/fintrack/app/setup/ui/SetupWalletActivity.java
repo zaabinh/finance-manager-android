@@ -11,7 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -25,7 +24,10 @@ import com.example.fintrack.app.wallet.ui.WalletSheet;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.fintrack.databinding.DialogMoneyInputBinding;
+import com.example.fintrack.databinding.ItemPendingWalletBinding;
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySetupWalletBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.FirstSetupRequest;
@@ -35,6 +37,8 @@ import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
 // Màn hình thiết lập ví tiền/tài khoản (SetupWalletActivity) trong luồng cài đặt
 public class SetupWalletActivity extends AppCompatActivity {
+
+    private ActivitySetupWalletBinding binding;
 
     // Khai báo các thành phần giao diện (UI)
     private ImageView ivBack;          // Nút Quay lại
@@ -54,7 +58,8 @@ public class SetupWalletActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setup_wallet); // Gắn giao diện XML vào Activity
+        binding = ActivitySetupWalletBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot()); // Gắn giao diện XML vào Activity
 
         // Lấy dữ liệu (Tên và Giờ nhắc nhở) truyền từ các màn hình trước sang
         if (getIntent() != null) {
@@ -86,19 +91,19 @@ public class SetupWalletActivity extends AppCompatActivity {
 
     // Cập nhật thẻ Tiền mặt và danh sách ví chờ lưu
     private void renderWallets() {
-        TextView balance = findViewById(R.id.tvCashBalance);
-        TextView desc = findViewById(R.id.tvCashDesc);
+        TextView balance = binding.tvCashBalance;
+        TextView desc = binding.tvCashDesc;
         balance.setText(pending.hasCash() ? FinanceUi.money(pending.cashBalance()) : getString(R.string.setup_cash_set_balance));
         desc.setText(pending.hasCash() ? R.string.setup_cash_confirmed : R.string.wallet_default_desc);
-        LinearLayout list = findViewById(R.id.llPendingWallets);
+        LinearLayout list = binding.llPendingWallets;
         list.removeAllViews();
         for (PendingWallet wallet : pending.others()) {
-            View row = LayoutInflater.from(this).inflate(R.layout.item_pending_wallet, list, false);
-            ((TextView) row.findViewById(R.id.tvPendingName)).setText(wallet.name);
-            ((TextView) row.findViewById(R.id.tvPendingDesc)).setText(
+            ItemPendingWalletBinding row = ItemPendingWalletBinding.inflate(getLayoutInflater(), list, false);
+            row.tvPendingName.setText(wallet.name);
+            row.tvPendingDesc.setText(
                     getString(R.string.setup_wallet_pending_desc, getString(typeLabel(wallet.walletType))));
-            ((TextView) row.findViewById(R.id.tvPendingBalance)).setText(FinanceUi.money(wallet.openingBalance));
-            list.addView(row);
+            row.tvPendingBalance.setText(FinanceUi.money(wallet.openingBalance));
+            list.addView(row.getRoot());
         }
     }
 
@@ -110,11 +115,12 @@ public class SetupWalletActivity extends AppCompatActivity {
 
     // Hộp thoại nhập số dư Tiền mặt; xác nhận thì thêm vào danh sách ví chờ lưu
     private void showCashDialog() {
-        View content = LayoutInflater.from(this).inflate(R.layout.dialog_money_input, null);
-        EditText input = content.findViewById(R.id.etDialogAmount);
-        MoneyInput.attach(input, content.findViewById(R.id.chipGroupAmountSuggestions));
+        DialogMoneyInputBinding content = DialogMoneyInputBinding.inflate(getLayoutInflater());
+        EditText input = content.etDialogAmount;
+        // The <include> in dialog_money_input has no id, so the chip group is not on the binding.
+        MoneyInput.attach(input, content.getRoot().findViewById(R.id.chipGroupAmountSuggestions));
         if (pending.hasCash() && pending.cashBalance() > 0) input.setText(MoneyFormat.group(pending.cashBalance()));
-        new MaterialAlertDialogBuilder(this).setTitle(R.string.setup_cash_dialog_title).setView(content)
+        new MaterialAlertDialogBuilder(this).setTitle(R.string.setup_cash_dialog_title).setView(content.getRoot())
                 .setNegativeButton(R.string.btn_cancel, null)
                 .setPositiveButton(R.string.btn_save, (dialog, which) -> {
                     String digits = MoneyFormat.digits(input.getText());
@@ -125,9 +131,9 @@ public class SetupWalletActivity extends AppCompatActivity {
 
     // Ánh xạ ID từ file XML sang biến Java
     private void initViews() {
-        ivBack = findViewById(R.id.ivBack);
-        tvAddWallet = findViewById(R.id.tvAddWallet);
-        btnCompleteSetup = findViewById(R.id.btnCompleteSetup);
+        ivBack = binding.ivBack;
+        tvAddWallet = binding.tvAddWallet;
+        btnCompleteSetup = binding.btnCompleteSetup;
     }
 
     // Thiết lập xử lý sự kiện bấm cho các nút
@@ -142,7 +148,7 @@ public class SetupWalletActivity extends AppCompatActivity {
             renderWallets();
             sheet.dismiss();
         }));
-        findViewById(R.id.cardCashWallet).setOnClickListener(v -> showCashDialog());
+        binding.cardCashWallet.setOnClickListener(v -> showCashDialog());
 
         // Nút Hoàn tất: gửi toàn bộ input của 3 bước trong một request
         btnCompleteSetup.setOnClickListener(v -> userViewModel.completeFirstSetup(buildRequest()));

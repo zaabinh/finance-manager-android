@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthVerifyEmailBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
@@ -37,6 +38,8 @@ public class VerifyEmailActivity extends AppCompatActivity {
     private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
     private static final long TIMER_DURATION_MS = 60000;
 
+    private ActivityAuthVerifyEmailBinding binding;
+
     // Các thành phần giao diện (4 ô nhập OTP, nút xác thực, chữ gửi lại mã)
     private EditText etOtp1, etOtp2, etOtp3, etOtp4;
     private Button btnVerify;
@@ -54,7 +57,8 @@ public class VerifyEmailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_verify_email);
+        binding = ActivityAuthVerifyEmailBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
@@ -85,12 +89,12 @@ public class VerifyEmailActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        etOtp1 = findViewById(R.id.etOtp1);
-        etOtp2 = findViewById(R.id.etOtp2);
-        etOtp3 = findViewById(R.id.etOtp3);
-        etOtp4 = findViewById(R.id.etOtp4);
-        btnVerify = findViewById(R.id.btnVerify);
-        tvResendOtp = findViewById(R.id.tvResendOtp);
+        etOtp1 = binding.etOtp1;
+        etOtp2 = binding.etOtp2;
+        etOtp3 = binding.etOtp3;
+        etOtp4 = binding.etOtp4;
+        btnVerify = binding.btnVerify;
+        tvResendOtp = binding.tvResendOtp;
     }
 
     /** Liên kết 4 ô nhập OTP để tự động chuyển focus qua lại khi nhập hoặc xóa */

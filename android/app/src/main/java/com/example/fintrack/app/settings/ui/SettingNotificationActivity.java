@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySettingNotificationBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
@@ -28,6 +29,8 @@ import java.util.Locale;
 public class SettingNotificationActivity extends AppCompatActivity {
     private static final int NOTIF_PERMISSION_CODE = 102;
     public static final int[] THRESHOLDS = {50, 60, 70, 80, 90, 100};
+
+    private ActivitySettingNotificationBinding binding;
 
     private SwitchMaterial switchNotifications;
     private SwitchMaterial switchDailyReminder;
@@ -45,11 +48,24 @@ public class SettingNotificationActivity extends AppCompatActivity {
     private int selectedThreshold = 80;
     private boolean settingsLoaded = false;
     private boolean saving = false;
+    private static final String STATE_LOADED = "state_loaded";
+    private static final String STATE_HOUR = "state_hour";
+    private static final String STATE_MINUTE = "state_minute";
+    private static final String STATE_THRESHOLD = "state_threshold";
+    // Set after rotation once the server values were shown: the replayed fetch result must not wipe the user's edits.
+    private boolean keepDraft = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting_notification);
+        binding = ActivitySettingNotificationBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_LOADED)) {
+            keepDraft = true;
+            selectedHour = savedInstanceState.getInt(STATE_HOUR, selectedHour);
+            selectedMinute = savedInstanceState.getInt(STATE_MINUTE, selectedMinute);
+            selectedThreshold = savedInstanceState.getInt(STATE_THRESHOLD, selectedThreshold);
+        }
         viewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
         initViews();
         btnSave.setEnabled(false);
@@ -59,20 +75,20 @@ public class SettingNotificationActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        switchNotifications = findViewById(R.id.switchNotifications);
-        switchDailyReminder = findViewById(R.id.switchDailyReminder);
-        switchLimitWarning = findViewById(R.id.switchLimitWarning);
-        switchBudgetWarning = findViewById(R.id.switchBudgetWarning);
-        switchOtherNotifications = findViewById(R.id.switchOtherNotifications);
-        layoutTimePickerRow = findViewById(R.id.layoutTimePickerRow);
-        rowBudgetThreshold = findViewById(R.id.rowBudgetThreshold);
-        btnSave = findViewById(R.id.btnSaveNotificationSettings);
-        tvReminderTime = findViewById(R.id.tvReminderTime);
-        tvBudgetThreshold = findViewById(R.id.tvBudgetThreshold);
+        switchNotifications = binding.switchNotifications;
+        switchDailyReminder = binding.switchDailyReminder;
+        switchLimitWarning = binding.switchLimitWarning;
+        switchBudgetWarning = binding.switchBudgetWarning;
+        switchOtherNotifications = binding.switchOtherNotifications;
+        layoutTimePickerRow = binding.layoutTimePickerRow;
+        rowBudgetThreshold = binding.rowBudgetThreshold;
+        btnSave = binding.btnSaveNotificationSettings;
+        tvReminderTime = binding.tvReminderTime;
+        tvBudgetThreshold = binding.tvBudgetThreshold;
     }
 
     private void setupListeners() {
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        binding.btnBack.setOnClickListener(v -> finish());
         switchNotifications.setOnCheckedChangeListener((button, checked) -> {
             updateEnabledState();
             if (button.isPressed() && checked) checkAndRequestNotificationPermission();
@@ -103,7 +119,13 @@ public class SettingNotificationActivity extends AppCompatActivity {
                 settingsLoaded = false;
                 btnSave.setEnabled(false);
             } else if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                apply(resource.getData());
+                if (keepDraft) {
+                    keepDraft = false;
+                    updateValues();
+                    updateEnabledState();
+                } else {
+                    apply(resource.getData());
+                }
                 settingsLoaded = true;
                 btnSave.setEnabled(!saving);
             } else {
@@ -199,6 +221,15 @@ public class SettingNotificationActivity extends AppCompatActivity {
         view.setAlpha(enabled ? 1f : 0.4f);
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_LOADED, settingsLoaded);
+        outState.putInt(STATE_HOUR, selectedHour);
+        outState.putInt(STATE_MINUTE, selectedMinute);
+        outState.putInt(STATE_THRESHOLD, selectedThreshold);
+    }
+
     private void showError(String message) {
         Toast.makeText(this, message == null ? getString(R.string.error_server) : message, Toast.LENGTH_LONG).show();
     }
@@ -217,9 +248,9 @@ public class SettingNotificationActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIF_PERMISSION_CODE) {
-            String message = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    ? "Đã cấp quyền Thông báo"
-                    : "Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.";
+            int message = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    ? R.string.notif_permission_granted
+                    : R.string.notif_permission_denied;
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }
     }

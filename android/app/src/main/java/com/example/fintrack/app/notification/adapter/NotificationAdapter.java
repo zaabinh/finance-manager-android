@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.fintrack.R;
+import com.example.fintrack.databinding.ItemNotificationBinding;
 import com.example.fintrack.app.notification.model.NotificationItem;
 
 import java.util.ArrayList;
@@ -42,8 +42,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notification, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(ItemNotificationBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
@@ -61,11 +60,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         private final TextView tvNotifTime;
         private final TextView tvNotifAmount;
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            tvNotifTitle = itemView.findViewById(R.id.tvNotifTitle);
-            tvNotifTime = itemView.findViewById(R.id.tvNotifTime);
-            tvNotifAmount = itemView.findViewById(R.id.tvNotifAmount);
+        ViewHolder(@NonNull ItemNotificationBinding binding) {
+            super(binding.getRoot());
+            tvNotifTitle = binding.tvNotifTitle;
+            tvNotifTime = binding.tvNotifTime;
+            tvNotifAmount = binding.tvNotifAmount;
         }
 
         public void bind(NotificationItem item, OnNotificationClickListener listener) {
