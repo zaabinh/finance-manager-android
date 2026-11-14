@@ -2,7 +2,7 @@
 <resources>
     <string name="voice_input_title">Nhập bằng giọng nói</string>
     <string name="voice_input_subtitle">Nói tự nhiên số tiền và nội dung thu chi của bạn</string>
-    <string name="voice_input_hint_example">Ví dụ: "Ăn trưa 45 nghìn" hoặc "Thu lương 15 triệu"</string>
+    <string name="voice_input_hint_example">Ví dụ: "Ăn trưa 45 nghìn", "Chi 50k cà phê" hoặc "Thu lương 15 triệu"</string>
     <string name="voice_state_idle">Chạm vào micro để nói</string>
     <string name="voice_state_listening">Đang lắng nghe bạn nói…</string>
     <string name="voice_state_processing">Đang phân tích giao dịch…</string>
@@ -14,8 +14,21 @@
     <string name="voice_amount_label">Số tiền:</string>
     <string name="voice_type_label">Loại giao dịch:</string>
     <string name="voice_note_label">Ghi chú / Khoản chi:</string>
+    <string name="voice_category_label">Danh mục</string>
+    <string name="voice_category_suggested_label">Danh mục (tự động gợi ý)</string>
+    <string name="voice_wallet_label">Ví thanh toán</string>
+    <string name="voice_source_wallet_label">Từ ví</string>
+    <string name="voice_destination_wallet_label">Đến ví</string>
     <string name="voice_btn_confirm">Xác nhận &amp; Lưu giao dịch</string>
     <string name="voice_btn_edit_more">Chỉnh sửa chi tiết</string>
     <string name="voice_btn_retry">Nói lại</string>
+    <string name="voice_btn_manual">Nhập thủ công</string>
     <string name="quick_action_voice">Giọng nói</string>
+    <string name="voice_error_no_match">Không nghe rõ giọng nói. Vui lòng nói to và rõ hơn!</string>
+    <string name="voice_error_network">Không có kết nối mạng để nhận diện giọng nói.</string>
+    <string name="voice_error_audio">Lỗi thu âm từ Micro. Vui lòng kiểm tra thiết bị và thử lại.</string>
+    <string name="voice_error_not_available">Thiết bị chưa bật hoặc không hỗ trợ dịch vụ nhận diện giọng nói.</string>
+    <string name="voice_amount_required">Vui lòng nhập số tiền hợp lệ lớn hơn 0.</string>
+    <string name="voice_wallet_required">Vui lòng chọn ví thanh toán.</string>
+    <string name="voice_destination_same_error">Ví nguồn và ví đích không được trùng nhau.</string>
 </resources>

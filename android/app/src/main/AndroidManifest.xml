@@ -9,6 +9,13 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Truy van dich vu Nhan dien giong noi tren Android 11+ -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:name=".app.FintrackApplication"
         android:allowBackup="true"

@@ -67,7 +67,7 @@
                 <FrameLayout
                     android:layout_width="220dp"
                     android:layout_height="220dp"
-                    android:layout_marginTop="@dimen/spacing_32">
+                    android:layout_marginTop="@dimen/spacing_24">
 
                     <!-- Outer Animated Pulse Ring -->
                     <View
@@ -123,6 +123,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_16"
+                    android:gravity="center"
                     android:text="@string/voice_state_idle"
                     android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
@@ -140,6 +141,52 @@
                     android:visibility="gone"
                     tools:text="&quot;Ăn trưa 45 nghìn&quot;"
                     tools:visibility="visible" />
+
+                <!-- Error fallback actions container (Shown on recognition error) -->
+                <LinearLayout
+                    android:id="@+id/layoutVoiceError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/tvVoiceErrorMessage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/voice_error_no_match"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/status_error" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnRetryOnError"
+                            style="@style/Widget.App.Button.Secondary"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_8"
+                            android:layout_weight="1"
+                            android:text="@string/voice_btn_retry" />
+
+                        <Button
+                            android:id="@+id/btnManualFromVoice"
+                            style="@style/Widget.App.Button.Primary"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/spacing_8"
+                            android:layout_weight="1"
+                            android:text="@string/voice_btn_manual" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <!-- Permission Rationale Card (if mic permission not granted) -->
                 <LinearLayout
@@ -172,7 +219,7 @@
                     android:id="@+id/cardRecognitionResult"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_24"
+                    android:layout_marginTop="@dimen/spacing_20"
                     android:background="@drawable/bg_card_white"
                     android:orientation="vertical"
                     android:padding="@dimen/spacing_16"
@@ -185,7 +232,7 @@
                         android:text="@string/voice_result_title"
                         android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
-                    <!-- Type Selector -->
+                    <!-- Type Selector (Chi tiêu, Thu nhập, Chuyển khoản) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/segmented_height"
@@ -205,6 +252,12 @@
                             style="@style/Widget.App.Button.Segment"
                             android:layout_marginStart="@dimen/spacing_4"
                             android:text="@string/transaction_type_income" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTypeTransfer"
+                            style="@style/Widget.App.Button.Segment"
+                            android:layout_marginStart="@dimen/spacing_4"
+                            android:text="@string/transaction_type_transfer" />
                     </LinearLayout>
 
                     <!-- Amount Field -->
@@ -252,6 +305,92 @@
                         android:singleLine="true"
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
 
+                    <!-- Category Selector Row (Hidden for TRANSFER) -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultCategory"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12">
+
+                        <ImageView
+                            android:id="@+id/ivResultCategoryIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_category" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultCategoryLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_category_suggested_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultCategoryValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transaction_category_placeholder"
+                                tools:text="Ăn uống" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
+                    <!-- Source Wallet Selector Row -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultWallet"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12">
+
+                        <ImageView
+                            android:id="@+id/ivResultWalletIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_wallet" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultWalletLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_wallet_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultWalletValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transaction_wallet_placeholder"
+                                tools:text="Tiền mặt" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
+                    <!-- Destination Wallet Selector Row (Visible only for TRANSFER) -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultDestinationWallet"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <ImageView
+                            android:id="@+id/ivResultDestinationWalletIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_wallet" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultDestinationWalletLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_destination_wallet_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultDestinationWalletValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transfer_destination_wallet_placeholder"
+                                tools:text="Tiết kiệm" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
                     <!-- Action Buttons -->
                     <Button
                         android:id="@+id/btnConfirmTransaction"
@@ -262,11 +401,19 @@
                         android:text="@string/voice_btn_confirm" />
 
                     <Button
-                        android:id="@+id/btnRetryVoice"
+                        android:id="@+id/btnEditMore"
                         style="@style/Widget.App.Button.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/voice_btn_edit_more" />
+
+                    <Button
+                        android:id="@+id/btnRetryVoice"
+                        style="@style/Widget.App.Button.Tertiary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
                         android:text="@string/voice_btn_retry" />
                 </LinearLayout>
 
