@@ -43,7 +43,7 @@ public final class BudgetListActivity extends FinanceActivity {
     protected void render() {
         if (book == null) return;
         String month = book.monthAt(System.currentTimeMillis());
-        binding.toolbarBudgets.setSubtitle(FinanceUi.monthLabel(month));
+        binding.toolbarBudgets.setSubtitle(FinanceUi.monthLabel(this, month));
 
         List<MonthlyBudget> items = book.monthlyBudgets();
         binding.rvBudgets.setAdapter(new MonthlyBudgetAdapter(book, items));

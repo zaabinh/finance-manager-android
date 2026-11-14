@@ -38,11 +38,6 @@ public class UserProfileResponse {
         return displayName;
     }
 
-    /** Backward-compatible name used by the profile settings screen. */
-    public String getName() {
-        return displayName;
-    }
-
     public String getCurrencyCode() {
         return currencyCode;
     }

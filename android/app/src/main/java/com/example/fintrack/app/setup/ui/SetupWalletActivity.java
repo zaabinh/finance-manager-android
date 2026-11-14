@@ -11,7 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,7 +45,7 @@ public class SetupWalletActivity extends AppCompatActivity {
     private Button btnCompleteSetup;   // Nút hoàn tất cài đặt
 
     // Lưu trữ thông tin nhận được từ các màn hình trước (với giá trị mặc định phòng trường hợp không có dữ liệu)
-    private String displayName = "Minh Anh";
+    private String displayName;
     private String reminderTime = "20:00";
     private UserViewModel userViewModel;
 
@@ -61,6 +60,7 @@ public class SetupWalletActivity extends AppCompatActivity {
         binding = ActivitySetupWalletBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); // Gắn giao diện XML vào Activity
 
+        displayName = getString(R.string.setup_default_display_name);
         // Lấy dữ liệu (Tên và Giờ nhắc nhở) truyền từ các màn hình trước sang
         if (getIntent() != null) {
             if (getIntent().hasExtra(SetupBasicInfoActivity.EXTRA_DISPLAY_NAME)) {
@@ -143,7 +143,7 @@ public class SetupWalletActivity extends AppCompatActivity {
 
         // Bấm vào nút Thêm ví: Mở màn hình Thêm ví mới
         tvAddWallet.setOnClickListener(v -> WalletSheet.show(this, (sheet, wallet) -> {
-            // Chỉ lưu vào danh sách chờ, chưa gửi lên server
+            // Vào danh sách chờ; được gửi lên server khi bấm Hoàn tất
             pending.add(wallet);
             renderWallets();
             sheet.dismiss();

@@ -21,7 +21,7 @@ public class FinanceViewModelTest {
     private final SessionStore session = new SessionStore(new FakeSessionStorage());
     private final DeferredFinanceRepository repository = new DeferredFinanceRepository();
     private FinanceViewModel model() {
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         return new FinanceViewModel(session, origin -> repository, DIRECT, FinanceRepository.Scope.TRANSACTION_DETAIL, "transaction-42");
     }
     private FinanceBook book() { return new FinanceBook(FinanceBook.empty()); }
@@ -30,7 +30,7 @@ public class FinanceViewModelTest {
         FinanceViewModel model = model();
         session.updateTokens(session.current(), "new-access", "new-refresh");
         model.refresh();
-        assertTrue(model.snapshotLoading()); assertFalse(model.busy());
+        assertTrue(model.snapshotLoading()); assertFalse(model.saveLoading());
         assertEquals(FinanceRepository.Scope.TRANSACTION_DETAIL, repository.scope);
         assertEquals("transaction-42", repository.detailId);
         FinanceBook book = book(); repository.reads.get(0).deliver(Resource.success(book));
@@ -47,7 +47,7 @@ public class FinanceViewModelTest {
         FinanceViewModel model = model(); model.refresh();
         FinanceBook previous = book(); repository.reads.get(0).deliver(Resource.success(previous));
         model.change(FinanceAction.deleteTransaction("id"), false);
-        assertTrue(model.saveLoading()); assertTrue(model.busy());
+        assertTrue(model.saveLoading());
         repository.writes.get(0).deliver(Resource.success(new MutationReceipt("created-42", null)));
         Event<FinanceViewModel.Command> event = model.command().getValue();
         FinanceViewModel.Command command = event.getContentIfNotHandled();
@@ -64,11 +64,11 @@ public class FinanceViewModelTest {
         model.change(FinanceAction.deleteTransaction("id"), true);
         repository.writes.get(0).deliver(Resource.error(HttpErrorParser.from(new java.io.IOException()), null));
         assertEquals(1, repository.writes.size()); assertSame(previous, model.state().getValue().getData());
-        assertNotNull(model.command().getValue().getContentIfNotHandled().error); assertFalse(model.busy());
+        assertNotNull(model.command().getValue().getContentIfNotHandled().error); assertFalse(model.saveLoading());
     }
     @Test public void sameAccountReloginSuppressesOldSaveAndRefresh() {
         FinanceViewModel model = model(); model.change(FinanceAction.deleteTransaction("id"), false);
-        session.clear(session.current()); session.login("b", "r", true);
+        session.clear(session.current()); session.login("b", "r", true, true);
         repository.writes.get(0).deliver(Resource.success(new MutationReceipt("old", null)));
         assertNull(model.command().getValue()); assertTrue(repository.reads.isEmpty());
         model.refresh(); assertTrue(repository.reads.isEmpty());
@@ -101,7 +101,7 @@ public class FinanceViewModelTest {
     }
     @Test public void sessionReplacedByNewLoginNeverDeliversOldData() {
         FinanceViewModel model = model(); model.refresh();
-        session.clear(session.current()); session.login("b", "r", true);
+        session.clear(session.current()); session.login("b", "r", true, true);
         repository.reads.get(0).deliver(Resource.success(book()));
         assertNull(model.state().getValue().getData());
         assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
@@ -117,7 +117,7 @@ public class FinanceViewModelTest {
     @Test public void readThatCannotStartAfterSessionEndsSignalsExpiry() {
         java.util.ArrayDeque<Runnable> queue = new java.util.ArrayDeque<>();
         AppExecutors queued = new AppExecutors(queue::add, queue::add, Runnable::run, Runnable::run);
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         FinanceViewModel model = new FinanceViewModel(session, origin -> repository, queued, FinanceRepository.Scope.ALL, null);
         model.refresh(); session.clear(session.current()); queue.remove().run();
         assertTrue(repository.reads.isEmpty()); assertFalse(model.snapshotLoading());
@@ -163,11 +163,11 @@ public class FinanceViewModelTest {
                 mutations[0]++; return new MutationReceipt(null, null);
             }
         };
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         FinanceViewModel model = new FinanceViewModel(session, origin -> realAsync, queued, FinanceRepository.Scope.ALL, null);
         model.change(FinanceAction.deleteTransaction("id"), true);
         queue.remove().run(); // Resolve the repository, leaving its write queued.
-        session.clear(session.current()); session.login("b", "r", true);
+        session.clear(session.current()); session.login("b", "r", true, true);
         queue.remove().run();
         assertEquals(0, mutations[0]); assertNull(model.command().getValue());
     }
@@ -180,7 +180,7 @@ public class FinanceViewModelTest {
                 mutations[0]++; return new MutationReceipt(null, null);
             }
         };
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         FinanceViewModel model = new FinanceViewModel(session, origin -> realAsync, queued, FinanceRepository.Scope.ALL, null);
         ViewModelStore owner = new ViewModelStore();
         new ViewModelProvider(owner, new ViewModelProvider.Factory() {

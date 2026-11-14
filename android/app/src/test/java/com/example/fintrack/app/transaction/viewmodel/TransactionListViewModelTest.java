@@ -19,7 +19,7 @@ public class TransactionListViewModelTest {
     private final SessionStore session = new SessionStore(new FakeSessionStorage());
     private final DeferredFinanceRepository repository = new DeferredFinanceRepository();
     private TransactionListViewModel model() {
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         return new TransactionListViewModel(session, origin -> repository, DIRECT);
     }
     private FinanceBook.Query query(String search) { return FinanceBook.Query.month("2026-11", null, null, null, search); }
@@ -65,7 +65,7 @@ public class TransactionListViewModelTest {
     }
     @Test public void reloginSuppressesOldResultEvenForSameAccount() {
         TransactionListViewModel model = model(); model.query(query(null));
-        session.clear(session.current()); session.login("b", "r", true); page(0, 0, 1, "old");
+        session.clear(session.current()); session.login("b", "r", true, true); page(0, 0, 1, "old");
         assertTrue(model.rows().isEmpty()); model.refresh(); assertEquals(1, repository.pages.size());
     }
     @Test public void sessionEndedDuringReadStopsLoadingAndSignalsExpiryOnceWithoutData() {
@@ -85,14 +85,14 @@ public class TransactionListViewModelTest {
     }
     @Test public void sessionReplacedByNewLoginNeverDeliversOldData() {
         TransactionListViewModel model = model(); model.query(query(null));
-        session.clear(session.current()); session.login("b", "r", true); page(0, 0, 1, "old");
+        session.clear(session.current()); session.login("b", "r", true, true); page(0, 0, 1, "old");
         assertTrue(model.rows().isEmpty()); assertNull(model.state().getValue().getData());
         assertEquals(com.example.fintrack.app.core.error.AppError.SESSION_EXPIRED, model.state().getValue().getError().code);
     }
     @Test public void readThatCannotStartAfterSessionEndsSignalsExpiry() {
         java.util.ArrayDeque<Runnable> queue = new java.util.ArrayDeque<>();
         AppExecutors queued = new AppExecutors(queue::add, queue::add, Runnable::run, Runnable::run);
-        session.login("a", "r", true);
+        session.login("a", "r", true, true);
         TransactionListViewModel model = new TransactionListViewModel(session, origin -> repository, queued);
         model.query(query(null)); session.clear(session.current()); queue.remove().run();
         assertTrue(repository.pages.isEmpty()); assertFalse(model.initialLoading());

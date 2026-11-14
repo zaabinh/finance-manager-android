@@ -14,6 +14,7 @@ import java.util.ArrayList;
  * Màn hình lựa chọn phương thức nhập hóa đơn (Chụp ảnh qua Camera hoặc Chọn ảnh từ Thư viện).
  */
 public final class TransactionImportActivity extends FinanceActivity {
+    private static final String STATE_CAMERA = "camera";
     private Uri cameraUri;
 
     // Bộ khởi chạy chọn ảnh từ thư viện thiết bị
@@ -32,7 +33,7 @@ public final class TransactionImportActivity extends FinanceActivity {
 
     @Override protected void bind(Bundle saved) {
         binding.toolbarTransactionImport.setNavigationOnClickListener(view -> finish());
-        if (saved != null && saved.getString("camera") != null) cameraUri = Uri.parse(saved.getString("camera"));
+        if (saved != null && saved.getString(STATE_CAMERA) != null) cameraUri = Uri.parse(saved.getString(STATE_CAMERA));
 
         // Nút chọn ảnh từ thư viện
         binding.optionLibrary.setOnClickListener(view -> gallery.launch(new String[]{"image/*"}));
@@ -43,13 +44,13 @@ public final class TransactionImportActivity extends FinanceActivity {
 
     // Chuyển sang màn hình xem lại kết quả quét hóa đơn
     private void review(ArrayList<String> images) {
-        startActivity(new Intent(this, TransactionReviewActivity.class).putStringArrayListExtra("images", images));
+        startActivity(new Intent(this, TransactionReviewActivity.class).putStringArrayListExtra(TransactionReviewActivity.EXTRA_IMAGES, images));
     }
 
     @Override protected void render() { }
 
     @Override protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
-        if (cameraUri != null) out.putString("camera", cameraUri.toString());
+        if (cameraUri != null) out.putString(STATE_CAMERA, cameraUri.toString());
     }
 }

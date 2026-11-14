@@ -101,13 +101,13 @@ public class SetupBasicInfoActivity extends AppCompatActivity {
     // Múi giờ máy không nằm trong danh sách thì hiển thị nguyên ID
     private void showTimezone() {
         int index = selectedTimezoneIndex();
-        tvTimezoneValue.setText(index >= 0 ? SettingUserActivity.TIMEZONE_LABELS[index] : selectedTimeZone);
+        tvTimezoneValue.setText(index >= 0 ? getResources().getStringArray(R.array.timezone_labels)[index] : selectedTimeZone);
     }
 
     private void showTimezonePicker() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.timezone_picker_title)
-                .setSingleChoiceItems(SettingUserActivity.TIMEZONE_LABELS, selectedTimezoneIndex(), (dialog, which) -> {
+                .setSingleChoiceItems(R.array.timezone_labels, selectedTimezoneIndex(), (dialog, which) -> {
                     selectedTimeZone = SettingUserActivity.TIMEZONE_IDS[which];
                     showTimezone();
                     dialog.dismiss();

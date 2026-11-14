@@ -37,12 +37,12 @@ public class FinanceFlowTest {
     @Before public void login() {
         session = FintrackApplication.container(context).sessionStore(); old = session.current();
         owner = "finance-flow-" + UUID.randomUUID();
-        session.updateProfile(session.login("fixture", "fixture", true), owner, "fixture@example.invalid", "Test");
+        session.updateProfile(session.login("fixture", "fixture", true, true), owner, "fixture@example.invalid", "Test");
     }
     @After public void restoreSession() throws Exception {
         drain();
         // The store has no unconditional writes: the previous state is restored as a new login (or a cleared one).
-        SessionSnapshot restored = session.login(old.accessToken, old.refreshToken, old.setupCompleted);
+        SessionSnapshot restored = session.login(old.accessToken, old.refreshToken, old.setupCompleted, true);
         if (old.loggedIn) session.updateProfile(restored, old.userId, old.email, old.name);
         else session.clear(restored);
         String key = android.util.Base64.encodeToString(java.security.MessageDigest.getInstance("SHA-256")

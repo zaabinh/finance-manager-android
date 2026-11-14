@@ -32,11 +32,6 @@ public final class SessionStore {
         return session != null && session.loggedIn && now.loggedIn && session.generation == now.generation;
     }
 
-    /** A remembered login: it survives closing the app. */
-    public synchronized SessionSnapshot login(String accessToken, String refreshToken, boolean setupCompleted) {
-        return login(accessToken, refreshToken, setupCompleted, true);
-    }
-
     /**
      * Starts a new session (a new generation, even for the same account) without profile fields.
      * With {@code rememberMe} false the session lasts until the app process ends (see {@link #current}).

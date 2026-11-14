@@ -57,7 +57,6 @@ public final class FinanceViewModel extends ViewModel {
     public LiveData<Boolean> saveLoadingState() { return saving; }
     public boolean snapshotLoading() { return snapshotLoading; }
     public boolean saveLoading() { return saveLoading; }
-    public boolean busy() { return saveLoading; }
     private boolean active() { return !cleared && session.isCurrent(origin); }
     /**
      * For results and could-not-start outcomes, on the main thread. A cleared model stays silent; once the origin

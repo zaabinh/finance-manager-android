@@ -8,7 +8,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.fintrack.R;
 import com.example.fintrack.databinding.ActivitySetupCompleteBinding;
 import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;

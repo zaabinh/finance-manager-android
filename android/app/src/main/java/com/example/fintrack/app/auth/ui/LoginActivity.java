@@ -1,5 +1,6 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.network.ErrorMapper;
 
 import android.content.Intent;
@@ -159,16 +160,17 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         });
 
-        authViewModel.getResendVerificationResult().observe(this, resource -> {
+        authViewModel.getResendVerificationResult().observe(this, event -> {
+            Resource<Void> resource = event == null ? null : event.getContentIfNotHandled();
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case SUCCESS:
-                    // Null after navigating: a LiveData replay on recreation must not reopen the OTP screen.
+                    // Null when this screen did not ask for the resend.
                     if (pendingVerificationEmail == null) break;
                     Toast.makeText(this, R.string.verify_resend_sent, Toast.LENGTH_LONG).show();
                     authViewModel.setRegisteredEmail(pendingVerificationEmail);
                     Intent intent = new Intent(LoginActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", pendingVerificationEmail);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, pendingVerificationEmail);
                     pendingVerificationEmail = null;
                     startActivity(intent);
                     break;

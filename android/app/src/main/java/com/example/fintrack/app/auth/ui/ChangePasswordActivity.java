@@ -28,6 +28,7 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 public class ChangePasswordActivity extends AppCompatActivity {
 
     // Các khóa để lưu tạm email và mã OTP khi xoay màn hình
+    public static final String EXTRA_OTP = "otp";
     private static final String KEY_EMAIL = "key_email";
     private static final String KEY_OTP = "key_otp";
 
@@ -57,12 +58,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
         // Khôi phục lại email và OTP nếu Activity bị hủy và tạo lại (ví dụ: khi xoay ngang/dọc màn hình)
         if (savedInstanceState != null) {
-            email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra("email"));
-            otp = savedInstanceState.getString(KEY_OTP, getIntent().getStringExtra("otp"));
+            email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra(VerifyEmailActivity.EXTRA_EMAIL));
+            otp = savedInstanceState.getString(KEY_OTP, getIntent().getStringExtra(EXTRA_OTP));
         } else {
             // Lấy email và OTP được truyền qua Intent từ màn hình VerifyEmailActivity
-            email = getIntent().getStringExtra("email");
-            otp = getIntent().getStringExtra("otp");
+            email = getIntent().getStringExtra(VerifyEmailActivity.EXTRA_EMAIL);
+            otp = getIntent().getStringExtra(EXTRA_OTP);
         }
 
         if (email == null) email = "";

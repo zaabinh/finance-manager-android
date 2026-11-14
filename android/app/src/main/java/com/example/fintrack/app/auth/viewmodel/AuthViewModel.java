@@ -35,9 +35,8 @@ public class AuthViewModel extends ViewModel {
     private final MutableLiveData<Event<LoginDestination>> loginNavigation = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> registerResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> verifyEmailResult = new MutableLiveData<>();
-    private final MutableLiveData<Resource<Void>> resendOtpResult = new MutableLiveData<>();
-    private final MutableLiveData<Resource<Void>> resendVerificationResult = new MutableLiveData<>();
-    private final MutableLiveData<Resource<Void>> forgotPasswordResult = new MutableLiveData<>();
+    private final MutableLiveData<Event<Resource<Void>>> resendVerificationResult = new MutableLiveData<>();
+    private final MutableLiveData<Event<Resource<Void>>> forgotPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resetPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Event<Resource<Void>>> logoutResult = new MutableLiveData<>();
 
@@ -100,15 +99,13 @@ public class AuthViewModel extends ViewModel {
         return verifyEmailResult;
     }
 
-    public LiveData<Resource<Void>> getResendOtpResult() {
-        return resendOtpResult;
-    }
-
-    public LiveData<Resource<Void>> getResendVerificationResult() {
+    /** Sự kiện một lần (LOADING, rồi SUCCESS/ERROR): màn hình tạo lại không hiện lại toast hay khởi động lại bộ đếm. */
+    public LiveData<Event<Resource<Void>>> getResendVerificationResult() {
         return resendVerificationResult;
     }
 
-    public LiveData<Resource<Void>> getForgotPasswordResult() {
+    /** Sự kiện một lần, như {@link #getResendVerificationResult()}. */
+    public LiveData<Event<Resource<Void>>> getForgotPasswordResult() {
         return forgotPasswordResult;
     }
 
@@ -203,23 +200,17 @@ public class AuthViewModel extends ViewModel {
         authRepository.verifyEmail(email, otp, verifyEmailResult::setValue);
     }
 
-    /** Gửi lại mã OTP */
-    public void resendOtp(String email) {
-        resendOtpResult.setValue(Resource.loading(null));
-        authRepository.resendOtp(email, resendOtpResult::setValue);
-    }
-
     /** Gửi lại email xác nhận tài khoản (/resend-verification) */
     public void resendVerification(String email) {
-        resendVerificationResult.setValue(Resource.loading(null));
-        authRepository.resendVerification(email, resendVerificationResult::setValue);
+        resendVerificationResult.setValue(new Event<>(Resource.loading(null)));
+        authRepository.resendVerification(email, result -> resendVerificationResult.setValue(new Event<>(result)));
     }
 
     /** Yêu cầu quên mật khẩu (gửi OTP về email) */
     public void forgotPassword(String email) {
         this.forgotPasswordEmail = email; // Lưu lại email dùng cho bước đặt lại mật khẩu
-        forgotPasswordResult.setValue(Resource.loading(null));
-        authRepository.forgotPassword(email, forgotPasswordResult::setValue);
+        forgotPasswordResult.setValue(new Event<>(Resource.loading(null)));
+        authRepository.forgotPassword(email, result -> forgotPasswordResult.setValue(new Event<>(result)));
     }
 
     /** Đặt lại mật khẩu mới bằng email, mã OTP và mật khẩu mới */

@@ -41,14 +41,14 @@ public final class BudgetDetailActivity extends FinanceActivity {
     protected void bind(Bundle saved) {
         id = getIntent().getStringExtra(EXTRA_MONTHLY_ID); binding.toolbarBudgetDetail.setNavigationOnClickListener(view -> finish());
         binding.btnAddCategoryBudget.setOnClickListener(view -> startActivity(new Intent(this, BudgetFormActivity.class)
-                .putExtra(BudgetFormActivity.EXTRA_MONTHLY_ID, id)));
+                .putExtra(EXTRA_MONTHLY_ID, id)));
         binding.btnDeleteBudget.setOnClickListener(view -> new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.monthly_budget_delete_title).setMessage(R.string.monthly_budget_delete_warning)
                 .setNegativeButton(R.string.btn_cancel, null)
                 .setPositiveButton(R.string.btn_delete, (dialog, which) -> model.change(FinanceAction.deleteMonthlyBudget(id), true)).show());
         binding.btnBudgetHistory.setOnClickListener(view -> {
             MonthlyBudget monthly = book == null ? null : book.monthlyBudget(id);
-            if (monthly != null) startActivity(new Intent(this, TransactionListActivity.class).putExtra("month", monthly.month));
+            if (monthly != null) startActivity(new Intent(this, TransactionListActivity.class).putExtra(TransactionListActivity.EXTRA_MONTH, monthly.month));
         });
     }
 
@@ -56,13 +56,13 @@ public final class BudgetDetailActivity extends FinanceActivity {
     protected void render() {
         if (book == null) return;
         MonthlyBudget monthly = book.monthlyBudget(id);
-        if (monthly == null) { if (!model.busy()) finish(); return; }
+        if (monthly == null) { if (!model.saveLoading()) finish(); return; }
         BudgetUsage usage = book.monthlyUsage(monthly);
         long total = book.monthlyTotal(monthly);
         boolean active = monthly.archivedAt == null;
 
-        binding.toolbarBudgetDetail.setSubtitle(FinanceUi.monthLabel(monthly.month));
-        binding.tvDetailCategoryName.setText(FinanceUi.monthLabel(monthly.month));
+        binding.toolbarBudgetDetail.setSubtitle(FinanceUi.monthLabel(this, monthly.month));
+        binding.tvDetailCategoryName.setText(FinanceUi.monthLabel(this, monthly.month));
         binding.tvDetailPercentage.setText(usage.percentage + "%");
         binding.tvDetailSpentAmount.setText(FinanceUi.money(usage.spent));
         binding.tvDetailLimitAmount.setText(getString(R.string.monthly_budget_total, FinanceUi.money(total)));
@@ -86,7 +86,7 @@ public final class BudgetDetailActivity extends FinanceActivity {
         CharSequence[] actions = {getString(R.string.budget_category_edit_limit), getString(R.string.budget_category_remove)};
         new MaterialAlertDialogBuilder(this).setItems(actions, (dialog, which) -> {
             if (which == 0) startActivity(new Intent(this, BudgetFormActivity.class)
-                    .putExtra(BudgetFormActivity.EXTRA_MONTHLY_ID, id).putExtra(BudgetFormActivity.EXTRA_ID, budget.id));
+                    .putExtra(EXTRA_MONTHLY_ID, id).putExtra(BudgetFormActivity.EXTRA_ID, budget.id));
             else new MaterialAlertDialogBuilder(this).setTitle(R.string.budget_category_remove_title)
                     .setMessage(R.string.budget_category_remove_body).setNegativeButton(R.string.btn_cancel, null)
                     .setPositiveButton(R.string.btn_delete, (d, w) -> model.change(FinanceAction.deleteBudget(budget.id), false)).show();

@@ -46,7 +46,7 @@ public class UserViewModelTest {
     private StubCall<ApiResponse<UserProfileResponse>> profileCall(String endpoint) { return api.call(endpoint, 0); }
 
     private SessionSnapshot loggedIn(String access, String userId) {
-        SessionSnapshot session = store.login(access, "refresh-" + access, false);
+        SessionSnapshot session = store.login(access, "refresh-" + access, false, true);
         store.updateProfile(session, userId, "old@example.com", "Old name");
         return session;
     }

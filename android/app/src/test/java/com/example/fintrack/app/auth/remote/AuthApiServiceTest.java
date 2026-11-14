@@ -47,7 +47,6 @@ public class AuthApiServiceTest {
     @Test public void emptySuccessBodiesReachTheCallerAsSuccessThroughTheRepository() throws Exception {
         assertEquals(Resource.Status.SUCCESS, answer(201, (auth, result) -> auth.register("demo", "demo@x.vn", "Demo12345!", result)).getStatus());
         assertEquals(Resource.Status.SUCCESS, answer(202, (auth, result) -> auth.resendVerification("demo@x.vn", result)).getStatus());
-        assertEquals(Resource.Status.SUCCESS, answer(202, (auth, result) -> auth.resendOtp("demo@x.vn", result)).getStatus());
         assertEquals(Resource.Status.SUCCESS, answer(202, (auth, result) -> auth.forgotPassword("demo@x.vn", result)).getStatus());
         assertEquals(Resource.Status.SUCCESS, answer(204, (auth, result) -> auth.verifyEmail("demo@x.vn", "1234", result)).getStatus());
         assertEquals(Resource.Status.SUCCESS, answer(204, (auth, result) -> auth.resetPassword("demo@x.vn", "1234", "Demo12345!", result)).getStatus());

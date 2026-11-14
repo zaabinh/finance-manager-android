@@ -65,7 +65,7 @@ public class AuthViewModelTest {
     }
 
     private SessionSnapshot loggedIn(String access, String refresh, String userId) {
-        SessionSnapshot session = store.login(access, refresh, true);
+        SessionSnapshot session = store.login(access, refresh, true, true);
         store.updateProfile(session, userId, userId + "@example.com", "Name " + userId);
         return session;
     }
@@ -250,7 +250,7 @@ public class AuthViewModelTest {
     @Test
     public void discardIncompleteSession_removesALeftoverHalfSessionButNotALoginInProgress() {
         // Left over from a previous run: tokens saved, profile never loaded.
-        store.login("stale", "stale-r", true);
+        store.login("stale", "stale-r", true, true);
         model.discardIncompleteSession();
         assertFalse(store.current().loggedIn);
 
@@ -268,6 +268,34 @@ public class AuthViewModelTest {
         SessionSnapshot complete = store.current();
         model.discardIncompleteSession();
         assertSame(complete, store.current());
+    }
+
+    // --- resend verification / forgot password ---
+
+    @Test
+    public void resendVerificationResultIsDeliveredOnce() {
+        model.resendVerification("demo@x.vn");
+        Event<Resource<Void>> loading = model.getResendVerificationResult().getValue();
+        assertEquals(Resource.Status.LOADING, loading.peekContent().getStatus());
+
+        api.<Void>call("resendVerification", 0).succeed(null);
+
+        Event<Resource<Void>> done = model.getResendVerificationResult().getValue();
+        assertEquals(Resource.Status.SUCCESS, done.getContentIfNotHandled().getStatus());
+        // A recreated screen observes the same value: no second toast, no restarted timer.
+        assertNull(done.getContentIfNotHandled());
+    }
+
+    @Test
+    public void forgotPasswordErrorIsDeliveredOnce() {
+        model.forgotPassword("demo@x.vn");
+        assertEquals("demo@x.vn", model.getForgotPasswordEmail());
+
+        api.<Void>call("forgotPassword", 0).fail(new IOException("offline"));
+
+        Event<Resource<Void>> done = model.getForgotPasswordResult().getValue();
+        assertEquals(Resource.Status.ERROR, done.getContentIfNotHandled().getStatus());
+        assertNull(done.getContentIfNotHandled());
     }
 
     // --- logout ---

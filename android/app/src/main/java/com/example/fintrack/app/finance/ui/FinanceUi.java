@@ -8,6 +8,7 @@ import com.example.fintrack.app.finance.domain.WalletType;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 import android.widget.EditText;
@@ -37,8 +38,8 @@ public final class FinanceUi {
     private FinanceUi() { }
     /** VISIBLE when on, GONE otherwise. */
     public static void visible(View view, boolean on) { view.setVisibility(on ? View.VISIBLE : View.GONE); }
-    public static String money(long centsOrUnits) {
-        return String.format(Locale.ROOT, "%,d đ", centsOrUnits).replace(',', '.');
+    public static String money(long amount) {
+        return String.format(Locale.ROOT, "%,d đ", amount).replace(',', '.');
     }
     /** Shared button loading state: disabled with a leading circular progress indicator; enabled and clean otherwise. */
     public static void progress(android.widget.Button button, boolean loading) {
@@ -84,10 +85,10 @@ public final class FinanceUi {
             default: return R.string.transaction_type_expense;
         }
     }
-    public static CharSequence monthLabel(String yyyyMm) {
+    public static CharSequence monthLabel(Context context, String yyyyMm) {
         try {
             String[] parts = yyyyMm.split("-");
-            return "Tháng " + Integer.parseInt(parts[1]) + "/" + parts[0];
+            return context.getString(R.string.budget_month_label, Integer.parseInt(parts[1]), parts[0]);
         } catch (Exception e) {
             return yyyyMm;
         }
@@ -270,6 +271,6 @@ public final class FinanceUi {
         new MaterialAlertDialogBuilder(activity).setTitle(R.string.label_category).setItems(names, (dialog, which) ->
                 selected.accept(filtered.get(which).id))
                 .setNeutralButton(R.string.category_add_title, (dialog, which) -> activity.startActivity(new Intent(activity,
-                        com.example.fintrack.app.category.ui.CategoryAddActivity.class).putExtra("category_type", type.name()))).show();
+                        com.example.fintrack.app.category.ui.CategoryAddActivity.class).putExtra(com.example.fintrack.app.category.ui.CategoryAddActivity.EXTRA_CATEGORY_TYPE, type.name()))).show();
     }
 }

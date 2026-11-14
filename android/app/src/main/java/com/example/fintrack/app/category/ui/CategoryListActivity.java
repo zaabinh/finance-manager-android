@@ -23,25 +23,26 @@ import java.util.List;
 import java.util.Locale;
 
 public class CategoryListActivity extends FinanceActivity {
+    private static final String STATE_CATEGORY_TYPE = "categoryType";
     private ActivityCategoryListBinding binding;
     private CategoryAdapter adapter;
     private TransactionType type = TransactionType.EXPENSE;
     @Override protected View contentView() { binding = ActivityCategoryListBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.CATEGORIES; }
     @Override protected void bind(Bundle saved) {
-        if (saved != null) type = TransactionType.valueOf(saved.getString("categoryType","EXPENSE"));
+        if (saved != null) type = TransactionType.valueOf(saved.getString(STATE_CATEGORY_TYPE,"EXPENSE"));
         adapter = new CategoryAdapter(new CategoryAdapter.OnCategoryClickListener() {
             @Override public void onCategoryClick(CategoryItem category) {
-                startActivity(new Intent(CategoryListActivity.this,CategoryEditActivity.class).putExtra("CATEGORY_ID",category.getId()));
+                startActivity(new Intent(CategoryListActivity.this,CategoryEditActivity.class).putExtra(CategoryEditActivity.EXTRA_CATEGORY_ID,category.getId()));
             }
             @Override public void onStatusToggle(CategoryItem category,boolean active) {
-                if (!model.busy()) model.change(FinanceAction.categoryStatus(category.getId(),active),false);
+                if (!model.saveLoading()) model.change(FinanceAction.categoryStatus(category.getId(),active),false);
             }
         });
         binding.rvCategories.setLayoutManager(new LinearLayoutManager(this)); binding.rvCategories.setAdapter(adapter);
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnAddCategory.setOnClickListener(v -> startActivity(
-                new Intent(this,CategoryAddActivity.class).putExtra("category_type",type.name())));
+                new Intent(this,CategoryAddActivity.class).putExtra(CategoryAddActivity.EXTRA_CATEGORY_TYPE,type.name())));
         binding.tabSpend.setOnClickListener(v -> { type=TransactionType.EXPENSE; render(); });
         binding.tabIncome.setOnClickListener(v -> { type=TransactionType.INCOME; render(); });
         binding.etSearchCategory.addTextChangedListener(new TextWatcher() {
@@ -70,6 +71,6 @@ public class CategoryListActivity extends FinanceActivity {
     }
     @Override protected void completed() { model.refresh(); }
     @Override protected void onSaveInstanceState(Bundle state) {
-        state.putString("categoryType",type.name()); super.onSaveInstanceState(state);
+        state.putString(STATE_CATEGORY_TYPE,type.name()); super.onSaveInstanceState(state);
     }
 }

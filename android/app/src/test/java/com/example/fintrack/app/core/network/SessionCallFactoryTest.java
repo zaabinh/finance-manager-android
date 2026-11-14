@@ -51,7 +51,7 @@ public class SessionCallFactoryTest {
     public void requestIsTaggedWithTheSessionThatIsCurrentWhenTheCallerEnqueuesIt() {
         UserApiService api = api(new SessionCallFactory(this::record, store::current));
         Call<ApiResponse<UserProfileResponse>> preparedWhileLoggedOut = api.getProfile();
-        SessionSnapshot first = store.login("a1", "r1", true);
+        SessionSnapshot first = store.login("a1", "r1", true, true);
 
         preparedWhileLoggedOut.enqueue(IGNORE);
 
@@ -60,7 +60,7 @@ public class SessionCallFactoryTest {
 
         store.clear(first);
         api.getProfile().enqueue(IGNORE);
-        SessionSnapshot second = store.login("a2", "r2", true);
+        SessionSnapshot second = store.login("a2", "r2", true, true);
         api.getProfile().enqueue(IGNORE);
 
         assertSame(first, issued.get(0).tag(SessionSnapshot.class)); // unchanged by later logins
@@ -70,10 +70,10 @@ public class SessionCallFactoryTest {
 
     @Test
     public void boundFactoryTagsEveryRequestWithItsOwnSessionWhateverIsCurrent() {
-        SessionSnapshot origin = store.login("a1", "r1", true);
+        SessionSnapshot origin = store.login("a1", "r1", true, true);
         UserApiService api = api(new SessionCallFactory(this::record, () -> origin));
         store.clear(origin);
-        store.login("a2", "r2", true);
+        store.login("a2", "r2", true, true);
 
         api.getProfile().enqueue(IGNORE);
 

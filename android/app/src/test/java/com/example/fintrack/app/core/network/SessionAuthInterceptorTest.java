@@ -41,14 +41,14 @@ public class SessionAuthInterceptorTest {
 
     @Test
     public void requestOfAnEndedSessionFailsBeforeItLeaves() {
-        SessionSnapshot old = store.login("a1", "r1", true);
+        SessionSnapshot old = store.login("a1", "r1", true, true);
         store.clear(old);
 
         assertThrows(IOException.class, () -> interceptor.intercept(chain(request(old))));
         assertNull(sent);
 
         // Logging back in (same account or not) does not revive it and never lends it the new token.
-        store.login("a2", "r2", true);
+        store.login("a2", "r2", true, true);
 
         assertThrows(IOException.class, () -> interceptor.intercept(chain(request(old))));
         assertNull(sent);
@@ -57,7 +57,7 @@ public class SessionAuthInterceptorTest {
     @Test
     public void untaggedAndLoggedOutRequestsAreSentWithoutAuthorization() throws IOException {
         SessionSnapshot loggedOut = store.current();
-        store.login("a1", "r1", true);
+        store.login("a1", "r1", true, true);
 
         interceptor.intercept(chain(request(null)));
         assertNull(sent.header("Authorization"));
@@ -70,7 +70,7 @@ public class SessionAuthInterceptorTest {
 
     @Test
     public void currentRequestCarriesTheRefreshedTokenOfItsSession() throws IOException {
-        SessionSnapshot session = store.login("a1", "r1", true);
+        SessionSnapshot session = store.login("a1", "r1", true, true);
 
         interceptor.intercept(chain(request(session)));
         assertEquals("Bearer a1", sent.header("Authorization"));

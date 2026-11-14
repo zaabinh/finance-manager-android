@@ -1,6 +1,8 @@
 package com.example.fintrack.app.auth.ui;
 
 import com.example.fintrack.app.core.network.ErrorMapper;
+import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.core.util.Event;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,6 +35,9 @@ import java.util.Locale;
  */
 public class VerifyEmailActivity extends AppCompatActivity {
 
+    public static final String EXTRA_EMAIL = "email";
+    /** True for the forgot-password flow: the OTP goes on to ChangePasswordActivity instead of verifying the email. */
+    public static final String EXTRA_IS_RESET_PASSWORD = "is_reset_password";
     private static final String KEY_END_TIME_STAMP = "key_end_time_stamp";
     private static final String KEY_USER_EMAIL = "key_user_email";
     private static final String KEY_IS_RESET_PASSWORD = "key_is_reset_password";
@@ -69,7 +74,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             isResetPassword = savedInstanceState.getBoolean(KEY_IS_RESET_PASSWORD, false);
-            userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra("email"));
+            userEmail = savedInstanceState.getString(KEY_USER_EMAIL, getIntent().getStringExtra(EXTRA_EMAIL));
             endTimeStamp = savedInstanceState.getLong(KEY_END_TIME_STAMP, 0);
             long remaining = endTimeStamp - System.currentTimeMillis();
             if (remaining > 0) {
@@ -78,8 +83,8 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 resetResendUi();
             }
         } else {
-            isResetPassword = getIntent().getBooleanExtra("is_reset_password", false);
-            userEmail = getIntent().getStringExtra("email");
+            isResetPassword = getIntent().getBooleanExtra(EXTRA_IS_RESET_PASSWORD, false);
+            userEmail = getIntent().getStringExtra(EXTRA_EMAIL);
             startResendTimer(TIMER_DURATION_MS);
         }
 
@@ -196,68 +201,28 @@ public class VerifyEmailActivity extends AppCompatActivity {
             }
         });
 
-        authViewModel.getResendVerificationResult().observe(this, resource -> {
-            if (resource == null) return;
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
-                    startResendTimer(TIMER_DURATION_MS);
-                    break;
+        authViewModel.getResendVerificationResult().observe(this, this::renderResend);
+        authViewModel.getForgotPasswordResult().observe(this, this::renderResend);
+    }
 
-                case ERROR:
-                    resetResendUi();
-                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    tvResendOtp.setEnabled(false);
-                    tvResendOtp.setText(R.string.loading_send_code);
-                    break;
-            }
-        });
-
-        authViewModel.getResendOtpResult().observe(this, resource -> {
-            if (resource == null) return;
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
-                    startResendTimer(TIMER_DURATION_MS);
-                    break;
-
-                case ERROR:
-                    resetResendUi();
-                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    tvResendOtp.setEnabled(false);
-                    tvResendOtp.setText(R.string.loading_send_code);
-                    break;
-            }
-        });
-
-        authViewModel.getForgotPasswordResult().observe(this, resource -> {
-            if (resource == null) return;
-            switch (resource.getStatus()) {
-                case SUCCESS:
-                    Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
-                    startResendTimer(TIMER_DURATION_MS);
-                    break;
-
-                case ERROR:
-                    resetResendUi();
-                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
-                    break;
-
-                case LOADING:
-                    tvResendOtp.setEnabled(false);
-                    tvResendOtp.setText(R.string.loading_send_code);
-                    break;
-            }
-        });
+    /** LOADING is state and is rendered again after recreation; SUCCESS and ERROR are handled once. */
+    private void renderResend(Event<Resource<Void>> event) {
+        if (event == null) return;
+        if (event.peekContent().getStatus() == Resource.Status.LOADING) {
+            tvResendOtp.setEnabled(false);
+            tvResendOtp.setText(R.string.loading_send_code);
+            return;
+        }
+        Resource<Void> resource = event.getContentIfNotHandled();
+        if (resource == null) return;
+        if (resource.getStatus() == Resource.Status.SUCCESS) {
+            Toast.makeText(this, R.string.resend_otp_success, Toast.LENGTH_SHORT).show();
+            startResendTimer(TIMER_DURATION_MS);
+        } else {
+            resetResendUi();
+            String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
+            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void handleResendOtp() {
@@ -321,8 +286,8 @@ public class VerifyEmailActivity extends AppCompatActivity {
         if (isResetPassword) {
             authViewModel.setResetOtp(otp);
             Intent intent = new Intent(VerifyEmailActivity.this, ChangePasswordActivity.class);
-            intent.putExtra("email", userEmail);
-            intent.putExtra("otp", otp);
+            intent.putExtra(EXTRA_EMAIL, userEmail);
+            intent.putExtra(ChangePasswordActivity.EXTRA_OTP, otp);
             startActivity(intent);
             finish();
         } else {

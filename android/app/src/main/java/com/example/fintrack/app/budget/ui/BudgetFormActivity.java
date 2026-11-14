@@ -25,16 +25,17 @@ import java.util.UUID;
  * Tháng cố định theo ngân sách tháng cha; mỗi danh mục chỉ xuất hiện một lần trong tháng.
  */
 public final class BudgetFormActivity extends FinanceActivity {
+    private static final String STATE_INITIALIZED = "initialized", STATE_ID = "id", STATE_CATEGORY = "category",
+            STATE_MONTH = "month";
 
     @Override protected com.example.fintrack.app.finance.data.FinanceRepository.Scope readScope() {
         return com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS;
     }
 
     /** The server snapshot is the parent monthly budget with its category budgets. */
-    @Override protected String detailId() { return getIntent().getStringExtra(EXTRA_MONTHLY_ID); }
+    @Override protected String detailId() { return getIntent().getStringExtra(BudgetDetailActivity.EXTRA_MONTHLY_ID); }
 
     public static final String EXTRA_ID = "budget_id";
-    public static final String EXTRA_MONTHLY_ID = "monthly_budget_id";
     private ActivityBudgetFormBinding binding;
     // view_budget_shortfall is included without an android:id, so ViewBinding does not expose it.
     private View shortfallPanel;
@@ -54,13 +55,13 @@ public final class BudgetFormActivity extends FinanceActivity {
         com.example.fintrack.app.core.ui.MoneyInput.attach(binding.amountInputBudget.etAmount,
                 binding.getRoot().<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         editing = getIntent().hasExtra(EXTRA_ID);
-        monthlyId = getIntent().getStringExtra(EXTRA_MONTHLY_ID);
+        monthlyId = getIntent().getStringExtra(BudgetDetailActivity.EXTRA_MONTHLY_ID);
         if (monthlyId == null) {
             // A category budget cannot exist without its monthly budget: start from "Tạo ngân sách tháng".
             startActivity(new Intent(this, MonthlyBudgetFormActivity.class)); finish(); return;
         }
         id = editing ? getIntent().getStringExtra(EXTRA_ID) : UUID.randomUUID().toString();
-        if (saved != null) { initialized = saved.getBoolean("initialized"); id = saved.getString("id"); category = saved.getString("category"); month = saved.getString("month"); }
+        if (saved != null) { initialized = saved.getBoolean(STATE_INITIALIZED); id = saved.getString(STATE_ID); category = saved.getString(STATE_CATEGORY); month = saved.getString(STATE_MONTH); }
 
         binding.toolbarBudgetForm.setTitle(editing ? R.string.budget_edit_title : R.string.budget_add_title);
         binding.amountInputBudget.tvAmountLabel.setText(getString(R.string.budget_limit_label)); binding.amountInputBudget.tvAmountSign.setVisibility(View.GONE);
@@ -86,7 +87,7 @@ public final class BudgetFormActivity extends FinanceActivity {
         if (book == null) return;
         MonthlyBudget monthly = book.monthlyBudget(monthlyId);
         if (monthly == null || monthly.archivedAt != null) {
-            if (!model.busy()) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); }
+            if (!model.saveLoading()) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); }
             return;
         }
         if (!initialized) {
@@ -99,12 +100,12 @@ public final class BudgetFormActivity extends FinanceActivity {
             initialized = true;
         }
         binding.tvBudgetCatValue.setText(book.category(category) == null ? getString(R.string.transaction_category_placeholder) : book.category(category).name);
-        binding.tvBudgetPeriodValue.setText(FinanceUi.monthLabel(month));
+        binding.tvBudgetPeriodValue.setText(FinanceUi.monthLabel(this, month));
     }
 
     /** Xử lý kiểm tra dữ liệu và lưu ngân sách danh mục */
     private void save() {
-        if (book == null || model.busy() || month == null) return;
+        if (book == null || model.saveLoading() || month == null) return;
 
         BudgetFormValidator.Result result = BudgetFormValidator.category(id, monthlyId, category, month, usedCategories(),
                 binding.amountInputBudget.etAmount.getText().toString());
@@ -136,6 +137,6 @@ public final class BudgetFormActivity extends FinanceActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out); out.putString("id", id); out.putString("category", category); out.putString("month", month); out.putBoolean("initialized", initialized);
+        super.onSaveInstanceState(out); out.putString(STATE_ID, id); out.putString(STATE_CATEGORY, category); out.putString(STATE_MONTH, month); out.putBoolean(STATE_INITIALIZED, initialized);
     }
 }

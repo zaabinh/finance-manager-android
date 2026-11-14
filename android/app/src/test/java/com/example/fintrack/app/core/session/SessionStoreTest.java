@@ -15,7 +15,7 @@ public class SessionStoreTest {
     private final SessionStore store = new SessionStore(storage);
 
     private SessionSnapshot loginWithProfile(String token, String userId) {
-        SessionSnapshot session = store.login(token, "refresh-" + token, true);
+        SessionSnapshot session = store.login(token, "refresh-" + token, true, true);
         assertTrue(store.updateProfile(session, userId, userId + "@example.com", "Name " + userId));
         return session;
     }
@@ -34,7 +34,7 @@ public class SessionStoreTest {
     @Test
     public void loginAlwaysStartsANewGenerationEvenForTheSameAccount() {
         SessionSnapshot first = loginWithProfile("a1", "user-1");
-        SessionSnapshot second = store.login("a2", "r2", false);
+        SessionSnapshot second = store.login("a2", "r2", false, true);
 
         assertTrue(second.generation > first.generation);
         assertFalse(store.isCurrent(first));
@@ -73,7 +73,7 @@ public class SessionStoreTest {
 
     @Test
     public void completeSetupMarksTheCurrentSession() {
-        SessionSnapshot session = store.login("a1", "r1", false);
+        SessionSnapshot session = store.login("a1", "r1", false, true);
 
         assertTrue(store.completeSetup(session));
 
@@ -84,7 +84,7 @@ public class SessionStoreTest {
     @Test
     public void everyConditionalWriteIsRefusedForAStaleSnapshot() {
         SessionSnapshot stale = loginWithProfile("a1", "user-1");
-        store.login("a2", "r2", false); // same or another account: a new session either way
+        store.login("a2", "r2", false, true); // same or another account: a new session either way
         SessionSnapshot current = store.current();
         int saves = storage.saves;
 
@@ -159,7 +159,7 @@ public class SessionStoreTest {
         SessionStore restartedAgain = new SessionStore(storage);
         assertFalse(restartedAgain.current().loggedIn);
         assertTrue(restartedAgain.current().setupCompleted);
-        SessionSnapshot next = restartedAgain.login("a3", "r3", true);
+        SessionSnapshot next = restartedAgain.login("a3", "r3", true, true);
         assertTrue(next.generation > restored.generation + 1);
         assertFalse(restartedAgain.isCurrent(session));
     }
@@ -200,7 +200,6 @@ public class SessionStoreTest {
     public void rememberedLoginSurvivesARestartAndLogoutResetsTheFlag() {
         SessionSnapshot remembered = store.login("a1", "r1", true, true);
         assertTrue(new SessionStore(storage).isCurrent(remembered));
-        assertTrue(store.login("a2", "r2", true).rememberMe); // the default
 
         SessionSnapshot session = store.login("a3", "r3", true, false);
         assertTrue(store.clear(session));

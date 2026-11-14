@@ -23,13 +23,6 @@ import java.util.function.Consumer;
 
 /** Shared budget-screen helpers: category picker, server-code messages and the savings transfer shortcut. */
 final class BudgetUi {
-    // Transfer seam (spec §3). TransactionFormActivity owns the EXTRA_PREFILL_* constants; literals keep this
-    // feature independent of the transfer work.
-    static final String PREFILL_TYPE = "prefillType";
-    static final String PREFILL_WALLET_ID = "prefillWalletId";
-    static final String PREFILL_DESTINATION_WALLET_ID = "prefillDestinationWalletId";
-    static final String PREFILL_AMOUNT_MINOR = "prefillAmountMinor";
-
     private BudgetUi() { }
 
     /** Active EXPENSE categories not yet used in this monthly budget (each category once). */
@@ -83,9 +76,9 @@ final class BudgetUi {
         }
         if (source == null) { Toast.makeText(activity, R.string.budget_no_savings_wallet, Toast.LENGTH_LONG).show(); return; }
         Intent intent = new Intent(activity, TransactionFormActivity.class)
-                .putExtra(PREFILL_TYPE, TransactionType.TRANSFER.name())
-                .putExtra(PREFILL_WALLET_ID, source.id);
-        if (shortfall > 0) intent.putExtra(PREFILL_AMOUNT_MINOR, shortfall);
+                .putExtra(TransactionFormActivity.EXTRA_PREFILL_TYPE, TransactionType.TRANSFER.name())
+                .putExtra(TransactionFormActivity.EXTRA_PREFILL_WALLET_ID, source.id);
+        if (shortfall > 0) intent.putExtra(TransactionFormActivity.EXTRA_PREFILL_AMOUNT_MINOR, shortfall);
         activity.startActivity(intent);
     }
 }

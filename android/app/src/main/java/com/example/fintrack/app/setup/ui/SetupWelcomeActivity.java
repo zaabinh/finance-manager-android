@@ -6,7 +6,6 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.fintrack.R;
 import com.example.fintrack.databinding.ActivitySetupWelcomeBinding;
 
 // Màn hình Chào mừng (SetupWelcomeActivity) - Màn hình khởi đầu của luồng hướng dẫn thiết lập

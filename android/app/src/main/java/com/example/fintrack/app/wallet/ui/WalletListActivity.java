@@ -16,7 +16,7 @@ public class WalletListActivity extends FinanceActivity {
     @Override protected View contentView() { binding = ActivityWalletListBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
-        adapter = new WalletAdapter(wallet -> startActivity(new Intent(this, WalletDetailActivity.class).putExtra("WALLET_ID", wallet.id)));
+        adapter = new WalletAdapter(wallet -> startActivity(new Intent(this, WalletDetailActivity.class).putExtra(WalletDetailActivity.EXTRA_WALLET_ID, wallet.id)));
         binding.rvWallets.setLayoutManager(new LinearLayoutManager(this)); binding.rvWallets.setAdapter(adapter);
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnAddWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletAddActivity.class)));

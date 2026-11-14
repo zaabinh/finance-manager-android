@@ -20,7 +20,7 @@ jobs:
   build-test:
     name: Android Build and Test
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: android
@@ -47,8 +47,21 @@ jobs:
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - name: Build mockDebug APK and unit tests
-        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleMockDebug :app:testMockDebugUnitTest
+      - name: Mock flavor - build, unit tests and lint
+        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleMockDebug :app:testMockDebugUnitTest :app:lintMockDebug
+
+      - name: Dev flavor - build and unit tests
+        if: ${{ !cancelled() }}
+        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleDevDebug :app:testDevDebugUnitTest
+
+      - name: Staging flavor - compile
+        if: ${{ !cancelled() }}
+        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleStagingDebug
+
+      # The release build type has no signingConfig, so this yields an unsigned APK and needs no secrets.
+      - name: Prod release with R8
+        if: ${{ !cancelled() }}
+        run: bash ./gradlew --no-daemon --stacktrace --console=plain :app:assembleProdRelease
 
       - name: Upload test reports
         if: ${{ always() }}
@@ -58,6 +71,9 @@ jobs:
           path: |
             android/app/build/reports/tests/testMockDebugUnitTest/
             android/app/build/test-results/testMockDebugUnitTest/
+            android/app/build/reports/tests/testDevDebugUnitTest/
+            android/app/build/test-results/testDevDebugUnitTest/
+            android/app/build/reports/lint-results-mockDebug.*
             android/build/reports/problems/
           if-no-files-found: warn
           retention-days: 7

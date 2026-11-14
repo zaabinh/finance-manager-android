@@ -15,17 +15,19 @@ import com.example.fintrack.app.transaction.ui.TransactionListActivity;
 import com.example.fintrack.databinding.ActivityWalletDetailBinding;
 
 public class WalletDetailActivity extends FinanceActivity {
+    /** Wallet id; also read by WalletEditActivity and, as a filter, by TransactionListActivity. */
+    public static final String EXTRA_WALLET_ID = "WALLET_ID";
     private ActivityWalletDetailBinding binding;
     private String id;
     private Wallet wallet;
     @Override protected View contentView() { binding = ActivityWalletDetailBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
-        id = getIntent().getStringExtra("WALLET_ID");
+        id = getIntent().getStringExtra(EXTRA_WALLET_ID);
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnEditWallet.setOnClickListener(v -> {
             if (wallet != null && wallet.archivedAt == null)
-                startActivity(new Intent(this, WalletEditActivity.class).putExtra("WALLET_ID", id));
+                startActivity(new Intent(this, WalletEditActivity.class).putExtra(EXTRA_WALLET_ID, id));
         });
         binding.btnDelete.setOnClickListener(v -> {
             if (wallet != null) confirmDelete(() -> model.change(FinanceAction.walletArchive(id), false));
@@ -34,7 +36,7 @@ public class WalletDetailActivity extends FinanceActivity {
             if (wallet != null) model.change(FinanceAction.walletStatus(id, wallet.archivedAt != null), false);
         });
         binding.btnSeeAllTransactions.setOnClickListener(v ->
-                startActivity(new Intent(this, TransactionListActivity.class).putExtra("WALLET_ID", id)));
+                startActivity(new Intent(this, TransactionListActivity.class).putExtra(EXTRA_WALLET_ID, id)));
         // A transaction page cannot provide exact monthly totals.
         binding.rvRecentTransactions.setVisibility(View.GONE);
         ((View) binding.tvIncomeThisMonth.getParent().getParent()).setVisibility(View.GONE);

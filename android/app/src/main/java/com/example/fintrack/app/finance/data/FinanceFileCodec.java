@@ -18,7 +18,11 @@ import java.util.UUID;
 /** Explicit codec for the existing per-user mock file format. */
 public final class FinanceFileCodec {
     private final Gson gson=new Gson();
-    public FinanceSnapshot decode(String json) {
+    /** Decodes and validates a file; any malformed or inconsistent content is a STORAGE failure. */
+    public FinanceSnapshot decode(String json) { return decodeBook(json).snapshot(); }
+
+    /** Same as {@link #decode} but keeps the validated book, so the store does not rebuild it. */
+    FinanceBook decodeBook(String json) {
         try {
             JsonObject root=JsonParser.parseString(json).getAsJsonObject();
             if (!root.has("version") || root.get("version").getAsBigDecimal().intValueExact()!=1)
@@ -33,7 +37,7 @@ public final class FinanceFileCodec {
             validateNumbers(root,"monthlyBudgets",new String[]{"serverTotalMinor","serverSpentMinor"},new String[]{"warningThresholdPercent"});
             FinanceFileDto file=gson.fromJson(root,FinanceFileDto.class);
             if (!root.has("monthlyBudgets")) upgrade(file);
-            return new FinanceBook(toSnapshot(file)).snapshot();
+            return new FinanceBook(toSnapshot(file));
         } catch (RuntimeException error) { throw storage(error); }
     }
     public String encode(FinanceSnapshot snapshot) {

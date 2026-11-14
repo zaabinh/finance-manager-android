@@ -82,10 +82,10 @@ public class UserViewModel extends ViewModel {
         });
     }
 
-    public void updateProfile(String name, String phone) {
+    public void updateProfile(String displayName, String timeZone) {
         SessionSnapshot origin = sessionStore.current();
         updateProfileResult.setValue(Resource.loading(null));
-        userRepository.updateProfile(name, phone, result -> {
+        userRepository.updateProfile(displayName, timeZone, result -> {
             if (!sessionStore.isCurrent(origin)) return;
             UserProfileResponse profile = result.getData();
             if (result.getStatus() == Resource.Status.SUCCESS && profile != null && !isEmpty(profile.getDisplayName())) {

@@ -28,7 +28,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     // Biến trạng thái
     private int currentStep = 1;
     private AnalyticsData analyticsData;
-    private String currentMonth = "Tháng 10";
+    private String currentMonth;
     private AnalyticsCategoryItem selectedCategory;
     private AnalyticsProvider provider;
 
@@ -49,6 +49,7 @@ public class AnalyticsActivity extends AppCompatActivity {
             binding.layoutNotConnected.setVisibility(View.VISIBLE);
             return;
         }
+        currentMonth = getResources().getStringArray(R.array.analytics_demo_months)[0];
         if (savedInstanceState != null) {
             currentStep = savedInstanceState.getInt(STATE_STEP, 1);
             currentMonth = savedInstanceState.getString(STATE_MONTH, currentMonth);
@@ -77,17 +78,17 @@ public class AnalyticsActivity extends AppCompatActivity {
 
         setupSlide2CategoryPills();
 
-        binding.tvSlide3PeakHeader.setText("Tuần " + analyticsData.getPeakWeekNumber() + " chi tiêu cao nhất");
-        binding.tvSlide3PeakSub.setText(analyticsData.getPeakWeekAmount() + " · chiếm " + analyticsData.getPeakWeekSharePercentage() + "% chi tiêu tháng.");
+        binding.tvSlide3PeakHeader.setText(getString(R.string.analytics_peak_week_header, analyticsData.getPeakWeekNumber()));
+        binding.tvSlide3PeakSub.setText(getString(R.string.analytics_peak_week_sub, analyticsData.getPeakWeekAmount(), analyticsData.getPeakWeekSharePercentage()));
 
-        binding.tvSlide4CategoryName.setText("Khoản " + analyticsData.getBudgetCategoryName());
-        binding.tvSlide4BudgetPercent.setText(analyticsData.getBudgetUsedPercentage() + "% ngân sách");
-        binding.tvSlide4Spent.setText("Đã chi " + analyticsData.getBudgetSpentFormatted());
-        binding.tvSlide4Remaining.setText("Còn " + analyticsData.getBudgetRemainingFormatted());
+        binding.tvSlide4CategoryName.setText(getString(R.string.analytics_budget_category, analyticsData.getBudgetCategoryName()));
+        binding.tvSlide4BudgetPercent.setText(getString(R.string.analytics_budget_percent, analyticsData.getBudgetUsedPercentage()));
+        binding.tvSlide4Spent.setText(getString(R.string.analytics_budget_spent, analyticsData.getBudgetSpentFormatted()));
+        binding.tvSlide4Remaining.setText(getString(R.string.analytics_budget_remaining, analyticsData.getBudgetRemainingFormatted()));
         binding.tvSlide4AlertNote.setText(analyticsData.getBudgetNote());
 
         binding.tvSlide5TipMessage.setText(analyticsData.getTipMessage());
-        binding.tvSlide5SuggestionAction.setText("Gợi ý: " + analyticsData.getTipSuggestionAction());
+        binding.tvSlide5SuggestionAction.setText(getString(R.string.analytics_tip_suggestion, analyticsData.getTipSuggestionAction()));
     }
 
     private void setupSlide2CategoryPills() {
@@ -152,7 +153,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     }
 
     private void updateStepUI() {
-        binding.tvStoryStepCounter.setText("PHÂN TÍCH " + currentStep + " / 5 · MINH HỌA");
+        binding.tvStoryStepCounter.setText(getString(R.string.analytics_step_counter, currentStep));
 
         View[] segs = {binding.progressSeg1, binding.progressSeg2, binding.progressSeg3, binding.progressSeg4, binding.progressSeg5};
         for (int i = 0; i < segs.length; i++) {
@@ -181,7 +182,7 @@ public class AnalyticsActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnSelectMonth.setOnClickListener(v -> {
-            String[] months = {"Tháng 10", "Tháng 9", "Tháng 8", "Tháng 7"};
+            String[] months = getResources().getStringArray(R.array.analytics_demo_months);
             new AlertDialog.Builder(this)
                     .setTitle(R.string.select_report_month)
                     .setItems(months, (dialog, which) -> {
@@ -212,7 +213,6 @@ public class AnalyticsActivity extends AppCompatActivity {
         // Điều hướng trực tiếp đến Màn hình danh sách Ngân sách
         binding.btnSlide5Suggestion.setOnClickListener(v -> {
             Intent intent = new Intent(this, BudgetListActivity.class);
-            intent.putExtra("month", currentMonth);
             startActivity(intent);
         });
     }

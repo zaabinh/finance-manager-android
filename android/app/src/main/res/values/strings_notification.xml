@@ -10,4 +10,6 @@
     <string name="notif_settings">Cài đặt thông báo</string>
     <string name="notification_not_connected_title">Chưa kết nối thông báo</string>
     <string name="notification_not_connected_body">Thông báo về tài khoản của bạn sẽ hiển thị tại đây khi được kết nối với máy chủ.</string>
+    <string name="notification_selected">Đã chọn: %1$s</string>
+    <string name="notification_all_marked_read">Đã đánh dấu đọc tất cả thông báo</string>
 </resources>

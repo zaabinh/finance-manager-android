@@ -49,7 +49,7 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
         ItemBudgetBinding row = holder.binding;
         row.tvBudgetCategoryName.setText(category == null
                 ? holder.itemView.getContext().getString(R.string.transaction_category_placeholder) : category.name);
-        row.tvBudgetPeriod.setText(FinanceUi.monthLabel(budget.month));
+        row.tvBudgetPeriod.setText(FinanceUi.monthLabel(holder.itemView.getContext(), budget.month));
 
         // Hiển thị phần trăm đã chi tiêu
         row.tvBudgetPercentage.setText(usage.percentage + "%");

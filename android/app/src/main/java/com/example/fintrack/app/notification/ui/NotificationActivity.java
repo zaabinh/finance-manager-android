@@ -53,7 +53,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void onItemClick(NotificationItem item) {
         provider.markRead(item.getId());
         loadNotifications();
-        Toast.makeText(this, "Đã chọn: " + item.getTitle(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.notification_selected, item.getTitle()), Toast.LENGTH_SHORT).show();
     }
 
     private void loadNotifications() {
@@ -94,7 +94,7 @@ public class NotificationActivity extends AppCompatActivity {
         binding.btnMarkAllRead.setOnClickListener(v -> {
             provider.markAllRead();
             loadNotifications();
-            Toast.makeText(this, "Đã đánh dấu đọc tất cả thông báo", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.notification_all_marked_read, Toast.LENGTH_SHORT).show();
         });
 
         binding.btnOpenSettings.setOnClickListener(v ->

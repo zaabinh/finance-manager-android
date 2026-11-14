@@ -41,7 +41,7 @@ public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudg
         int count = book.categoryBudgets(monthly).size();
 
         ItemBudgetBinding row = holder.binding;
-        row.tvBudgetCategoryName.setText(FinanceUi.monthLabel(monthly.month));
+        row.tvBudgetCategoryName.setText(FinanceUi.monthLabel(context, monthly.month));
         row.tvBudgetPeriod.setText(context.getResources().getQuantityString(R.plurals.monthly_budget_category_count, count, count));
         row.tvBudgetPercentage.setText(usage.percentage + "%");
         row.tvBudgetSpent.setText(FinanceUi.money(usage.spent));

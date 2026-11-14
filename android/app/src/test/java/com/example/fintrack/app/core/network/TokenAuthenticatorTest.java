@@ -79,7 +79,7 @@ public class TokenAuthenticatorTest {
     }
 
     private SessionSnapshot login(String access, String refresh, String userId) {
-        SessionSnapshot session = store.login(access, refresh, true);
+        SessionSnapshot session = store.login(access, refresh, true, true);
         store.updateProfile(session, userId, userId + "@example.com", userId);
         return session;
     }
@@ -280,7 +280,7 @@ public class TokenAuthenticatorTest {
 
     @Test
     public void missingRefreshTokenClearsTheSession() throws IOException {
-        SessionSnapshot session = store.login("a1", null, true);
+        SessionSnapshot session = store.login("a1", null, true, true);
 
         assertNull(authenticator.authenticate(null, unauthorized(session, "a1")));
 

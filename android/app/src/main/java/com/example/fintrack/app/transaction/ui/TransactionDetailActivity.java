@@ -32,7 +32,7 @@ public final class TransactionDetailActivity extends FinanceActivity {
     @Override protected void render() {
         if (book == null) return;
         Transaction value = book.transaction(id);
-        if (value == null) { if (!model.busy()) finish(); return; }
+        if (value == null) { if (!model.saveLoading()) finish(); return; }
         boolean transfer = value.type == TransactionType.TRANSFER, voided = "VOIDED".equals(value.status);
         String zone = book.timeZone();
         binding.toolbarTransactionDetail.setTitle(transfer ? R.string.transfer_detail_title : R.string.transaction_detail_title);

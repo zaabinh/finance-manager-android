@@ -1,7 +1,7 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.transaction.ui.TransactionListActivity;
 import com.example.fintrack.app.budget.domain.BudgetFormValidator;
-import com.example.fintrack.app.finance.domain.Budget;
 import com.example.fintrack.app.finance.domain.Category;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.domain.FinanceFailure;
@@ -51,7 +51,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
     protected void bind(Bundle saved) {
         binding.toolbarMonthlyBudgetForm.setNavigationOnClickListener(view -> finish());
         id = UUID.randomUUID().toString();
-        if (getIntent().hasExtra("month")) { month = getIntent().getStringExtra("month"); monthChosen = true; }
+        if (getIntent().hasExtra(TransactionListActivity.EXTRA_MONTH)) { month = getIntent().getStringExtra(TransactionListActivity.EXTRA_MONTH); monthChosen = true; }
         if (saved != null) {
             id = saved.getString(KEY_ID, id);
             month = saved.getString(KEY_MONTH); monthChosen = month != null;
@@ -75,7 +75,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
     protected void render() {
         if (book == null) return;
         if (!monthChosen) month = book.monthAt(System.currentTimeMillis());
-        binding.tvMonthlyBudgetPeriodValue.setText(FinanceUi.monthLabel(currentMonth()));
+        binding.tvMonthlyBudgetPeriodValue.setText(FinanceUi.monthLabel(this, currentMonth()));
         // Only refresh category names; rebuilding would drop focus while the user types.
         for (int i = 0; i < binding.containerBudgetRows.getChildCount() && i < categories.size(); i++) {
             Category category = book.category(categories.get(i));
@@ -120,7 +120,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
     }
 
     private void save() {
-        if (book == null || model.busy()) return;
+        if (book == null || model.saveLoading()) return;
         BudgetFormValidator.Result result = BudgetFormValidator.monthly(currentMonth(), book.monthlyBudgetFor(currentMonth()) != null,
                 categories, limits, () -> UUID.randomUUID().toString());
         if (!result.valid()) {

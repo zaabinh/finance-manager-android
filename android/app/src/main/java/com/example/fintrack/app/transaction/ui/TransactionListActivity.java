@@ -1,5 +1,6 @@
 package com.example.fintrack.app.transaction.ui;
 
+import com.example.fintrack.app.wallet.ui.WalletDetailActivity;
 import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.domain.Transaction;
 import com.example.fintrack.app.finance.domain.TransactionType;
@@ -28,6 +29,11 @@ import java.util.List;
 
 /** History: references come from the REFERENCES snapshot, rows from the server-paged query held by the ViewModel. */
 public final class TransactionListActivity extends FinanceActivity {
+    private static final String STATE_MONTH = "month", STATE_WALLET = "wallet", STATE_CATEGORY = "category",
+            STATE_EXPLICIT_MONTH = "explicitMonth", STATE_TYPE = "type", STATE_SEARCH = "search";
+    /** YYYY-MM month to open; anything else is ignored. */
+    public static final String EXTRA_MONTH = "month";
+    public static final String EXTRA_CATEGORY_ID = "category_id";
     private String month = FinanceBook.month(System.currentTimeMillis()), walletFilter, categoryFilter;
     private TransactionType type;
     private TransactionAdapter adapter;
@@ -40,15 +46,15 @@ public final class TransactionListActivity extends FinanceActivity {
         history = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory())
                 .get(TransactionListViewModel.class);
         if (saved != null) {
-            month = saved.getString("month", month); walletFilter = saved.getString("wallet"); categoryFilter = saved.getString("category");
-            explicitMonth = saved.getBoolean("explicitMonth");
-            String savedType = saved.getString("type");
+            month = saved.getString(STATE_MONTH, month); walletFilter = saved.getString(STATE_WALLET); categoryFilter = saved.getString(STATE_CATEGORY);
+            explicitMonth = saved.getBoolean(STATE_EXPLICIT_MONTH);
+            String savedType = saved.getString(STATE_TYPE);
             type = savedType == null ? null : TransactionType.valueOf(savedType);
-            binding.etTransactionSearch.setText(saved.getString("search", ""));
+            binding.etTransactionSearch.setText(saved.getString(STATE_SEARCH, ""));
         } else {
             // Entry points from wallet/budget detail.
-            walletFilter = getIntent().getStringExtra("WALLET_ID"); categoryFilter = getIntent().getStringExtra("category_id");
-            String requested = getIntent().getStringExtra("month");
+            walletFilter = getIntent().getStringExtra(WalletDetailActivity.EXTRA_WALLET_ID); categoryFilter = getIntent().getStringExtra(EXTRA_CATEGORY_ID);
+            String requested = getIntent().getStringExtra(EXTRA_MONTH);
             if (requested != null && requested.matches("[0-9]{4}-(0[1-9]|1[0-2])")) { month = requested; explicitMonth = true; }
         }
         FinanceUi.navigation(this, R.id.navReport);
@@ -131,7 +137,7 @@ public final class TransactionListActivity extends FinanceActivity {
         List<Transaction> rows = history.rows();
         if (adapter == null) { adapter = new TransactionAdapter(book, rows); binding.rvTransactions.setAdapter(adapter); }
         else adapter.submit(book, rows);
-        binding.tvTransactionMonth.setText(FinanceUi.monthLabel(month));
+        binding.tvTransactionMonth.setText(FinanceUi.monthLabel(this, month));
         if (BuildConfig.USE_MOCK) binding.tvMonthSummary.setText(getString(R.string.transaction_month_summary,
                 FinanceUi.money(book.total(TransactionType.EXPENSE, month)), FinanceUi.money(book.total(TransactionType.INCOME, month))));
         FinanceBook.Query query = history.query();
@@ -156,8 +162,8 @@ public final class TransactionListActivity extends FinanceActivity {
         else if (!isFinishing() && history != null) history.refresh();
     }
     @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out); out.putString("month", month); out.putString("wallet", walletFilter); out.putString("category", categoryFilter);
-        out.putBoolean("explicitMonth", explicitMonth); out.putString("type", type == null ? null : type.name());
-        out.putString("search", binding.etTransactionSearch.getText().toString());
+        super.onSaveInstanceState(out); out.putString(STATE_MONTH, month); out.putString(STATE_WALLET, walletFilter); out.putString(STATE_CATEGORY, categoryFilter);
+        out.putBoolean(STATE_EXPLICIT_MONTH, explicitMonth); out.putString(STATE_TYPE, type == null ? null : type.name());
+        out.putString(STATE_SEARCH, binding.etTransactionSearch.getText().toString());
     }
 }

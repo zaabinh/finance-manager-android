@@ -43,7 +43,7 @@ public final class MockFinanceStore {
         if (!file.getBaseFile().exists() && !new File(file.getBaseFile().getPath() + ".bak").exists()) return demo();
         try {
             String json = new String(file.readFully(), StandardCharsets.UTF_8);
-            return new FinanceBook(codec.decode(json));
+            return codec.decodeBook(json);
         } catch (Exception e) { throw new FinanceFailure(FinanceProblem.STORAGE, e); }
     }
 

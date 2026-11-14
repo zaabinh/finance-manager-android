@@ -27,9 +27,6 @@ public class SettingUserActivity extends AppCompatActivity {
     public static final String[] TIMEZONE_IDS = {
             "Asia/Ho_Chi_Minh", "Asia/Tokyo", "Europe/London", "America/New_York"
     };
-    public static final String[] TIMEZONE_LABELS = {
-            "Hà Nội · GMT+07:00", "Tokyo · GMT+09:00", "London", "New York"
-    };
 
     private ActivitySettingUserBinding binding;
 
@@ -221,7 +218,7 @@ public class SettingUserActivity extends AppCompatActivity {
     private void showTimezonePicker() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.timezone_picker_title)
-                .setSingleChoiceItems(TIMEZONE_LABELS, selectedTimezoneIndex(), (dialog, which) -> {
+                .setSingleChoiceItems(R.array.timezone_labels, selectedTimezoneIndex(), (dialog, which) -> {
                     String timezoneId = TIMEZONE_IDS[which];
                     selectedTimeZone = timezoneId;
                     showTimezone(timezoneId);
@@ -241,7 +238,7 @@ public class SettingUserActivity extends AppCompatActivity {
     private void showTimezone(String timezoneId) {
         for (int i = 0; i < TIMEZONE_IDS.length; i++) {
             if (TIMEZONE_IDS[i].equals(timezoneId)) {
-                tvTimezoneValue.setText(TIMEZONE_LABELS[i]);
+                tvTimezoneValue.setText(getResources().getStringArray(R.array.timezone_labels)[i]);
                 return;
             }
         }

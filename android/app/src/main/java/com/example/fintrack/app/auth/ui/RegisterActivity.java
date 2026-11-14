@@ -172,7 +172,7 @@ public class RegisterActivity extends AppCompatActivity {
                     }
 
                     Intent intent = new Intent(RegisterActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", emailToPass);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, emailToPass);
                     startActivity(intent);
                     finish();
                     break;

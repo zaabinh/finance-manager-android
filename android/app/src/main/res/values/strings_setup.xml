@@ -74,4 +74,5 @@
     <string name="btn_enter_app">Vào ứng dụng</string>
     <string name="notif_permission_granted">Đã cấp quyền Thông báo</string>
     <string name="notif_permission_denied">Thông báo bị tắt. Bạn có thể bật lại trong Cài đặt hệ thống.</string>
+    <string name="setup_default_display_name">Minh Anh</string>
 </resources>

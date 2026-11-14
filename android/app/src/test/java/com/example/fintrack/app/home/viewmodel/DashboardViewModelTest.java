@@ -40,7 +40,7 @@ public class DashboardViewModelTest {
     private StubCall<DashboardResponse> call(int index) { return api.call("dashboard", index); }
 
     private SessionSnapshot loggedIn(String access) {
-        SessionSnapshot session = store.login(access, "refresh-" + access, true);
+        SessionSnapshot session = store.login(access, "refresh-" + access, true, true);
         store.updateProfile(session, "user-1", "user-1@example.com", "Name");
         return session;
     }

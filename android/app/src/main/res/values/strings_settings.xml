@@ -79,4 +79,11 @@
     <string name="ocr_camera_granted">Đã cấp quyền Camera</string>
     <string name="ocr_camera_denied_use_gallery">Bạn có thể chọn ảnh hóa đơn sẵn có từ Thư viện</string>
     <string name="ocr_camera_permission_needed">Vui lòng cấp quyền Camera hoặc chọn ảnh từ Thư viện</string>
+    <!-- Same order as SettingUserActivity.TIMEZONE_IDS. -->
+    <string-array name="timezone_labels">
+        <item>Hà Nội · GMT+07:00</item>
+        <item>Tokyo · GMT+09:00</item>
+        <item>London</item>
+        <item>New York</item>
+    </string-array>
 </resources>

@@ -25,6 +25,7 @@ import com.google.android.material.chip.ChipGroup;
 
 /** Forms use the authenticated finance repository and command lifecycle. */
 public abstract class WalletFormActivity extends FinanceActivity {
+    private static final String STATE_WALLET_INITIALIZED = "walletInitialized", STATE_WALLET_TYPE = "walletType";
     // The add and edit layouts are different binding classes; the shared views are held once here.
     private View root;
     private Toolbar toolbar;
@@ -53,11 +54,11 @@ public abstract class WalletFormActivity extends FinanceActivity {
     }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
-        id = getIntent().getStringExtra("WALLET_ID");
+        id = getIntent().getStringExtra(WalletDetailActivity.EXTRA_WALLET_ID);
         MoneyInput.attach(opening, root.<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         if (saved != null) {
-            initialized = saved.getBoolean("walletInitialized");
-            type = WalletType.valueOf(saved.getString("walletType", "CASH"));
+            initialized = saved.getBoolean(STATE_WALLET_INITIALIZED);
+            type = WalletType.valueOf(saved.getString(STATE_WALLET_TYPE, "CASH"));
         }
         toolbar.setNavigationOnClickListener(view -> finish());
         root.findViewById(R.id.fieldWalletType).setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
@@ -93,6 +94,6 @@ public abstract class WalletFormActivity extends FinanceActivity {
         if (save != null) FinanceUi.progress(save, value);
     }
     @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out); out.putBoolean("walletInitialized", initialized); out.putString("walletType", type.name());
+        super.onSaveInstanceState(out); out.putBoolean(STATE_WALLET_INITIALIZED, initialized); out.putString(STATE_WALLET_TYPE, type.name());
     }
 }

@@ -68,20 +68,20 @@ public class EncryptedSessionStorageTest {
     @Test
     public void storeGenerationIsPersistedAcrossRestarts() {
         SessionStore store = new SessionStore(new EncryptedSessionStorage(context));
-        SessionSnapshot session = store.login("access", "refresh", false);
+        SessionSnapshot session = store.login("access", "refresh", false, true);
 
         SessionStore restarted = new SessionStore(new EncryptedSessionStorage(context));
 
         assertEquals(session.generation, restarted.current().generation);
         assertTrue(restarted.isCurrent(session));
         assertNull(restarted.current().userId);
-        assertTrue(restarted.login("access-2", "refresh-2", false).generation > session.generation);
+        assertTrue(restarted.login("access-2", "refresh-2", false, true).generation > session.generation);
     }
 
     @Test
     public void clearRemovesTheSessionButKeepsTheSetupFlag() {
         SessionStore store = new SessionStore(new EncryptedSessionStorage(context));
-        SessionSnapshot session = store.login("access", "refresh", true);
+        SessionSnapshot session = store.login("access", "refresh", true, true);
         store.updateProfile(session, "user-1", "user@example.com", "Minh Anh");
 
         assertTrue(store.clear(session));

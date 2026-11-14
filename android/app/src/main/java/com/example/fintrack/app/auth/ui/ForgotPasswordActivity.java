@@ -1,5 +1,6 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.network.ErrorMapper;
 
 import android.content.Intent;
@@ -75,7 +76,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     /** Lắng nghe kết quả trả về từ API quên mật khẩu thông qua LiveData trong ViewModel */
     private void setupObservers() {
-        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+        authViewModel.getForgotPasswordResult().observe(this, event -> {
+            if (event == null) return;
+            // LOADING is state (rendered again after recreation); SUCCESS and ERROR are handled once.
+            Resource<Void> resource = event.peekContent().getStatus() == Resource.Status.LOADING
+                    ? event.peekContent() : event.getContentIfNotHandled();
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case SUCCESS:
@@ -92,8 +97,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
                     // Chuyển sang VerifyEmailActivity và đánh dấu cờ is_reset_password = true (để biết đây là luồng quên mật khẩu)
                     Intent intent = new Intent(ForgotPasswordActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", emailToPass);
-                    intent.putExtra("is_reset_password", true);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, emailToPass);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_IS_RESET_PASSWORD, true);
                     startActivity(intent);
                     finish(); // Đóng màn hình quên mật khẩu hiện tại
                     break;

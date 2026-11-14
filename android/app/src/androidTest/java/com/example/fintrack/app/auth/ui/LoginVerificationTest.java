@@ -1,5 +1,6 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.util.Event;
 import com.example.fintrack.app.core.error.AppError;
 
 import com.example.fintrack.app.core.network.HttpErrorParser;
@@ -93,12 +94,12 @@ public class LoginVerificationTest {
             scenario.onActivity(activity -> {
                 ((EditText) activity.findViewById(R.id.etUsernameOrEmail)).setText("demo@fintrack.com");
                 AuthViewModel model = new ViewModelProvider(activity, FintrackApplication.container(activity).viewModelFactory()).get(AuthViewModel.class);
-                ((MutableLiveData<Resource<Void>>) model.getResendVerificationResult())
-                        .setValue(Resource.success(null));
+                ((MutableLiveData<Event<Resource<Void>>>) model.getResendVerificationResult())
+                        .setValue(new Event<>(Resource.success(null)));
             });
             assertNotNull(verificationIntent);
             assertEquals(VerifyEmailActivity.class.getName(), verificationIntent.getComponent().getClassName());
-            assertEquals("demo@fintrack.com", verificationIntent.getStringExtra("email"));
+            assertEquals("demo@fintrack.com", verificationIntent.getStringExtra(VerifyEmailActivity.EXTRA_EMAIL));
         }
     }
 
@@ -108,8 +109,8 @@ public class LoginVerificationTest {
             instrumentation.addMonitor(monitor);
             scenario.onActivity(activity -> {
                 AuthViewModel model = new ViewModelProvider(activity, FintrackApplication.container(activity).viewModelFactory()).get(AuthViewModel.class);
-                ((MutableLiveData<Resource<Void>>) model.getResendVerificationResult())
-                        .setValue(Resource.error(HttpErrorParser.from(new java.io.IOException()), null));
+                ((MutableLiveData<Event<Resource<Void>>>) model.getResendVerificationResult())
+                        .setValue(new Event<>(Resource.error(HttpErrorParser.from(new java.io.IOException()), null)));
             });
             assertNull(verificationIntent);
         }

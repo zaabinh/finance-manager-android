@@ -22,6 +22,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /** Uses the same repository, session checks and command lifecycle as finance pickers. */
 abstract class CategoryFormActivity extends FinanceActivity {
+    private static final String STATE_CATEGORY_TYPE = "categoryType", STATE_ICON_KEY = "iconKey",
+            STATE_MANUAL_COLOR = "manualColor", STATE_CATEGORY_LOADED = "categoryLoaded";
     // The add and edit layouts are different binding classes; the shared views are held once here.
     private Toolbar toolbar;
     private EditText name, order;
@@ -58,13 +60,13 @@ abstract class CategoryFormActivity extends FinanceActivity {
     }
 
     @Override protected void bind(Bundle saved) {
-        id = getIntent().getStringExtra("CATEGORY_ID");
+        id = getIntent().getStringExtra(CategoryEditActivity.EXTRA_CATEGORY_ID);
         if (editing() && (id == null || id.isEmpty())) { finish(); return; }
-        if ("INCOME".equals(getIntent().getStringExtra("category_type"))) type = TransactionType.INCOME;
+        if ("INCOME".equals(getIntent().getStringExtra(CategoryAddActivity.EXTRA_CATEGORY_TYPE))) type = TransactionType.INCOME;
         if (saved != null) {
-            type = TransactionType.valueOf(saved.getString("categoryType", "EXPENSE"));
-            iconKey = saved.getString("iconKey"); manualColor = saved.getString("manualColor");
-            restoredForm = saved.getBoolean("categoryLoaded");
+            type = TransactionType.valueOf(saved.getString(STATE_CATEGORY_TYPE, "EXPENSE"));
+            iconKey = saved.getString(STATE_ICON_KEY); manualColor = saved.getString(STATE_MANUAL_COLOR);
+            restoredForm = saved.getBoolean(STATE_CATEGORY_LOADED);
         }
         toolbar.setNavigationOnClickListener(view -> finish());
         if (!editing()) {
@@ -76,13 +78,13 @@ abstract class CategoryFormActivity extends FinanceActivity {
                     confirmDelete(() -> model.change(FinanceAction.categoryArchive(id), true)));
         }
         status.setOnCheckedChangeListener((button, active) -> {
-            if (!bindingStatus && initialized && !model.busy())
+            if (!bindingStatus && initialized && !model.saveLoading())
                 model.change(FinanceAction.categoryStatus(id, active), false);
         });
         expense.setOnClickListener(v -> { type = TransactionType.EXPENSE; showType(); appearance.setType(type); });
         income.setOnClickListener(v -> { type = TransactionType.INCOME; showType(); appearance.setType(type); });
         save.setOnClickListener(v -> {
-            if (!initialized || model.busy()) return;
+            if (!initialized || model.saveLoading()) return;
             String value = name.getText().toString().trim();
             if (value.isEmpty() || value.codePointCount(0,value.length()) > 100) {
                 name.setError(getString(R.string.category_name_invalid)); return;
@@ -127,8 +129,8 @@ abstract class CategoryFormActivity extends FinanceActivity {
         expense.setEnabled(active); income.setEnabled(active);
         FinanceUi.visible(icons, active);
         FinanceUi.visible(colors, active);
-        save.setEnabled(active && !model.busy());
-        if(editing()) delete.setEnabled(active && !model.busy());
+        save.setEnabled(active && !model.saveLoading());
+        if(editing()) delete.setEnabled(active && !model.saveLoading());
     }
     @Override protected void loading(boolean busy) {
         if (save != null) FinanceUi.progress(save, busy);
@@ -136,8 +138,8 @@ abstract class CategoryFormActivity extends FinanceActivity {
         if (status != null) status.setEnabled(!busy && initialized);
     }
     @Override protected void onSaveInstanceState(Bundle state) {
-        state.putString("categoryType",type.name()); state.putString("iconKey",appearance.iconKey()); state.putString("manualColor",appearance.manualColor());
-        state.putBoolean("categoryLoaded", initialized);
+        state.putString(STATE_CATEGORY_TYPE,type.name()); state.putString(STATE_ICON_KEY,appearance.iconKey()); state.putString(STATE_MANUAL_COLOR,appearance.manualColor());
+        state.putBoolean(STATE_CATEGORY_LOADED, initialized);
         super.onSaveInstanceState(state);
     }
 }

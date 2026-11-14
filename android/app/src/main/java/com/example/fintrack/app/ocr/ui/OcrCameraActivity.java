@@ -104,7 +104,7 @@ public class OcrCameraActivity extends AppCompatActivity {
         ArrayList<String> images = new ArrayList<>();
         images.add(uri.toString());
         Intent intent = new Intent(this, TransactionReviewActivity.class);
-        intent.putStringArrayListExtra("images", images);
+        intent.putStringArrayListExtra(TransactionReviewActivity.EXTRA_IMAGES, images);
         startActivity(intent);
         finish();
     }

@@ -32,6 +32,10 @@ import java.util.UUID;
  * Màn hình xem lại kết quả trích xuất thông tin hóa đơn từ OCR (số tiền, cửa hàng, ngày tháng, danh mục).
  */
 public final class TransactionReviewActivity extends FinanceActivity {
+    private static final String STATE_ID = "id", STATE_CATEGORY = "category", STATE_WALLET = "wallet",
+            STATE_PAYEE = "payee", STATE_DATE = "date", STATE_APPLIED = "applied";
+    /** Receipt image URIs (strings); one screen reviews the image at EXTRA_INDEX, then opens the next. */
+    public static final String EXTRA_IMAGES = "images", EXTRA_INDEX = "index";
     private ArrayList<String> images;
     private int index;
     private String id = UUID.randomUUID().toString(), category, wallet, payee = "";
@@ -45,17 +49,17 @@ public final class TransactionReviewActivity extends FinanceActivity {
         binding.toolbarReceiptReview.setNavigationOnClickListener(view -> finish());
         // The suggestion chips live in an include without an android:id, so ViewBinding does not expose them.
         com.example.fintrack.app.core.ui.MoneyInput.attach(binding.amountInput.etAmount, binding.getRoot().<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
-        images = getIntent().getStringArrayListExtra("images");
-        index = getIntent().getIntExtra("index", 0);
+        images = getIntent().getStringArrayListExtra(EXTRA_IMAGES);
+        index = getIntent().getIntExtra(EXTRA_INDEX, 0);
         if (images == null || index < 0 || index >= images.size()) { finish(); return; }
 
         if (saved != null) {
-            id = saved.getString("id");
-            category = saved.getString("category");
-            wallet = saved.getString("wallet");
-            payee = saved.getString("payee", "");
-            date = saved.getLong("date");
-            applied = saved.getBoolean("applied");
+            id = saved.getString(STATE_ID);
+            category = saved.getString(STATE_CATEGORY);
+            wallet = saved.getString(STATE_WALLET);
+            payee = saved.getString(STATE_PAYEE, "");
+            date = saved.getLong(STATE_DATE);
+            applied = saved.getBoolean(STATE_APPLIED);
         }
 
         MaterialToolbar toolbar = binding.toolbarReceiptReview;
@@ -104,7 +108,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
                 applied = true;
             }
             render();
-            loading(model.busy());
+            loading(model.saveLoading());
         });
         receipt.read(Uri.parse(images.get(index)));
     }
@@ -136,7 +140,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
 
     // Lưu giao dịch được trích xuất từ hóa đơn vào cơ sở dữ liệu
     private void save() {
-        if (reading || book == null || model.busy()) return;
+        if (reading || book == null || model.saveLoading()) return;
         long amount;
         try { amount = FinanceBook.parseAmount(binding.amountInput.etAmount.getText().toString()); }
         catch (FinanceFailure error) {
@@ -156,18 +160,18 @@ public final class TransactionReviewActivity extends FinanceActivity {
     @Override protected void completed() {
         if (images != null && index + 1 < images.size()) {
             startActivity(new Intent(this, TransactionReviewActivity.class)
-                    .putStringArrayListExtra("images", images).putExtra("index", index + 1));
+                    .putStringArrayListExtra(EXTRA_IMAGES, images).putExtra(EXTRA_INDEX, index + 1));
         }
         finish();
     }
 
     @Override protected void onSaveInstanceState(@NonNull Bundle out) {
         super.onSaveInstanceState(out);
-        out.putString("id", id);
-        out.putString("category", category);
-        out.putString("wallet", wallet);
-        out.putString("payee", payee);
-        out.putLong("date", date);
-        out.putBoolean("applied", applied);
+        out.putString(STATE_ID, id);
+        out.putString(STATE_CATEGORY, category);
+        out.putString(STATE_WALLET, wallet);
+        out.putString(STATE_PAYEE, payee);
+        out.putLong(STATE_DATE, date);
+        out.putBoolean(STATE_APPLIED, applied);
     }
 }

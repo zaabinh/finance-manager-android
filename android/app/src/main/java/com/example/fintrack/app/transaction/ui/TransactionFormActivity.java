@@ -23,6 +23,10 @@ import com.google.android.material.chip.ChipGroup;
 import java.util.UUID;
 
 public final class TransactionFormActivity extends FinanceActivity {
+    private static final String STATE_INITIALIZED = "initialized", STATE_ID = "id", STATE_REQUEST_ID = "requestId",
+            STATE_TYPE = "type", STATE_CATEGORY = "category", STATE_WALLET = "wallet",
+            STATE_DESTINATION = "destination", STATE_DATE = "date", STATE_AWAITING_WALLET = "awaitingWallet",
+            STATE_AWAITING_DESTINATION = "awaitingDestination", STATE_AWAITING_CATEGORY = "awaitingCategory";
     public static final String EXTRA_ID = "transaction_id";
     public static final String EXTRA_AMOUNT = "receipt_amount", EXTRA_PAYEE = "receipt_payee";
     /** Optional prefill for a new transaction (spec 2026-11-09 §3); it only fills the form, the user still saves. */
@@ -54,13 +58,13 @@ public final class TransactionFormActivity extends FinanceActivity {
         // Idempotency key: survives rotation/process death so a timeout retry replays instead of double-posting.
         requestId = UUID.randomUUID().toString();
         if (saved != null) {
-            initialized = saved.getBoolean("initialized"); id = saved.getString("id"); requestId = saved.getString("requestId", requestId);
-            type = TransactionType.valueOf(saved.getString("type"));
-            category = saved.getString("category"); wallet = saved.getString("wallet"); destination = saved.getString("destination");
-            occurredAt = saved.getLong("date");
-            awaitingWallet = saved.getBoolean("awaitingWallet");
-            awaitingDestination = saved.getBoolean("awaitingDestination");
-            awaitingCategory = saved.getBoolean("awaitingCategory");
+            initialized = saved.getBoolean(STATE_INITIALIZED); id = saved.getString(STATE_ID); requestId = saved.getString(STATE_REQUEST_ID, requestId);
+            type = TransactionType.valueOf(saved.getString(STATE_TYPE));
+            category = saved.getString(STATE_CATEGORY); wallet = saved.getString(STATE_WALLET); destination = saved.getString(STATE_DESTINATION);
+            occurredAt = saved.getLong(STATE_DATE);
+            awaitingWallet = saved.getBoolean(STATE_AWAITING_WALLET);
+            awaitingDestination = saved.getBoolean(STATE_AWAITING_DESTINATION);
+            awaitingCategory = saved.getBoolean(STATE_AWAITING_CATEGORY);
         }
         binding.segmentedTransactionType.btnTypeExpense.setOnClickListener(view -> selectType(TransactionType.EXPENSE));
         binding.segmentedTransactionType.btnTypeIncome.setOnClickListener(view -> selectType(TransactionType.INCOME));
@@ -83,12 +87,12 @@ public final class TransactionFormActivity extends FinanceActivity {
                 getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null);
     }
     private void selectType(TransactionType value) {
-        if (model.busy()) return;
+        if (model.saveLoading()) return;
         if (type != value) category = null;
         type = value; render();
     }
     private void chooseWallet(boolean target) {
-        if (model.busy()) return;
+        if (model.saveLoading()) return;
         if (book == null) { Toast.makeText(this, R.string.finance_wallet_empty, Toast.LENGTH_SHORT).show(); return; }
         // A transfer needs two different wallets, so the other side is not offered.
         String other = type == TransactionType.TRANSFER ? (target ? wallet : destination) : null;
@@ -97,7 +101,7 @@ public final class TransactionFormActivity extends FinanceActivity {
                 R.string.picker_add_wallet, () -> createWallet(target), value -> { if (target) destination = value; else wallet = value; render(); });
     }
     private void chooseCategory() {
-        if (model.busy()) return;
+        if (model.saveLoading()) return;
         if (book == null) { Toast.makeText(this, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return; }
         com.example.fintrack.app.core.ui.PickerSheet.show(this, R.string.picker_category_title,
                 com.example.fintrack.app.core.ui.PickerSheet.categories(book.categories(), type), category,
@@ -105,7 +109,7 @@ public final class TransactionFormActivity extends FinanceActivity {
     }
     private void createWallet(boolean target) {
         walletSheet = com.example.fintrack.app.wallet.ui.WalletSheet.show(this, (sheet, value) -> {
-            if (book == null || model.busy()) return;
+            if (book == null || model.saveLoading()) return;
             awaitingWallet = !target; awaitingDestination = target; awaitingCategory = false;
             model.change(FinanceAction.wallet(value.name, value.openingBalance, WalletType.valueOf(value.walletType),
                     value.includeInAssets, value.sortOrder), false);
@@ -113,7 +117,7 @@ public final class TransactionFormActivity extends FinanceActivity {
     }
     private void createCategory() {
         categorySheet = com.example.fintrack.app.category.ui.CategorySheet.show(this, type, (sheet, name, categoryType, icon, colorHex) -> {
-            if (book == null || model.busy()) return;
+            if (book == null || model.saveLoading()) return;
             // The new category must match the transaction type, so the form follows the sheet's type choice.
             if (categoryType != type && type != TransactionType.TRANSFER) { category = null; type = categoryType; }
             awaitingCategory = true; awaitingWallet = awaitingDestination = false;
@@ -181,7 +185,7 @@ public final class TransactionFormActivity extends FinanceActivity {
         FinanceUi.visible(binding.feedbackSameWallet, same); FinanceUi.visible(binding.feedbackTransferInfo, !same);
     }
     private void save() {
-        if (book == null || model.busy()) return;
+        if (book == null || model.saveLoading()) return;
         TransactionFormValidator.Result result = TransactionFormValidator.validate(book, id, type, category, wallet, destination,
                 occurredAt, binding.amountInput.etAmount.getText().toString(), binding.etTransactionNote.getText().toString(),
                 binding.etTransactionPayee.getText().toString());
@@ -245,9 +249,9 @@ public final class TransactionFormActivity extends FinanceActivity {
         if (categorySheet != null && (awaitingCategory || !loading)) categorySheet.loading(creating);
     }
     @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out); out.putString("id", id); out.putString("requestId", requestId); out.putString("type", type.name()); out.putString("category", category);
-        out.putBoolean("awaitingWallet", awaitingWallet); out.putBoolean("awaitingDestination", awaitingDestination);
-        out.putBoolean("awaitingCategory", awaitingCategory);
-        out.putString("wallet", wallet); out.putString("destination", destination); out.putLong("date", occurredAt); out.putBoolean("initialized", initialized);
+        super.onSaveInstanceState(out); out.putString(STATE_ID, id); out.putString(STATE_REQUEST_ID, requestId); out.putString(STATE_TYPE, type.name()); out.putString(STATE_CATEGORY, category);
+        out.putBoolean(STATE_AWAITING_WALLET, awaitingWallet); out.putBoolean(STATE_AWAITING_DESTINATION, awaitingDestination);
+        out.putBoolean(STATE_AWAITING_CATEGORY, awaitingCategory);
+        out.putString(STATE_WALLET, wallet); out.putString(STATE_DESTINATION, destination); out.putLong(STATE_DATE, occurredAt); out.putBoolean(STATE_INITIALIZED, initialized);
     }
 }
