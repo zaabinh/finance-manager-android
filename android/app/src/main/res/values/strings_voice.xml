@@ -61,4 +61,35 @@
     <!-- Speech Error Fallback -->
     <string name="voice_btn_try_system_speech">Thử bộ lọc ồn Google</string>
     <string name="voice_hint_speak_clearly">Mẹo: Hãy nói rõ ràng, ví dụ: "Ăn trưa 45k" hoặc "Đổ xăng 70k"</string>
+
+    <!-- Voice Guidance & Interactive Prompts -->
+    <string name="voice_guidance_question">Hôm nay bạn vừa chi tiêu hay thu tiền khoản gì?</string>
+    <string name="voice_examples_header">Gợi ý mẫu câu (Chạm để thử ngay):</string>
+    <string name="voice_prompt_lunch">🍜 Ăn trưa 45k</string>
+    <string name="voice_prompt_coffee">☕ Cà phê 30k</string>
+    <string name="voice_prompt_gas">⛽ Đổ xăng 50k</string>
+    <string name="voice_prompt_salary">💵 Thu lương 15 triệu</string>
+    <string name="voice_prompt_transfer">🔄 Chuyển 200k vào Momo</string>
+    <string name="voice_prompt_yesterday">📅 Hôm qua mua sách 120k</string>
+
+    <!-- Rotating Hints -->
+    <string name="voice_rotating_hint_1">Bạn có thể nói: "Ăn trưa 45 nghìn"…</string>
+    <string name="voice_rotating_hint_2">Hoặc: "Cà phê 30k quẹt thẻ"…</string>
+    <string name="voice_rotating_hint_3">Hoặc: "Đổ xăng 50k bằng momo"…</string>
+    <string name="voice_rotating_hint_4">Hoặc: "Hôm qua mua sách 120k"…</string>
+    <string name="voice_rotating_hint_5">Hoặc: "Thu lương tháng này 15 triệu"…</string>
+
+    <!-- Help Sheet -->
+    <string name="voice_help_title">Cách nói để FinTrack hiểu chuẩn</string>
+    <string name="voice_help_formula_title">1. Công thức đơn giản nhất</string>
+    <string name="voice_help_formula_desc">[Khoản gì] + [Bao nhiêu tiền] + [Bằng ví nào/Khi nào]</string>
+    <string name="voice_help_examples_title">2. Một số ví dụ thường ngày</string>
+    <string name="voice_help_example_item_1">• Chi tiêu: "Ăn phở 45k", "Cà phê 30 nghìn", "Đổ xăng 50k"</string>
+    <string name="voice_help_example_item_2">• Ví &amp; Thẻ: "Quẹt thẻ 350k siêu thị", "Bắn momo 45k trà sữa"</string>
+    <string name="voice_help_example_item_3">• Thời gian: "Hôm qua ăn tối 150k", "Hôm kia mua áo 200k"</string>
+    <string name="voice_help_example_item_4">• Thu nhập: "Thu lương 15 triệu", "Được thưởng 500k"</string>
+    <string name="voice_help_example_item_5">• Chuyển tiền: "Chuyển 500k sang ví Momo"</string>
+    <string name="voice_help_slang_title">3. Hỗ trợ từ lóng &amp; cách đọc dân dã</string>
+    <string name="voice_help_slang_desc">k, ngàn, lít (100k), lốp (100k), vé (100k), sọi (10k), củ (1 triệu), chai (1 triệu), rưỡi (50k/500k), hăm lăm (25k), năm nhăm (55k), trăm hai (120k)...</string>
+    <string name="voice_help_btn_got_it">Đã hiểu, thử ngay!</string>
 </resources>

@@ -11,7 +11,18 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarVoice"
         style="@style/Widget.App.Toolbar.Back"
-        app:title="@string/voice_input_title" />
+        app:title="@string/voice_input_title">
+
+        <ImageButton
+            android:id="@+id/btnVoiceHelp"
+            android:layout_width="@dimen/touch_target_min"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/voice_help_title"
+            android:src="@drawable/ic_info"
+            app:tint="@color/text_primary" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -39,8 +50,9 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="480dp">
 
-                <!-- Instruction Card -->
+                <!-- Conversational Guidance Card -->
                 <LinearLayout
+                    android:id="@+id/cardInstruction"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_white"
@@ -48,17 +60,19 @@
                     android:padding="@dimen/spacing_16">
 
                     <TextView
+                        android:id="@+id/tvVoiceGuidance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/voice_input_subtitle"
+                        android:text="@string/voice_guidance_question"
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvRotatingHint"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_4"
-                        android:text="@string/voice_input_hint_example"
+                        android:text="@string/voice_rotating_hint_1"
                         android:textAppearance="@style/TextAppearance.App.BodySecondary"
                         android:textColor="@color/color_primary" />
                 </LinearLayout>
@@ -232,6 +246,119 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_12"
                         android:text="@string/voice_permission_grant" />
+                </LinearLayout>
+
+                <!-- Interactive Example Prompts (Tap to Try) -->
+                <LinearLayout
+                    android:id="@+id/layoutExamplePrompts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_20"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/voice_examples_header"
+                        android:textAppearance="@style/TextAppearance.App.Label"
+                        android:textColor="@color/text_secondary" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipPromptLunch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_lunch"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptCoffee"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_coffee"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptGas"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_gas"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptSalary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_salary"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptTransfer"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_transfer"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptYesterday"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_yesterday"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
                 </LinearLayout>
 
                 <!-- Parsed Result Card (Visible upon recognition) -->

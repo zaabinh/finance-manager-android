@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -39,6 +41,7 @@ import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
 import com.example.fintrack.app.voice.domain.VoiceCategoryPredictor;
 import com.example.fintrack.app.voice.domain.VoiceTransactionParser;
 import com.example.fintrack.databinding.ActivityVoiceTransactionBinding;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
@@ -79,6 +82,34 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private String recognizedTranscript = "";
     private long occurredAt = System.currentTimeMillis();
     private int consecutiveErrorCount = 0;
+
+    // Bộ luân phiên gợi ý câu mẫu động (Rotating Hints)
+    private final Handler rotatingHintHandler = new Handler(Looper.getMainLooper());
+    private int rotatingHintIndex = 0;
+    private final int[] ROTATING_HINT_RES_IDS = new int[]{
+            R.string.voice_rotating_hint_1,
+            R.string.voice_rotating_hint_2,
+            R.string.voice_rotating_hint_3,
+            R.string.voice_rotating_hint_4,
+            R.string.voice_rotating_hint_5
+    };
+    private final Runnable rotatingHintRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isListening && !isResultShowing) {
+                rotatingHintIndex = (rotatingHintIndex + 1) % ROTATING_HINT_RES_IDS.length;
+                if (binding != null && binding.tvRotatingHint != null) {
+                    binding.tvRotatingHint.animate().alpha(0f).setDuration(200).withEndAction(() -> {
+                        if (binding != null && binding.tvRotatingHint != null) {
+                            binding.tvRotatingHint.setText(ROTATING_HINT_RES_IDS[rotatingHintIndex]);
+                            binding.tvRotatingHint.animate().alpha(1f).setDuration(200).start();
+                        }
+                    }).start();
+                }
+                rotatingHintHandler.postDelayed(this, 2500);
+            }
+        }
+    };
 
     // Bộ đếm ngược tự động lưu rảnh tay (Auto-save Countdown)
     private CountDownTimer autoSaveTimer;
@@ -132,6 +163,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     @Override
     protected void bind(Bundle saved) {
         binding.toolbarVoice.setNavigationOnClickListener(v -> finish());
+        binding.toolbarVoice.findViewById(R.id.btnVoiceHelp).setOnClickListener(v -> showVoiceHelpDialog());
 
         if (saved != null) {
             String typeName = saved.getString(STATE_TYPE);
@@ -151,8 +183,10 @@ public class VoiceTransactionActivity extends FinanceActivity {
         setupListeners();
         setupMicroAdjustmentChips();
         setupPresetAmountChips();
+        setupExamplePromptChips();
 
         if (isResultShowing) {
+            binding.layoutExamplePrompts.setVisibility(View.GONE);
             binding.cardRecognitionResult.setVisibility(View.VISIBLE);
             binding.tvVoiceTranscript.setVisibility(View.VISIBLE);
             binding.tvVoiceTranscript.setText(String.format("\"%s\"", recognizedTranscript));
@@ -160,6 +194,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
             binding.etResultNote.setText(parsedNote);
             binding.tvVoiceStatus.setText(R.string.voice_result_title);
         } else {
+            binding.layoutExamplePrompts.setVisibility(View.VISIBLE);
             checkPermissionAndStart();
         }
     }
@@ -248,6 +283,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
             binding.cardRecognitionResult.setVisibility(View.GONE);
             binding.tvVoiceTranscript.setVisibility(View.GONE);
             binding.layoutVoiceError.setVisibility(View.GONE);
+            binding.layoutExamplePrompts.setVisibility(View.VISIBLE);
             checkPermissionAndStart();
         });
 
@@ -255,6 +291,45 @@ public class VoiceTransactionActivity extends FinanceActivity {
             cancelAutoSaveCountdown(false);
             launchSystemSpeechRecognizer();
         });
+    }
+
+    private void setupExamplePromptChips() {
+        binding.chipPromptLunch.setOnClickListener(v -> simulatePrompt("Ăn trưa 45k"));
+        binding.chipPromptCoffee.setOnClickListener(v -> simulatePrompt("Cà phê 30k"));
+        binding.chipPromptGas.setOnClickListener(v -> simulatePrompt("Đổ xăng 50k"));
+        binding.chipPromptSalary.setOnClickListener(v -> simulatePrompt("Thu lương 15 triệu"));
+        binding.chipPromptTransfer.setOnClickListener(v -> simulatePrompt("Chuyển 200k vào Momo"));
+        binding.chipPromptYesterday.setOnClickListener(v -> simulatePrompt("Hôm qua mua sách 120k"));
+    }
+
+    private void simulatePrompt(String transcript) {
+        cancelAutoSaveCountdown(false);
+        stopListening();
+        binding.layoutExamplePrompts.setVisibility(View.GONE);
+        handleRecognitionSuccess(transcript);
+    }
+
+    private void showVoiceHelpDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.sheet_voice_help, null);
+        sheetView.findViewById(R.id.btnHelpClose).setOnClickListener(v -> dialog.dismiss());
+        sheetView.findViewById(R.id.btnHelpGotIt).setOnClickListener(v -> dialog.dismiss());
+        dialog.setContentView(sheetView);
+        dialog.show();
+    }
+
+    private void startRotatingHints() {
+        stopRotatingHints();
+        rotatingHintIndex = 0;
+        if (binding != null && binding.tvRotatingHint != null) {
+            binding.tvRotatingHint.setText(ROTATING_HINT_RES_IDS[0]);
+            binding.tvRotatingHint.setAlpha(1f);
+        }
+        rotatingHintHandler.postDelayed(rotatingHintRunnable, 2500);
+    }
+
+    private void stopRotatingHints() {
+        rotatingHintHandler.removeCallbacks(rotatingHintRunnable);
     }
 
     private void setupPresetAmountChips() {
@@ -528,11 +603,14 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 binding.pbVoiceLoading.setVisibility(View.GONE);
                 binding.ivMicIcon.setVisibility(View.VISIBLE);
                 startPulseAnimation();
+                startRotatingHints();
                 HapticHelper.tick(VoiceTransactionActivity.this);
             }
 
             @Override
-            public void onBeginningOfSpeech() {}
+            public void onBeginningOfSpeech() {
+                stopRotatingHints();
+            }
 
             @Override
             public void onRmsChanged(float rmsdB) {
@@ -548,6 +626,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
             public void onEndOfSpeech() {
                 isListening = false;
                 stopPulseAnimation();
+                stopRotatingHints();
                 binding.tvVoiceStatus.setText(R.string.voice_state_processing);
                 binding.pbVoiceLoading.setVisibility(View.VISIBLE);
                 binding.ivMicIcon.setVisibility(View.INVISIBLE);
@@ -558,6 +637,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
             public void onError(int error) {
                 isListening = false;
                 stopPulseAnimation();
+                stopRotatingHints();
                 binding.pbVoiceLoading.setVisibility(View.GONE);
                 binding.ivMicIcon.setVisibility(View.VISIBLE);
 
@@ -624,6 +704,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private void stopListening() {
         isListening = false;
         stopPulseAnimation();
+        stopRotatingHints();
         if (speechRecognizer != null) {
             try {
                 speechRecognizer.stopListening();
@@ -664,6 +745,8 @@ public class VoiceTransactionActivity extends FinanceActivity {
         isResultShowing = true;
 
         binding.layoutVoiceError.setVisibility(View.GONE);
+        binding.layoutExamplePrompts.setVisibility(View.GONE);
+        stopRotatingHints();
         binding.tvVoiceTranscript.setVisibility(View.VISIBLE);
         binding.tvVoiceTranscript.setText(String.format("\"%s\"", recognizedTranscript));
 
