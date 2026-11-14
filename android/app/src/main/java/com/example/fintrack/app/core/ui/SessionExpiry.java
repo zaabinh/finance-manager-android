@@ -12,7 +12,8 @@ public final class SessionExpiry {
     private SessionExpiry() { }
 
     public static void redirectToLogin(Activity activity) {
-        activity.startActivity(new Intent(activity, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        activity.startActivity(new Intent(activity, LoginActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
         activity.finish();
     }
 

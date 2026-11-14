@@ -28,7 +28,7 @@ public final class TransactionFormActivity extends FinanceActivity {
             STATE_DESTINATION = "destination", STATE_DATE = "date", STATE_AWAITING_WALLET = "awaitingWallet",
             STATE_AWAITING_DESTINATION = "awaitingDestination", STATE_AWAITING_CATEGORY = "awaitingCategory";
     public static final String EXTRA_ID = "transaction_id";
-    public static final String EXTRA_AMOUNT = "receipt_amount", EXTRA_PAYEE = "receipt_payee";
+    public static final String EXTRA_AMOUNT = "receipt_amount", EXTRA_PAYEE = "receipt_payee", EXTRA_NOTE = "transaction_note";
     /** Optional prefill for a new transaction (spec 2026-11-09 §3); it only fills the form, the user still saves. */
     public static final String EXTRA_PREFILL_TYPE = "prefillType";
     public static final String EXTRA_PREFILL_WALLET_ID = "prefillWalletId";
@@ -75,10 +75,15 @@ public final class TransactionFormActivity extends FinanceActivity {
         binding.fieldDestinationWallet.setOnClickListener(view -> chooseWallet(true));
         binding.fieldDate.setOnClickListener(view -> FinanceUi.dateTime(this, occurredAt, value -> { occurredAt = value; render(); }));
         binding.btnSaveTransaction.setOnClickListener(view -> save());
-        if (saved == null && !editing && getIntent().hasExtra(EXTRA_AMOUNT)) {
-            long amount = getIntent().getLongExtra(EXTRA_AMOUNT, 0);
-            if (amount > 0) binding.amountInput.etAmount.setText(Long.toString(amount));
-            binding.etTransactionPayee.setText(getIntent().getStringExtra(EXTRA_PAYEE));
+        if (saved == null && !editing) {
+            if (getIntent().hasExtra(EXTRA_AMOUNT)) {
+                long amount = getIntent().getLongExtra(EXTRA_AMOUNT, 0);
+                if (amount > 0) binding.amountInput.etAmount.setText(Long.toString(amount));
+                binding.etTransactionPayee.setText(getIntent().getStringExtra(EXTRA_PAYEE));
+            }
+            if (getIntent().hasExtra(EXTRA_NOTE)) {
+                binding.etTransactionNote.setText(getIntent().getStringExtra(EXTRA_NOTE));
+            }
         }
         // Wallet IDs are checked against the loaded references in render(); after rotation the form state wins.
         // Intent extras survive rotation, so re-parse until the form has loaded once.

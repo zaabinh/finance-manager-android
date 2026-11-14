@@ -41,6 +41,9 @@ public final class TransactionListActivity extends FinanceActivity {
     private TransactionListViewModel history;
     private boolean firstResume = true, updatingFilters;
     private ActivityTransactionListBinding binding;
+    private final android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable searchRunnable = this::search;
+    private static final long SEARCH_DEBOUNCE_MS = 350;
     @Override protected View contentView() { binding = ActivityTransactionListBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
     @Override protected void bind(Bundle saved) {
         history = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory())
@@ -74,7 +77,12 @@ public final class TransactionListActivity extends FinanceActivity {
         });
         binding.etTransactionSearch.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            public void onTextChanged(CharSequence s, int start, int before, int count) { if (!updatingFilters) search(); }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!updatingFilters) {
+                    searchHandler.removeCallbacks(searchRunnable);
+                    searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_MS);
+                }
+            }
             public void afterTextChanged(Editable value) { }
         });
         MaterialToolbar toolbar = binding.toolbarTransactions;
@@ -165,5 +173,9 @@ public final class TransactionListActivity extends FinanceActivity {
         super.onSaveInstanceState(out); out.putString(STATE_MONTH, month); out.putString(STATE_WALLET, walletFilter); out.putString(STATE_CATEGORY, categoryFilter);
         out.putBoolean(STATE_EXPLICIT_MONTH, explicitMonth); out.putString(STATE_TYPE, type == null ? null : type.name());
         out.putString(STATE_SEARCH, binding.etTransactionSearch.getText().toString());
+    }
+    @Override protected void onDestroy() {
+        searchHandler.removeCallbacks(searchRunnable);
+        super.onDestroy();
     }
 }

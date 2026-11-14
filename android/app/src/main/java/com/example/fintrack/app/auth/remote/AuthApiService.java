@@ -43,4 +43,8 @@ public interface AuthApiService {
     /** Đặt lại mật khẩu mới bằng mã OTP */
     @POST("api/v1/auth/reset-password")
     Call<Void> resetPassword(@Body ResetPasswordRequest request);
+
+    /** Đổi mật khẩu cho người dùng đang đăng nhập */
+    @POST("api/v1/auth/change-password")
+    Call<ApiResponse<TokenResponse>> changePassword(@Body ChangePasswordRequest request);
 }

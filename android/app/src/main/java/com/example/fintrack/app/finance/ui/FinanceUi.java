@@ -184,6 +184,11 @@ public final class FinanceUi {
                         public void onOcrScanClick() {
                             activity.startActivity(new Intent(activity, com.example.fintrack.app.transaction.ui.TransactionImportActivity.class));
                         }
+
+                        @Override
+                        public void onVoiceInputClick() {
+                            activity.startActivity(new Intent(activity, com.example.fintrack.app.voice.ui.VoiceTransactionActivity.class));
+                        }
                     }
             );
             fabAdd.setOnClickListener(v -> fabHelper.showSpeedDial());

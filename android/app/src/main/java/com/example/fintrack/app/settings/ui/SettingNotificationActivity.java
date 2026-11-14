@@ -155,9 +155,18 @@ public class SettingNotificationActivity extends AppCompatActivity {
         switchOtherNotifications.setChecked(settings.isOtherNotificationsEnabled());
         selectedThreshold = settings.getBudgetAlertThresholdPercent();
         String time = settings.getDailyReminderTime();
-        if (time != null && time.length() >= 5) {
-            selectedHour = Integer.parseInt(time.substring(0, 2));
-            selectedMinute = Integer.parseInt(time.substring(3, 5));
+        if (time != null && !time.trim().isEmpty()) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d{1,2}):(\\d{2})").matcher(time.trim());
+            if (m.find()) {
+                try {
+                    int h = Integer.parseInt(m.group(1));
+                    int min = Integer.parseInt(m.group(2));
+                    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+                        selectedHour = h;
+                        selectedMinute = min;
+                    }
+                } catch (NumberFormatException ignored) { }
+            }
         }
         updateValues();
         updateEnabledState();

@@ -9,78 +9,83 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.fintrack.R;
 import com.example.fintrack.databinding.ItemCategoryBinding;
-import com.example.fintrack.app.category.model.CategoryItem;
+import com.example.fintrack.app.category.model.CategoryIcons;
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.TransactionType;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * CategoryAdapter: Adapter dùng để chuyển đổi danh sách các danh mục (CategoryItem)
- * thành các dòng hiển thị trên danh sách (RecyclerView) trong màn hình quản lý danh mục.
+ * CategoryAdapter: Adapter quản lý danh sách Category trong màn hình quản lý danh mục.
+ * Sử dụng trực tiếp canonical domain model Category và DiffUtil để tối ưu hiệu năng.
  */
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
 
-    /**
-     * Interface lắng nghe các sự kiện tương tác của người dùng trên mỗi dòng danh mục:
-     * - onCategoryClick: Bấm vào dòng danh mục để xem/sửa chi tiết.
-     * - onStatusToggle: Bật/tắt công tắc trạng thái hoạt động ngay trên danh sách.
-     */
     public interface OnCategoryClickListener {
-        void onCategoryClick(CategoryItem category);
-        void onStatusToggle(CategoryItem category, boolean isChecked);
+        void onCategoryClick(Category category);
+        void onStatusToggle(Category category, boolean isChecked);
     }
 
-    private final List<CategoryItem> categoryList = new ArrayList<>(); // Danh sách hiển thị hiện tại
-    private final OnCategoryClickListener listener;                   // Biến lắng nghe sự kiện bấm nút
+    private final List<Category> categoryList = new ArrayList<>();
+    private final OnCategoryClickListener listener;
 
-    // Constructor nhận vào listener từ Activity
     public CategoryAdapter(OnCategoryClickListener listener) {
         this.listener = listener;
     }
 
-    /**
-     * Cập nhật danh sách mới cho Adapter và làm mới lại giao diện hiển thị
-     */
-    public void setCategories(List<CategoryItem> categories) {
+    public void setCategories(List<Category> categories) {
+        List<Category> next = categories != null ? categories : new ArrayList<>();
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return categoryList.size(); }
+            @Override public int getNewListSize() { return next.size(); }
+            @Override public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return categoryList.get(oldItemPosition).id.equals(next.get(newItemPosition).id);
+            }
+            @Override public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                Category oldC = categoryList.get(oldItemPosition);
+                Category newC = next.get(newItemPosition);
+                return Objects.equals(oldC.name, newC.name)
+                        && oldC.type == newC.type
+                        && Objects.equals(oldC.iconKey, newC.iconKey)
+                        && Objects.equals(oldC.colorHex, newC.colorHex)
+                        && Objects.equals(oldC.archivedAt, newC.archivedAt);
+            }
+        });
         categoryList.clear();
-        if (categories != null) {
-            categoryList.addAll(categories);
-        }
-        notifyDataSetChanged(); // Báo RecyclerView vẽ lại giao diện
+        categoryList.addAll(next);
+        diff.dispatchUpdatesTo(this);
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Gắn giao diện XML của từng dòng (item_category) vào ViewHolder
         return new ViewHolder(ItemCategoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // Đổ dữ liệu của từng danh mục vào các thành phần giao diện tương ứng tại vị trí (position)
         holder.bind(categoryList.get(position), listener);
     }
 
     @Override
     public int getItemCount() {
-        return categoryList.size(); // Trả về tổng số lượng danh mục có trong danh sách
+        return categoryList.size();
     }
 
-    /**
-     * Lớp ViewHolder: Ánh xạ và quản lý các thành phần giao diện của một dòng danh mục đơn lẻ
-     */
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private final View flIconBg;         // Nền bao quanh icon danh mục
-        private final ImageView ivCategoryIcon;     // Hình ảnh icon đại diện
-        private final TextView tvCategoryName;      // Tên danh mục
-        private final TextView tvCategoryStatus;    // Nhãn chữ hiển thị trạng thái (Đang hoạt động / Đã vô hiệu hóa)
-        private final SwitchMaterial switchStatus;  // Công tắc bật/tắt trạng thái
+        private final View flIconBg;
+        private final ImageView ivCategoryIcon;
+        private final TextView tvCategoryName;
+        private final TextView tvCategoryStatus;
+        private final SwitchMaterial switchStatus;
 
         public ViewHolder(@NonNull ItemCategoryBinding binding) {
             super(binding.getRoot());
@@ -91,15 +96,12 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
             switchStatus = binding.switchStatus;
         }
 
-        /**
-         * Gán dữ liệu của một đối tượng CategoryItem lên các thành phần giao diện của dòng
-         */
-        public void bind(CategoryItem category, OnCategoryClickListener listener) {
+        public void bind(Category category, OnCategoryClickListener listener) {
             Context context = itemView.getContext();
-            tvCategoryName.setText(category.getName()); // Hiển thị tên danh mục
+            tvCategoryName.setText(category.name);
 
-            // Hiển thị trạng thái hoạt động bằng chữ và màu sắc tương ứng
-            if (category.isActive()) {
+            boolean active = category.archivedAt == null;
+            if (active) {
                 tvCategoryStatus.setText(R.string.status_active);
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.status_success));
             } else {
@@ -107,35 +109,23 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
                 tvCategoryStatus.setTextColor(ContextCompat.getColor(context, R.color.neutral_text_400));
             }
 
-            // Gỡ sự kiện lắng nghe cũ trước khi đổi trạng thái Switch để tránh lỗi gọi lặp vô ý
             switchStatus.setOnCheckedChangeListener(null);
-            switchStatus.setChecked(category.isActive());
+            switchStatus.setChecked(active);
 
-            // Tùy chỉnh màu sắc nền icon tùy thuộc vào loại Thu nhập (INCOME) hay Chi tiêu (EXPENSE)
-            if ("INCOME".equalsIgnoreCase(category.getType())) {
+            if (category.type == TransactionType.INCOME) {
                 flIconBg.setBackgroundResource(R.drawable.bg_income_card);
-                ivCategoryIcon.setColorFilter(ContextCompat.getColor(context, R.color.status_success));
             } else {
                 flIconBg.setBackgroundResource(R.drawable.bg_expense_card);
-                ivCategoryIcon.setColorFilter(ContextCompat.getColor(context, R.color.status_error));
             }
 
-            // Hiển thị hình ảnh icon nếu có
-            if (category.getIconResId() != 0) {
-                ivCategoryIcon.setImageResource(category.getIconResId());
-            }
-            if (category.getColorHex() != null && category.getColorHex().matches("#[0-9a-fA-F]{6}")) {
-                ivCategoryIcon.setColorFilter(android.graphics.Color.parseColor(category.getColorHex()));
-            }
+            CategoryIcons.paint(ivCategoryIcon, category);
 
-            // Lắng nghe sự kiện khi người dùng gạt công tắc bật/tắt trạng thái
             switchStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (listener != null) {
                     listener.onStatusToggle(category, isChecked);
                 }
             });
 
-            // Lắng nghe sự kiện khi người dùng bấm vào toàn bộ dòng danh mục (để sửa)
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onCategoryClick(category);

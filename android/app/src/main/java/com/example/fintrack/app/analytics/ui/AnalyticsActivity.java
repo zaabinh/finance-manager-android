@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.fintrack.R;
@@ -183,7 +183,7 @@ public class AnalyticsActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnSelectMonth.setOnClickListener(v -> {
             String[] months = getResources().getStringArray(R.array.analytics_demo_months);
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.select_report_month)
                     .setItems(months, (dialog, which) -> {
                         loadAnalyticsData(months[which]);

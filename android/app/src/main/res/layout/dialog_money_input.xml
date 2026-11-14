@@ -18,5 +18,7 @@
         android:inputType="number"
         android:minHeight="48dp" />
 
-    <include layout="@layout/view_amount_suggestions" />
+    <include
+        android:id="@+id/amountSuggestions"
+        layout="@layout/view_amount_suggestions" />
 </LinearLayout>

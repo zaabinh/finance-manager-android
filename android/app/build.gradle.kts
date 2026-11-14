@@ -125,7 +125,6 @@ dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
-    implementation(libs.flexbox)
     implementation(libs.core.splashscreen)
     implementation(libs.material)
     implementation(libs.mlkit.text.recognition)

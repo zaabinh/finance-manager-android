@@ -3,6 +3,7 @@ package com.example.fintrack.app.setup.ui;
 import com.example.fintrack.app.core.network.ErrorMapper;
 
 import com.example.fintrack.app.finance.domain.WalletType;
+import com.example.fintrack.app.wallet.ui.WalletTypes;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -100,25 +101,22 @@ public class SetupWalletActivity extends AppCompatActivity {
         for (PendingWallet wallet : pending.others()) {
             ItemPendingWalletBinding row = ItemPendingWalletBinding.inflate(getLayoutInflater(), list, false);
             row.tvPendingName.setText(wallet.name);
+            WalletType wt = WalletType.CASH;
+            try {
+                if (wallet.walletType != null) wt = WalletType.valueOf(wallet.walletType);
+            } catch (IllegalArgumentException ignored) {}
             row.tvPendingDesc.setText(
-                    getString(R.string.setup_wallet_pending_desc, getString(typeLabel(wallet.walletType))));
+                    getString(R.string.setup_wallet_pending_desc, getString(WalletTypes.label(wt))));
             row.tvPendingBalance.setText(FinanceUi.money(wallet.openingBalance));
             list.addView(row.getRoot());
         }
-    }
-
-    private static int typeLabel(String type) {
-        if (WalletType.BANK.name().equals(type)) return R.string.wallet_type_bank;
-        if (WalletType.CASH.name().equals(type)) return R.string.wallet_type_cash;
-        return R.string.wallet_type_savings;
     }
 
     // Hộp thoại nhập số dư Tiền mặt; xác nhận thì thêm vào danh sách ví chờ lưu
     private void showCashDialog() {
         DialogMoneyInputBinding content = DialogMoneyInputBinding.inflate(getLayoutInflater());
         EditText input = content.etDialogAmount;
-        // The <include> in dialog_money_input has no id, so the chip group is not on the binding.
-        MoneyInput.attach(input, content.getRoot().findViewById(R.id.chipGroupAmountSuggestions));
+        MoneyInput.attach(input, content.amountSuggestions.chipGroupAmountSuggestions);
         if (pending.hasCash() && pending.cashBalance() > 0) input.setText(MoneyFormat.group(pending.cashBalance()));
         new MaterialAlertDialogBuilder(this).setTitle(R.string.setup_cash_dialog_title).setView(content.getRoot())
                 .setNegativeButton(R.string.btn_cancel, null)

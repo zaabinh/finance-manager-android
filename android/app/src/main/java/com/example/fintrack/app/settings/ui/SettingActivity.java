@@ -7,9 +7,9 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import com.example.fintrack.R;
 import com.example.fintrack.databinding.ActivitySettingBinding;
@@ -153,7 +153,7 @@ public class SettingActivity extends AppCompatActivity {
         // Thông tin ứng dụng
         if (rowAboutApp != null) {
             rowAboutApp.setOnClickListener(v -> {
-                new AlertDialog.Builder(this)
+                new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.about_dialog_title)
                         .setMessage(R.string.about_dialog_message)
                         .setPositiveButton(R.string.about_dialog_close, (dialog, which) -> dialog.dismiss())

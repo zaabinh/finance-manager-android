@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.fintrack.app.auth.remote.LoginResponse;
+import com.example.fintrack.app.auth.remote.TokenResponse;
 import com.example.fintrack.app.auth.repository.AuthRepository;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.core.session.SessionSnapshot;
@@ -39,6 +40,7 @@ public class AuthViewModel extends ViewModel {
     private final MutableLiveData<Event<Resource<Void>>> forgotPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> resetPasswordResult = new MutableLiveData<>();
     private final MutableLiveData<Event<Resource<Void>>> logoutResult = new MutableLiveData<>();
+    private final MutableLiveData<Event<Resource<TokenResponse>>> changePasswordResult = new MutableLiveData<>();
 
     // Biến tạm để lưu trữ thông tin email và mã OTP giữa các màn hình
     private String registeredEmail = "";
@@ -116,6 +118,11 @@ public class AuthViewModel extends ViewModel {
     /** Sự kiện một lần: yêu cầu đăng xuất đã kết thúc (SUCCESS hoặc ERROR) và phiên local của nó đã được xóa. */
     public LiveData<Event<Resource<Void>>> getLogoutResult() {
         return logoutResult;
+    }
+
+    /** Sự kiện một lần: kết quả đổi mật khẩu khi đang đăng nhập. */
+    public LiveData<Event<Resource<TokenResponse>>> getChangePasswordResult() {
+        return changePasswordResult;
     }
 
     // --- Các hàm xử lý nghiệp vụ xác thực ---
@@ -229,6 +236,23 @@ public class AuthViewModel extends ViewModel {
             if (!sessionStore.isCurrent(origin)) return;
             sessionStore.clear(origin);
             logoutResult.setValue(new Event<>(result));
+        });
+    }
+
+    /**
+     * Đổi mật khẩu tài khoản hiện tại.
+     * Khi thành công, server trả về token pair mới và thu hồi các phiên khác.
+     */
+    public void changePassword(String currentPassword, String newPassword) {
+        SessionSnapshot origin = sessionStore.current();
+        changePasswordResult.setValue(new Event<>(Resource.loading(null)));
+        authRepository.changePassword(currentPassword, newPassword, result -> {
+            if (!sessionStore.isCurrent(origin)) return;
+            if (result.getStatus() == Resource.Status.SUCCESS && result.getData() != null) {
+                TokenResponse tokens = result.getData();
+                sessionStore.updateTokens(origin, tokens.getAccessToken(), tokens.getRefreshToken());
+            }
+            changePasswordResult.setValue(new Event<>(result));
         });
     }
 }
