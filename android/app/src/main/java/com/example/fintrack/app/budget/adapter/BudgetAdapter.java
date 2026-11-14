@@ -1,15 +1,17 @@
 package com.example.fintrack.app.budget.adapter;
 
+import com.example.fintrack.app.finance.domain.Budget;
+import com.example.fintrack.app.finance.domain.BudgetUsage;
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
+import com.example.fintrack.databinding.ItemBudgetBinding;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import java.util.List;
 
@@ -19,11 +21,11 @@ import java.util.List;
 public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Holder> {
 
     private final FinanceBook book;
-    private final List<FinanceBook.Budget> budgets;
-    private final java.util.function.Consumer<FinanceBook.Budget> onClick;
+    private final List<Budget> budgets;
+    private final java.util.function.Consumer<Budget> onClick;
 
     // Constructor nhận dữ liệu sổ tài chính và danh sách ngân sách danh mục (thuộc một ngân sách tháng)
-    public BudgetAdapter(FinanceBook book, List<FinanceBook.Budget> budgets, java.util.function.Consumer<FinanceBook.Budget> onClick) {
+    public BudgetAdapter(FinanceBook book, List<Budget> budgets, java.util.function.Consumer<Budget> onClick) {
         this.book = book;
         this.budgets = budgets;
         this.onClick = onClick;
@@ -33,31 +35,31 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
     @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
         // Khởi tạo layout từng item ngân sách từ file XML
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_budget, parent, false);
-        return new Holder(view);
+        return new Holder(ItemBudgetBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         // Lấy thông tin ngân sách và tính toán mức độ sử dụng tại vị trí hiện tại
-        FinanceBook.Budget budget = budgets.get(position);
-        FinanceBook.BudgetUsage usage = book.usage(budget);
+        Budget budget = budgets.get(position);
+        BudgetUsage usage = book.usage(budget);
 
         // Hiển thị tên danh mục và khoảng thời gian của ngân sách
-        FinanceBook.Category category = book.category(budget.categoryId);
-        holder.text(R.id.tvBudgetCategoryName, category == null
+        Category category = book.category(budget.categoryId);
+        ItemBudgetBinding row = holder.binding;
+        row.tvBudgetCategoryName.setText(category == null
                 ? holder.itemView.getContext().getString(R.string.transaction_category_placeholder) : category.name);
-        holder.text(R.id.tvBudgetPeriod, FinanceUi.monthLabel(budget.month).toString());
+        row.tvBudgetPeriod.setText(FinanceUi.monthLabel(holder.itemView.getContext(), budget.month));
 
         // Hiển thị phần trăm đã chi tiêu
-        holder.text(R.id.tvBudgetPercentage, usage.percentage + "%");
+        row.tvBudgetPercentage.setText(usage.percentage + "%");
 
         // Hiển thị số tiền đã chi tiêu so với hạn mức tổng
-        holder.text(R.id.tvBudgetSpent, FinanceUi.money(usage.spent));
-        holder.text(R.id.tvBudgetLimit, "/ " + FinanceUi.money(budget.limit));
+        row.tvBudgetSpent.setText(FinanceUi.money(usage.spent));
+        row.tvBudgetLimit.setText("/ " + FinanceUi.money(budget.limit));
 
         // Hiển thị trạng thái ngân sách (Vượt hạn mức, Cảnh báo, hoặc Còn lại bao nhiêu)
-        holder.text(R.id.tvBudgetStatus, holder.itemView.getContext().getString(
+        row.tvBudgetStatus.setText(holder.itemView.getContext().getString(
                 usage.exceeded ? R.string.finance_budget_exceeded
                         : usage.warning ? R.string.finance_budget_warning
                           : R.string.finance_budget_remaining,
@@ -65,7 +67,7 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
         ));
 
         // Cập nhật giá trị và màu sắc cho thanh tiến trình (Progress Bar)
-        LinearProgressIndicator progress = holder.itemView.findViewById(R.id.progressBudget);
+        LinearProgressIndicator progress = row.progressBudget;
         progress.setProgress(usage.progress);
         progress.setIndicatorColor(holder.itemView.getContext().getColor(
                 usage.exceeded ? R.color.status_error
@@ -74,7 +76,7 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
         ));
 
         // Icon và màu người dùng đã chọn cho danh mục
-        com.example.fintrack.app.category.model.CategoryIcons.paint(holder.itemView.findViewById(R.id.ivBudgetCategoryIcon), category);
+        com.example.fintrack.app.category.model.CategoryIcons.paint(row.ivBudgetCategoryIcon, category);
 
         // Bấm vào một ngân sách danh mục: màn hình cha quyết định (sửa hạn mức / xóa)
         holder.itemView.setOnClickListener(onClick == null ? null : view -> onClick.accept(budget));
@@ -90,13 +92,11 @@ public final class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.Hold
      * ViewHolder lưu giữ các View thành phần của một item trong danh sách
      */
     static final class Holder extends RecyclerView.ViewHolder {
-        Holder(View view) {
-            super(view);
-        }
+        final ItemBudgetBinding binding;
 
-        // Hàm tiện ích giúp gán nhanh chuỗi văn bản cho TextView theo ID
-        void text(int id, String value) {
-            ((TextView) itemView.findViewById(id)).setText(value);
+        Holder(ItemBudgetBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 }

@@ -1,7 +1,14 @@
 package com.example.fintrack.app.finance.ui;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 import android.widget.EditText;
@@ -14,7 +21,6 @@ import android.widget.Toast;
 import com.example.fintrack.R;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
 import com.example.fintrack.app.finance.data.FinanceAction;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
 import com.example.fintrack.app.settings.ui.SettingActivity;
 import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
@@ -30,8 +36,10 @@ import java.util.function.Consumer;
 /** Shared lifecycle/error handling. All disk work stays in the repository executor. */
 public final class FinanceUi {
     private FinanceUi() { }
-    public static String money(long centsOrUnits) {
-        return String.format(Locale.ROOT, "%,d đ", centsOrUnits).replace(',', '.');
+    /** VISIBLE when on, GONE otherwise. */
+    public static void visible(View view, boolean on) { view.setVisibility(on ? View.VISIBLE : View.GONE); }
+    public static String money(long amount) {
+        return String.format(Locale.ROOT, "%,d đ", amount).replace(',', '.');
     }
     /** Shared button loading state: disabled with a leading circular progress indicator; enabled and clean otherwise. */
     public static void progress(android.widget.Button button, boolean loading) {
@@ -69,7 +77,7 @@ public final class FinanceUi {
         sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
         return sdf.format(new Date(millis));
     }
-    public static int typeName(FinanceBook.Type type) {
+    public static int typeName(TransactionType type) {
         if (type == null) return R.string.transaction_type_expense;
         switch (type) {
             case INCOME: return R.string.transaction_type_income;
@@ -77,15 +85,15 @@ public final class FinanceUi {
             default: return R.string.transaction_type_expense;
         }
     }
-    public static CharSequence monthLabel(String yyyyMm) {
+    public static CharSequence monthLabel(Context context, String yyyyMm) {
         try {
             String[] parts = yyyyMm.split("-");
-            return "Tháng " + Integer.parseInt(parts[1]) + "/" + parts[0];
+            return context.getString(R.string.budget_month_label, Integer.parseInt(parts[1]), parts[0]);
         } catch (Exception e) {
             return yyyyMm;
         }
     }
-    public static int error(FinanceBook.Problem problem) {
+    public static int error(FinanceProblem problem) {
         switch (problem) {
             case NETWORK: return R.string.error_connection;
             case UNAUTHORIZED: return R.string.error_unauthorized;
@@ -197,7 +205,7 @@ public final class FinanceUi {
                 }).show();
     }
     public static void dateTime(FinanceActivity activity, long initial, Consumer<Long> selected) {
-        Calendar date = Calendar.getInstance(TimeZone.getTimeZone(activity.book == null ? "Asia/Ho_Chi_Minh" : activity.book.state().timeZone)); date.setTimeInMillis(initial);
+        Calendar date = Calendar.getInstance(TimeZone.getTimeZone(activity.book == null ? "Asia/Ho_Chi_Minh" : activity.book.timeZone())); date.setTimeInMillis(initial);
         new DatePickerDialog(activity, (picker, year, month, day) -> {
             date.set(year, month, day);
             new TimePickerDialog(activity, (clock, hour, minute) -> {
@@ -216,10 +224,10 @@ public final class FinanceUi {
                 .setNegativeButton(R.string.btn_cancel, null)
                 .setPositiveButton(R.string.btn_create_wallet, (dialog, which) -> {
                     String value = name.getText().toString().trim();
-                    if (!value.isEmpty()) activity.model.change(FinanceAction.wallet(value, 0, FinanceBook.WalletType.CASH), true);
+                    if (!value.isEmpty()) activity.model.change(FinanceAction.wallet(value, 0, WalletType.CASH), true);
                 }).show();
     }
-    public static void addCategory(FinanceActivity activity, FinanceBook.Type type) {
+    public static void addCategory(FinanceActivity activity, TransactionType type) {
         LinearLayout box = new LinearLayout(activity); box.setOrientation(LinearLayout.VERTICAL);
         int pad = activity.getResources().getDimensionPixelSize(R.dimen.spacing_24); box.setPadding(pad, 0, pad, 0);
         EditText name = new EditText(activity); name.setHint(R.string.category_name_hint);
@@ -239,8 +247,8 @@ public final class FinanceUi {
         if (activity.book == null) {
             Toast.makeText(activity, R.string.finance_wallet_empty, Toast.LENGTH_SHORT).show(); return;
         }
-        java.util.List<FinanceBook.Wallet> list = new java.util.ArrayList<>();
-        for (FinanceBook.Wallet item : activity.book.state().wallets) if (!activeOnly || item.archivedAt == null) list.add(item);
+        java.util.List<Wallet> list = new java.util.ArrayList<>();
+        for (Wallet item : activity.book.wallets()) if (!activeOnly || item.archivedAt == null) list.add(item);
         CharSequence[] names = new CharSequence[list.size()];
         for (int i = 0; i < list.size(); i++) names[i] = list.get(i).name;
         new MaterialAlertDialogBuilder(activity).setTitle(R.string.label_wallet).setItems(names, (dialog, which) ->
@@ -248,21 +256,21 @@ public final class FinanceUi {
                 .setNeutralButton(R.string.finance_add_wallet, (dialog, which) -> activity.startActivity(new Intent(activity,
                         com.example.fintrack.app.wallet.ui.WalletAddActivity.class))).show();
     }
-    public static void category(FinanceActivity activity, FinanceBook.Type type, Consumer<String> selected) {
+    public static void category(FinanceActivity activity, TransactionType type, Consumer<String> selected) {
         category(activity, type, true, selected);
     }
-    public static void category(FinanceActivity activity, FinanceBook.Type type, boolean activeOnly, Consumer<String> selected) {
+    public static void category(FinanceActivity activity, TransactionType type, boolean activeOnly, Consumer<String> selected) {
         if (activity.book == null) {
             Toast.makeText(activity, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return;
         }
-        java.util.List<FinanceBook.Category> all = activity.book.state().categories;
-        java.util.List<FinanceBook.Category> filtered = new java.util.ArrayList<>();
-        for (FinanceBook.Category c : all) if (c.type == type && (!activeOnly || c.archivedAt == null)) filtered.add(c);
+        java.util.List<Category> all = activity.book.categories();
+        java.util.List<Category> filtered = new java.util.ArrayList<>();
+        for (Category c : all) if (c.type == type && (!activeOnly || c.archivedAt == null)) filtered.add(c);
         CharSequence[] names = new CharSequence[filtered.size()];
         for (int i = 0; i < filtered.size(); i++) names[i] = filtered.get(i).name;
         new MaterialAlertDialogBuilder(activity).setTitle(R.string.label_category).setItems(names, (dialog, which) ->
                 selected.accept(filtered.get(which).id))
                 .setNeutralButton(R.string.category_add_title, (dialog, which) -> activity.startActivity(new Intent(activity,
-                        com.example.fintrack.app.category.ui.CategoryAddActivity.class).putExtra("category_type", type.name()))).show();
+                        com.example.fintrack.app.category.ui.CategoryAddActivity.class).putExtra(com.example.fintrack.app.category.ui.CategoryAddActivity.EXTRA_CATEGORY_TYPE, type.name()))).show();
     }
 }

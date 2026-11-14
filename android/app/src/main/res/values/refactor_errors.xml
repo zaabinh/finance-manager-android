@@ -1,0 +1,11 @@
+<resources>
+    <string name="error_email_not_verified">Email chưa được xác thực. Vui lòng xác thực email.</string>
+    <string name="error_auth_username_already_exists">Tên người dùng đã được sử dụng.</string>
+    <string name="error_auth_email_already_exists">Email đã được đăng ký bởi tài khoản khác.</string>
+    <string name="error_auth_user_locked">Tài khoản của bạn đã bị khóa.</string>
+    <string name="error_auth_user_disabled">Tài khoản của bạn đã bị vô hiệu hóa.</string>
+    <string name="error_auth_invalid_credentials">Tên đăng nhập hoặc mật khẩu không chính xác.</string>
+    <string name="error_auth_otp_invalid">Mã OTP không chính xác. Vui lòng kiểm tra lại.</string>
+    <string name="error_auth_otp_expired">Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.</string>
+    <string name="error_auth_rate_limited">Thao tác quá nhanh hoặc vượt quá số lần thử. Vui lòng thử lại sau.</string>
+</resources>

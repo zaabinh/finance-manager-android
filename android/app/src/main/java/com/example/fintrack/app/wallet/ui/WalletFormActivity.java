@@ -1,46 +1,74 @@
 package com.example.fintrack.app.wallet.ui;
 
+import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.widget.Toolbar;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.data.FinanceRepository;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.core.ui.MoneyInput;
 import com.example.fintrack.app.wallet.model.WalletDraft;
+import com.example.fintrack.databinding.ActivityWalletAddBinding;
+import com.example.fintrack.databinding.ActivityWalletEditBinding;
+import com.google.android.material.chip.ChipGroup;
 
 /** Forms use the authenticated finance repository and command lifecycle. */
 public abstract class WalletFormActivity extends FinanceActivity {
+    private static final String STATE_WALLET_INITIALIZED = "walletInitialized", STATE_WALLET_TYPE = "walletType";
+    // The add and edit layouts are different binding classes; the shared views are held once here.
+    private View root;
+    private Toolbar toolbar;
     private EditText name, opening, order;
     private CheckBox assets;
+    private Button save, cancel;
+    private TextView typeValue;
+    private ImageView typeIcon;
     private String id;
     private boolean initialized;
-    private FinanceBook.WalletType type = FinanceBook.WalletType.CASH;
+    private WalletType type = WalletType.CASH;
     protected abstract boolean editing();
-    @Override protected int layout() { return editing() ? R.layout.activity_wallet_edit : R.layout.activity_wallet_add; }
+    @Override protected View contentView() {
+        if (editing()) {
+            ActivityWalletEditBinding b = ActivityWalletEditBinding.inflate(getLayoutInflater());
+            root = b.getRoot(); toolbar = b.toolbarForm; order = b.etWalletSortOrder; assets = b.cbWalletIncludeAssets; save = b.btnSaveChanges;
+        } else {
+            ActivityWalletAddBinding b = ActivityWalletAddBinding.inflate(getLayoutInflater());
+            root = b.getRoot(); toolbar = b.toolbarForm; order = b.etWalletSortOrder; assets = b.cbWalletIncludeAssets;
+            save = b.btnCreateWallet; cancel = b.btnCancel;
+        }
+        // form_wallet_fields is included without an android:id, so ViewBinding does not expose its views.
+        name = root.findViewById(R.id.etWalletName); opening = root.findViewById(R.id.etBalance);
+        typeValue = root.findViewById(R.id.tvWalletTypeValue); typeIcon = root.findViewById(R.id.ivWalletTypeIcon);
+        return root;
+    }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
-        id = getIntent().getStringExtra("WALLET_ID");
-        name = findViewById(R.id.etWalletName); opening = findViewById(R.id.etBalance);
-        order = findViewById(R.id.etWalletSortOrder); assets = findViewById(R.id.cbWalletIncludeAssets);
-        MoneyInput.attach(opening, findViewById(R.id.chipGroupAmountSuggestions));
+        id = getIntent().getStringExtra(WalletDetailActivity.EXTRA_WALLET_ID);
+        MoneyInput.attach(opening, root.<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         if (saved != null) {
-            initialized = saved.getBoolean("walletInitialized");
-            type = FinanceBook.WalletType.valueOf(saved.getString("walletType", "CASH"));
+            initialized = saved.getBoolean(STATE_WALLET_INITIALIZED);
+            type = WalletType.valueOf(saved.getString(STATE_WALLET_TYPE, "CASH"));
         }
-        toolbar(R.id.toolbarForm);
-        findViewById(R.id.fieldWalletType).setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
-        findViewById(editing() ? R.id.btnSaveChanges : R.id.btnCreateWallet).setOnClickListener(v -> save());
-        if (!editing()) findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
+        toolbar.setNavigationOnClickListener(view -> finish());
+        root.findViewById(R.id.fieldWalletType).setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
+        save.setOnClickListener(v -> save());
+        if (cancel != null) cancel.setOnClickListener(v -> finish());
         showType();
     }
     @Override protected void render() {
         if (editing() && !initialized) {
-            FinanceBook.Wallet wallet = book.wallet(id);
+            Wallet wallet = book.wallet(id);
             if (wallet == null || wallet.archivedAt != null) {
                 Toast.makeText(this, R.string.wallet_missing_or_archived, Toast.LENGTH_LONG).show(); finish(); return;
             }
@@ -50,8 +78,8 @@ public abstract class WalletFormActivity extends FinanceActivity {
         }
     }
     private void showType() {
-        text(R.id.tvWalletTypeValue, getString(WalletTypes.label(type)));
-        ((android.widget.ImageView) findViewById(R.id.ivWalletTypeIcon)).setImageResource(WalletTypes.icon(type));
+        typeValue.setText(getString(WalletTypes.label(type)));
+        typeIcon.setImageResource(WalletTypes.icon(type));
     }
     private void save() {
         if (book == null) return;
@@ -63,9 +91,9 @@ public abstract class WalletFormActivity extends FinanceActivity {
                 : FinanceAction.wallet(draft.name, draft.opening, type, assets.isChecked(), draft.sortOrder), true);
     }
     @Override protected void loading(boolean value) {
-        FinanceUi.progress((android.widget.Button) findViewById(editing() ? R.id.btnSaveChanges : R.id.btnCreateWallet), value);
+        if (save != null) FinanceUi.progress(save, value);
     }
     @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out); out.putBoolean("walletInitialized", initialized); out.putString("walletType", type.name());
+        super.onSaveInstanceState(out); out.putBoolean(STATE_WALLET_INITIALIZED, initialized); out.putString(STATE_WALLET_TYPE, type.name());
     }
 }

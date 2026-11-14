@@ -2,9 +2,8 @@ package com.example.fintrack.app.category.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,6 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ItemCategoryBinding;
 import com.example.fintrack.app.category.model.CategoryItem;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -58,8 +58,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Gắn giao diện XML của từng dòng (item_category) vào ViewHolder
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_category, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(ItemCategoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
@@ -77,20 +76,19 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
      * Lớp ViewHolder: Ánh xạ và quản lý các thành phần giao diện của một dòng danh mục đơn lẻ
      */
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private final FrameLayout flIconBg;         // Nền bao quanh icon danh mục
+        private final View flIconBg;         // Nền bao quanh icon danh mục
         private final ImageView ivCategoryIcon;     // Hình ảnh icon đại diện
         private final TextView tvCategoryName;      // Tên danh mục
         private final TextView tvCategoryStatus;    // Nhãn chữ hiển thị trạng thái (Đang hoạt động / Đã vô hiệu hóa)
         private final SwitchMaterial switchStatus;  // Công tắc bật/tắt trạng thái
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            // Ánh xạ các ID từ file layout item_category.xml
-            flIconBg = itemView.findViewById(R.id.flIconBg);
-            ivCategoryIcon = itemView.findViewById(R.id.ivCategoryIcon);
-            tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
-            tvCategoryStatus = itemView.findViewById(R.id.tvCategoryStatus);
-            switchStatus = itemView.findViewById(R.id.switchStatus);
+        public ViewHolder(@NonNull ItemCategoryBinding binding) {
+            super(binding.getRoot());
+            flIconBg = binding.flIconBg;
+            ivCategoryIcon = binding.ivCategoryIcon;
+            tvCategoryName = binding.tvCategoryName;
+            tvCategoryStatus = binding.tvCategoryStatus;
+            switchStatus = binding.switchStatus;
         }
 
         /**

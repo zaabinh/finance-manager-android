@@ -1,8 +1,11 @@
 package com.example.fintrack.app.transaction.domain;
 
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import static org.junit.Assert.*;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,14 +16,14 @@ public class TransactionPrefillTest {
     @Before public void setup() {
         book = new FinanceBook(FinanceBook.empty());
         cash = book.addWallet("Tiền mặt", 0).id;
-        savings = book.addWallet("Tiết kiệm", 5_000_000, FinanceBook.WalletType.SAVINGS).id;
+        savings = book.addWallet("Tiết kiệm", 5_000_000, WalletType.SAVINGS).id;
         archived = book.addWallet("Ví cũ", 0).id;
         book.walletStatus(archived, false);
     }
 
     @Test public void budgetShortfallPrefillFillsTransferForm() {
         TransactionPrefill prefill = TransactionPrefill.parse("TRANSFER", savings, cash, 250_000L).resolve(book);
-        assertEquals(FinanceBook.Type.TRANSFER, prefill.type);
+        assertEquals(TransactionType.TRANSFER, prefill.type);
         assertEquals(savings, prefill.walletId);
         assertEquals(cash, prefill.destinationWalletId);
         assertEquals(Long.valueOf(250_000L), prefill.amountMinor);
@@ -28,7 +31,7 @@ public class TransactionPrefillTest {
 
     @Test public void optionalFieldsMayBeAbsent() {
         TransactionPrefill prefill = TransactionPrefill.parse("TRANSFER", null, null, null).resolve(book);
-        assertEquals(FinanceBook.Type.TRANSFER, prefill.type);
+        assertEquals(TransactionType.TRANSFER, prefill.type);
         assertNull(prefill.walletId); assertNull(prefill.destinationWalletId); assertNull(prefill.amountMinor);
         assertNull(TransactionPrefill.parse(null, null, " ", null));
     }
@@ -43,7 +46,7 @@ public class TransactionPrefillTest {
 
     @Test public void invalidTypeAndAmountAreIgnored() {
         TransactionPrefill prefill = TransactionPrefill.parse("transfer", cash, savings, 0L).resolve(book);
-        assertEquals(FinanceBook.Type.EXPENSE, prefill.type); // unknown type keeps the form default
+        assertEquals(TransactionType.EXPENSE, prefill.type); // unknown type keeps the form default
         assertEquals(cash, prefill.walletId);
         assertNull(prefill.destinationWalletId); // a destination only applies to a transfer
         assertNull(prefill.amountMinor);

@@ -1,10 +1,12 @@
 package com.example.fintrack.app.category.model;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.widget.ImageView;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,15 +38,15 @@ public final class CategoryIcons {
         int index = KEYS.indexOf(key);
         return index < 0 ? R.drawable.ic_category : RESOURCES.get(index);
     }
-    public static String defaultColor(FinanceBook.Type type) {
-        return type == FinanceBook.Type.INCOME ? INCOME_COLOR : EXPENSE_COLOR;
+    public static String defaultColor(TransactionType type) {
+        return type == TransactionType.INCOME ? INCOME_COLOR : EXPENSE_COLOR;
     }
     /** Stored colour if valid, otherwise the type default. */
-    public static String color(String colorHex, FinanceBook.Type type) {
+    public static String color(String colorHex, TransactionType type) {
         return colorHex != null && colorHex.matches("#[0-9a-fA-F]{6}") ? colorHex : defaultColor(type);
     }
     /** Draws the category's chosen icon in its chosen (or default) colour. */
-    public static void paint(ImageView view, FinanceBook.Category category) {
+    public static void paint(ImageView view, Category category) {
         if (category == null) { view.setImageResource(R.drawable.ic_category); view.setImageTintList(null); return; }
         view.setImageResource(resource(category.iconKey));
         view.setImageTintList(ColorStateList.valueOf(Color.parseColor(color(category.colorHex, category.type))));

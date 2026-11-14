@@ -89,6 +89,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     compileOptions {
@@ -124,6 +125,7 @@ dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
+    implementation(libs.flexbox)
     implementation(libs.core.splashscreen)
     implementation(libs.material)
     implementation(libs.mlkit.text.recognition)
@@ -144,6 +146,4 @@ dependencies {
     // Android instrumentation testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-    implementation("com.google.android.flexbox:flexbox:3.0.0")
 }

@@ -1,8 +1,6 @@
 package com.example.fintrack.app.category.ui;
 
-import com.example.fintrack.R;
-
 public class CategoryEditActivity extends CategoryFormActivity {
-    @Override protected int layout() { return R.layout.activity_category_edit; }
+    public static final String EXTRA_CATEGORY_ID = "CATEGORY_ID";
     @Override protected boolean editing() { return true; }
 }

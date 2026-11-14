@@ -14,6 +14,8 @@
 -keep class com.example.fintrack.app.**.remote.** { *; }
 -keep class com.example.fintrack.app.**.model.** { *; }
 -keep class com.example.fintrack.app.finance.domain.** { *; }
+-keep class com.example.fintrack.app.finance.data.FinanceFileDto { *; }
+-keep class com.example.fintrack.app.finance.data.FinanceFileDto$* { *; }
 -keep class com.example.fintrack.app.core.network.** { *; }
 -keep class com.example.fintrack.app.core.session.** { *; }
 

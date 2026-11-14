@@ -1,18 +1,18 @@
 package com.example.fintrack.app.finance.ui;
 
-import android.content.Intent;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
+
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
-import com.example.fintrack.app.auth.ui.LoginActivity;
+import com.example.fintrack.app.FintrackApplication;
+import com.example.fintrack.app.core.ui.SessionExpiry;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.finance.domain.FinanceBook;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
@@ -22,9 +22,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public abstract class FinanceActivity extends AppCompatActivity {
     protected FinanceViewModel model;
     protected FinanceBook book;
-    private String owner;
+    private SessionSnapshot origin; // phiên đăng nhập lúc mở màn hình
 
-    protected abstract int layout(); // Khai báo layout XML của màn hình con
+    /** Inflates the screen's ViewBinding (kept in a subclass field) and returns its root; called once from onCreate. */
+    protected abstract View contentView();
     protected abstract void bind(Bundle saved); // Khởi tạo các view và sự kiện
     protected abstract void render(); // Cập nhật giao diện khi dữ liệu tài chính thay đổi
     protected void loading(boolean loading) { } // Xử lý hiệu ứng loading
@@ -36,21 +37,20 @@ public abstract class FinanceActivity extends AppCompatActivity {
     @Override 
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
-        owner = SessionManager.getInstance(this).getUserId();
+        origin = FintrackApplication.container(this).sessionStore().current();
         if (!authenticated()) return; // Kiểm tra đăng nhập
-        setContentView(layout());
+        setContentView(contentView());
         FinanceUi.insets(findViewById(android.R.id.content));
-        model = new ViewModelProvider(this).get(FinanceViewModel.class);
-        model.configure(readScope(), detailId());
+        model = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory().forFinance(readScope(), detailId())).get(FinanceViewModel.class);
         bind(saved);
 
         // Quan sát dữ liệu tài chính (FinanceBook) từ LiveData
         model.state().observe(this, resource -> {
-            loading(resource.getStatus() == Resource.Status.LOADING);
+            loading(model.snapshotLoading() || model.saveLoading());
             if (resource.getData() != null) { book = resource.getData(); render(); }
             if (resource.getStatus() == Resource.Status.ERROR) {
-                FinanceBook.Problem problem = FinanceBook.Problem.valueOf(resource.getMessage());
-                if (problem == FinanceBook.Problem.UNAUTHORIZED) { authenticated(); return; }
+                FinanceProblem problem = FinanceErrors.problem(resource.getError());
+                if (problem == FinanceProblem.UNAUTHORIZED) { authenticated(); return; }
                 
                 // Hiển thị hộp thoại báo lỗi hoặc Snackbar thử lại
                 if (resource.getData() == null) new MaterialAlertDialogBuilder(this)
@@ -63,8 +63,12 @@ public abstract class FinanceActivity extends AppCompatActivity {
         });
 
         // Quan sát sự kiện hoàn tất lệnh (Command) thêm/sửa/xóa
-        model.command().observe(this, command -> {
-            if (!command.consume()) return;
+        model.saveLoadingState().observe(this, value -> loading(model.snapshotLoading() || Boolean.TRUE.equals(value)));
+        model.command().observe(this, event -> {
+            FinanceViewModel.Command command = event.getContentIfNotHandled();
+            if (command == null) return;
+            loading(model.snapshotLoading() || model.saveLoading());
+            onCommand(command);
             if (command.error != null) { CharSequence text = failure(command); if (text != null) Toast.makeText(this, text, Toast.LENGTH_LONG).show(); }
             else if (command.complete) {
                 Toast.makeText(this, R.string.finance_saved, Toast.LENGTH_SHORT).show();
@@ -72,6 +76,8 @@ public abstract class FinanceActivity extends AppCompatActivity {
             }
         });
     }
+
+    protected void onCommand(FinanceViewModel.Command command) { }
 
     protected void completed() { setResult(RESULT_OK); finish(); }
 
@@ -81,18 +87,13 @@ public abstract class FinanceActivity extends AppCompatActivity {
         return getString(FinanceUi.error(command.error));
     }
 
-    /** Kiểm tra xem người dùng đã đăng nhập đúng tài khoản hay chưa */
-    private boolean authenticated() {
-        SessionManager session = SessionManager.getInstance(this);
-        if (session.isLoggedIn() && session.getUserId() != null && !session.getUserId().trim().isEmpty()
-                && java.util.Objects.equals(owner, session.getUserId())) return true;
-        startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish(); return false;
+    /** Kiểm tra phiên đăng nhập lúc mở màn hình có còn là phiên hiện tại hay không; nếu không thì chuyển về Login */
+    protected final boolean authenticated() {
+        if (origin.userId != null && !origin.userId.trim().isEmpty() && SessionExpiry.isCurrent(this, origin)) return true;
+        SessionExpiry.redirectToLogin(this); return false;
     }
 
     @Override protected void onResume() { super.onResume(); if (authenticated() && model != null) model.refresh(); }
-    protected void toolbar(int id) { ((MaterialToolbar) findViewById(id)).setNavigationOnClickListener(view -> finish()); }
-    protected void text(int id, CharSequence value) { ((TextView) findViewById(id)).setText(value); }
-    protected void visible(int id, boolean value) { findViewById(id).setVisibility(value ? View.VISIBLE : View.GONE); }
 
     /** Hiển thị hộp thoại xác nhận xóa dữ liệu */
     protected void confirmDelete(Runnable action) {

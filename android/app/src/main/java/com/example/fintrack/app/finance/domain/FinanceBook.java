@@ -20,173 +20,58 @@ public final class FinanceBook {
     public static final long MAX_AMOUNT = 999_999_999_999L;
     public static final TimeZone ZONE = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
 
-    // Các loại giao dịch: Chi tiêu, Thu nhập, Chuyển tiền giữa các ví
-    public enum Type { EXPENSE, INCOME, TRANSFER }
-
-    // Các loại ví tài khoản
-    public enum WalletType { CASH, BANK, SAVINGS }
-
-    // Danh sách các mã lỗi nghiệp vụ
-    public enum Problem { AMOUNT, CATEGORY, WALLET, SAME_WALLET, DUPLICATE_BUDGET, NOT_FOUND, NAME, DATE, STORAGE,
-        NETWORK, UNAUTHORIZED, CONFLICT, VALIDATION, SERVER, INSUFFICIENT_FUNDS, VOIDED, ARCHIVED }
-
-    // Ngoại lệ dùng chung trong toàn bộ nghiệp vụ tài chính
-    public static final class Failure extends RuntimeException {
-        public final Problem problem;
-        public final String userMessage;
-        /** Backend errorCode and fieldErrors[].field when the server supplied them; for client-side localisation. */
-        public String code;
-        public List<String> fields = Collections.emptyList();
-        /** BUDGET_EXCEEDS_AVAILABLE_BALANCE: spendable money missing for the requested budget. */
-        public Long shortfallMinor;
-        public Failure(Problem problem) { this(problem, null); }
-        public Failure(Problem problem, String message) { super(problem.name()); this.problem = problem; this.userMessage = message; }
-    }
-
-    // Mô hình dữ liệu Ví tiền
-    public static final class Wallet {
-        public String id, name;
-        public long openingBalance;
-        public String archivedAt;
-        public boolean includeInAssets = true;
-        public int sortOrder;
-        public Long serverBalanceMinor;
-        public WalletType walletType = WalletType.CASH;
-        public Wallet(String id, String name, long openingBalance) {
-            this.id = id; this.name = name; this.openingBalance = openingBalance;
-        }
-    }
-
-    // Mô hình dữ liệu Danh mục thu/chi
-    public static final class Category {
-        public String id, name;
-        public Type type;
-        public String archivedAt, iconKey, colorHex;
-        public int sortOrder;
-        public Category(String id, String name, Type type) { this.id = id; this.name = name; this.type = type; }
-    }
-
-    // Mô hình dữ liệu Giao dịch tài chính
-    public static final class Transaction {
-        public String id, categoryId, walletId, destinationWalletId, note, payee;
-        public Type type;
-        public long amount, occurredAt;
-        public String status = "POSTED", voidedAt;
-        /** Idempotency key for POST; distinct from the (server-assigned) transaction id. */
-        public String clientRequestId;
-        public Transaction(String id, Type type, long amount, String categoryId, String walletId,
-                           String destinationWalletId, long occurredAt, String note, String payee) {
-            this.id = id; this.type = type; this.amount = amount; this.categoryId = categoryId;
-            this.walletId = walletId; this.destinationWalletId = destinationWalletId;
-            this.occurredAt = occurredAt; this.note = note; this.payee = payee;
-        }
-    }
-
-    // Mô hình dữ liệu Hạn mức Ngân sách
-    public static final class Budget {
-        public String id, categoryId, month;
-        public long limit;
-        public Long serverSpentMinor;
-        public int warningThresholdPercent = 80;
-        public String archivedAt;
-        /** Parent monthly budget; null only for legacy rows restored before hierarchical budgets. */
-        public String monthlyBudgetId;
-        public Budget(String id, String categoryId, String month, long limit) {
-            this.id = id; this.categoryId = categoryId; this.month = month; this.limit = limit;
-        }
-    }
-
-    /** Container for one month. Its total is derived from the category budgets and never entered or stored. */
-    public static final class MonthlyBudget {
-        public String id, month, archivedAt;
-        /** Authoritative server aggregates; null in the mock flavor, which derives the same values locally. */
-        public Long serverTotalMinor, serverSpentMinor;
-        public int warningThresholdPercent = 80;
-        public MonthlyBudget(String id, String month) { this.id = id; this.month = month; }
-    }
-
-    /** Trạng thái lưu trữ dữ liệu (State), có phiên bản để tránh ghi đè dữ liệu bị lỗi/hỏng. */
-    public static final class State {
-        public int version = 1;
-        public String timeZone = "Asia/Ho_Chi_Minh";
-        public boolean serverSnapshot;
-        public List<Wallet> wallets = new ArrayList<>();
-        public List<Category> categories = new ArrayList<>();
-        public List<Transaction> transactions = new ArrayList<>();
-        public List<Budget> budgets = new ArrayList<>();
-        public List<MonthlyBudget> monthlyBudgets = new ArrayList<>();
-    }
-
     // Khởi tạo sổ tài chính mặc định với các danh mục cơ bản sẵn có
-    public static State empty() {
-        State s = new State();
-        s.categories.add(new Category("food", "Ăn uống", Type.EXPENSE));
-        s.categories.add(new Category("transport", "Đi lại", Type.EXPENSE));
-        s.categories.add(new Category("shopping", "Mua sắm", Type.EXPENSE));
-        s.categories.add(new Category("bills", "Hóa đơn", Type.EXPENSE));
-        s.categories.add(new Category("other-expense", "Khác", Type.EXPENSE));
-        s.categories.add(new Category("salary", "Lương", Type.INCOME));
-        s.categories.add(new Category("bonus", "Thưởng", Type.INCOME));
-        s.categories.add(new Category("other-income", "Thu nhập khác", Type.INCOME));
+    public static FinanceSnapshot.Builder empty() {
+        FinanceSnapshot.Builder s = new FinanceSnapshot.Builder();
+        s.categories.add(new Category("food", "Ăn uống", TransactionType.EXPENSE));
+        s.categories.add(new Category("transport", "Đi lại", TransactionType.EXPENSE));
+        s.categories.add(new Category("shopping", "Mua sắm", TransactionType.EXPENSE));
+        s.categories.add(new Category("bills", "Hóa đơn", TransactionType.EXPENSE));
+        s.categories.add(new Category("other-expense", "Khác", TransactionType.EXPENSE));
+        s.categories.add(new Category("salary", "Lương", TransactionType.INCOME));
+        s.categories.add(new Category("bonus", "Thưởng", TransactionType.INCOME));
+        s.categories.add(new Category("other-income", "Thu nhập khác", TransactionType.INCOME));
         // Same icon keys as the backend seed (V8__category_seed.sql), in the order added above.
         String[] icons = {"coffee", "car", "shopping_bag", "receipt", "more_horiz", "briefcase", "gift", "more_horiz"};
-        for (int i = 0; i < icons.length; i++) s.categories.get(i).iconKey = icons[i];
+        for (int i = 0; i < icons.length; i++) {
+            Category c = s.categories.get(i);
+            s.categories.set(i, new Category(c.id,c.name,c.type,c.archivedAt,icons[i],c.colorHex,c.sortOrder));
+        }
         return s;
     }
 
-    private final State state;
+    private final FinanceSnapshot.Builder state;
     private boolean restoring = true;
 
     // Constructor kiểm tra tính hợp lệ của toàn bộ dữ liệu đầu vào khi tải trạng thái
-    public FinanceBook(State state) {
-        if (state == null || state.version != 1 || state.wallets == null || state.categories == null
-                || state.transactions == null || state.budgets == null) throw new Failure(Problem.STORAGE);
-        this.state = new State();
-        this.state.timeZone = state.timeZone == null ? "Asia/Ho_Chi_Minh" : state.timeZone;
-        // java.time needs API 26 (minSdk 24); TimeZone silently falls back to GMT, so check the ID explicitly.
-        if (!java.util.Arrays.asList(TimeZone.getAvailableIDs()).contains(this.state.timeZone)) throw new Failure(Problem.STORAGE);
+    public FinanceBook(FinanceSnapshot.Builder state) { this(state.build()); }
+
+    public FinanceBook(FinanceSnapshot state) {
+        String timeZone = LedgerRestorer.validate(state);
+        this.state = new FinanceSnapshot.Builder();
+        this.state.timeZone = timeZone;
         this.state.serverSnapshot = state.serverSnapshot;
-        java.util.Set<String> walletIds = new java.util.HashSet<>(), categoryIds = new java.util.HashSet<>();
-
-        // Kiểm tra tính hợp lệ của từng ví
-        for (Wallet wallet : state.wallets) {
-            if (wallet == null || wallet.id == null || wallet.id.isEmpty() || !walletIds.add(wallet.id)
-                    || wallet.walletType == null || wallet.openingBalance < 0 || wallet.openingBalance > MAX_AMOUNT)
-                throw new Failure(Problem.STORAGE);
-            validName(wallet.name); this.state.wallets.add(wallet);
-        }
-
-        // Kiểm tra tính hợp lệ của từng danh mục
-        for (Category category : state.categories) {
-            if (category == null || category.id == null || category.id.isEmpty() || !categoryIds.add(category.id)
-                    || category.type == null || category.type == Type.TRANSFER) throw new Failure(Problem.STORAGE);
-            validName(category.name); this.state.categories.add(category);
-        }
-
-        // Kiểm tra ngân sách tháng: mỗi tháng tối đa một ngân sách đang hoạt động
-        java.util.Set<String> monthlyIds = new java.util.HashSet<>(), activeMonths = new java.util.HashSet<>();
-        if (state.monthlyBudgets != null) for (MonthlyBudget monthly : state.monthlyBudgets) {
-            if (monthly == null || monthly.id == null || monthly.id.isEmpty() || !monthlyIds.add(monthly.id)
-                    || (monthly.archivedAt == null && !activeMonths.add(String.valueOf(monthly.month)))) throw new Failure(Problem.STORAGE);
-            validateMonth(monthly.month); this.state.monthlyBudgets.add(monthly);
-        }
-
+        this.state.wallets.addAll(state.wallets);
+        this.state.categories.addAll(state.categories);
+        if (state.monthlyBudgets != null) this.state.monthlyBudgets.addAll(state.monthlyBudgets);
         for (Transaction transaction : state.transactions) save(transaction, false);
         for (Budget budget : state.budgets) save(budget, false);
         restoring = false;
         validateTotals();
-        for (Wallet wallet : this.state.wallets) if (balance(wallet.id) < 0) throw new Failure(Problem.INSUFFICIENT_FUNDS);
+        for (Wallet wallet : this.state.wallets) if (balance(wallet.id) < 0) throw new FinanceFailure(FinanceProblem.INSUFFICIENT_FUNDS);
     }
 
-    public State state() { return state; }
+    public FinanceSnapshot snapshot() { return state.build(); }
+
+    public List<Wallet> wallets() { return Collections.unmodifiableList(state.wallets); }
+    public List<Category> categories() { return Collections.unmodifiableList(state.categories); }
+    public List<Transaction> transactions() { return Collections.unmodifiableList(state.transactions); }
+    public List<Budget> budgets() { return Collections.unmodifiableList(state.budgets); }
+    public String timeZone() { return state.timeZone; }
 
     // Kiểm tra tổng số liệu toàn bộ sổ để đảm bảo không bị tràn số
     public void validateTotals() {
-        long magnitude = 0;
-        for (Wallet wallet : state.wallets) magnitude = Math.addExact(magnitude, wallet.openingBalance);
-        for (Transaction transaction : state.transactions) magnitude = Math.addExact(magnitude, transaction.amount);
-        long limits = 0;
-        for (Budget budget : state.budgets) limits = Math.addExact(limits, budget.limit);
+        LedgerCalculations.validateTotals(wallets(), transactions(), budgets());
     }
 
     // Tìm kiếm Ví theo ID
@@ -215,33 +100,10 @@ public final class FinanceBook {
 
     // Thêm mới hoặc cập nhật một Giao dịch (validate kỹ lưỡng trước khi lưu)
     public void save(Transaction value, boolean editing) {
-        if (value == null || value.id == null || value.id.isEmpty() || value.type == null) throw new Failure(Problem.NOT_FOUND);
-        amount(value.amount);
-        if (value.occurredAt < 0 || value.occurredAt > 253402214400000L) throw new Failure(Problem.DATE);
-        if (wallet(value.walletId) == null) throw new Failure(Problem.WALLET);
-        if (!restoring && wallet(value.walletId).archivedAt != null) throw new Failure(Problem.ARCHIVED);
-
-        // Xử lý riêng nếu là giao dịch chuyển tiền giữa các ví
-        if (value.type == Type.TRANSFER) {
-            if (wallet(value.destinationWalletId) == null) throw new Failure(Problem.WALLET);
-            if (value.walletId.equals(value.destinationWalletId)) throw new Failure(Problem.SAME_WALLET);
-            if (!restoring && wallet(value.destinationWalletId).archivedAt != null) throw new Failure(Problem.ARCHIVED);
-            value.categoryId = null;
-        } else {
-            Category category = category(value.categoryId);
-            if (category == null || category.type != value.type) throw new Failure(Problem.CATEGORY);
-            if (!restoring && category.archivedAt != null) throw new Failure(Problem.ARCHIVED);
-            value.destinationWalletId = null;
-        }
-
-        value.note = value.note == null ? "" : value.note.trim();
-        value.payee = value.payee == null ? "" : value.payee.trim();
-        if (value.note.length() > 2000 || value.payee.length() > 160) throw new Failure(Problem.NAME);
-
+        value = TransactionPolicy.normalize(value, value == null ? null : wallet(value.walletId),
+                value == null ? null : wallet(value.destinationWalletId), value == null ? null : category(value.categoryId), restoring);
         Transaction old = transaction(value.id);
-        if (editing && old == null) throw new Failure(Problem.NOT_FOUND);
-        if (!editing && old != null) throw new Failure(Problem.NOT_FOUND);
-        if (!restoring && old != null && "VOIDED".equals(old.status)) throw new Failure(Problem.VOIDED);
+        TransactionPolicy.validateReplacement(old, editing, restoring);
         if (!restoring) checkContributions(old, value);
         if (old != null) state.transactions.remove(old);
         state.transactions.add(value);
@@ -249,26 +111,10 @@ public final class FinanceBook {
 
     // Thêm mới hoặc cập nhật một Khoản ngân sách
     public void save(Budget value, boolean editing) {
-        if (value == null || value.id == null || value.id.isEmpty()) throw new Failure(Problem.NOT_FOUND);
-        amount(value.limit);
-        validateMonth(value.month);
-        Category category = category(value.categoryId);
-        if (category == null || category.type != Type.EXPENSE) throw new Failure(Problem.CATEGORY);
-        if (value.monthlyBudgetId != null) {
-            MonthlyBudget parent = monthlyBudget(value.monthlyBudgetId);
-            if (parent == null || !parent.month.equals(value.month)) throw new Failure(restoring ? Problem.STORAGE : Problem.NOT_FOUND);
-        }
-        Budget old = budget(value.id);
-        if ((editing && old == null) || (!editing && old != null)) throw new Failure(Problem.NOT_FOUND);
-        if (!restoring && old != null && old.archivedAt != null) throw new Failure(Problem.ARCHIVED);
-        if (!restoring && category.archivedAt != null && (old == null || !old.categoryId.equals(value.categoryId)))
-            throw new Failure(Problem.ARCHIVED);
-
-        // Kiểm tra tránh trùng lặp ngân sách cùng danh mục trong một tháng
-        for (Budget item : state.budgets) {
-            if (item.archivedAt == null && value.archivedAt == null && !item.id.equals(value.id) && item.categoryId.equals(value.categoryId) && item.month.equals(value.month))
-                throw new Failure(Problem.DUPLICATE_BUDGET);
-        }
+        Budget old = value == null ? null : budget(value.id);
+        BudgetPolicy.validateCategoryBudget(value, value == null ? null : category(value.categoryId),
+                value == null || value.monthlyBudgetId == null ? null : monthlyBudget(value.monthlyBudgetId),
+                old, budgets(), editing, restoring);
         if (old != null) state.budgets.remove(old);
         state.budgets.add(value);
     }
@@ -276,18 +122,18 @@ public final class FinanceBook {
     // Xóa một giao dịch theo ID
     public void deleteTransaction(String id) {
         Transaction old = transaction(id);
-        if (old == null) throw new Failure(Problem.NOT_FOUND);
+        if (old == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
         if ("VOIDED".equals(old.status)) return;
         checkContributions(old, null);
-        old.status = "VOIDED";
-        old.voidedAt = now();
+        state.transactions.set(state.transactions.indexOf(old), new Transaction(old.id,old.type,old.amount,
+                old.categoryId,old.walletId,old.destinationWalletId,old.occurredAt,old.note,old.payee,"VOIDED",now(),old.clientRequestId));
     }
 
     // Xóa một ngân sách theo ID
     public void deleteBudget(String id) {
         Budget old = budget(id);
-        if (old == null) throw new Failure(Problem.NOT_FOUND);
-        if (old.archivedAt == null) old.archivedAt = now();
+        if (old == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
+        if (old.archivedAt == null) state.budgets.set(state.budgets.indexOf(old), old.withArchivedAt(now()));
     }
 
     // Thêm ví mới với loại mặc định là tiền mặt (CASH)
@@ -297,113 +143,69 @@ public final class FinanceBook {
 
     // Thêm ví mới kèm loại ví tùy chỉnh
     public Wallet addWallet(String name, long openingBalance, WalletType type) {
+        return addWallet(name, openingBalance, type, true, 0);
+    }
+
+    public Wallet addWallet(String name, long openingBalance, WalletType type, boolean included, int order) {
         name = validName(name);
-        if (openingBalance < 0 || openingBalance > MAX_AMOUNT) throw new Failure(Problem.AMOUNT);
-        for (Wallet item : state.wallets) if (item.archivedAt == null && sameName(item.name, name)) throw new Failure(Problem.NAME);
-        Wallet wallet = new Wallet(UUID.randomUUID().toString(), name, openingBalance);
-        if (type == null) throw new Failure(Problem.WALLET);
-        wallet.walletType = type;
+        if (openingBalance < 0 || openingBalance > MAX_AMOUNT) throw new FinanceFailure(FinanceProblem.AMOUNT);
+        for (Wallet item : state.wallets) if (item.archivedAt == null && sameName(item.name, name)) throw new FinanceFailure(FinanceProblem.NAME);
+        if (type == null) throw new FinanceFailure(FinanceProblem.WALLET);
+        Wallet wallet = new Wallet(UUID.randomUUID().toString(), name, openingBalance, type, null, included, order, null);
         state.wallets.add(wallet);
         return wallet;
     }
 
     // Thêm một danh mục mới
-    public Category addCategory(String name, Type type) {
+    public Category addCategory(String name, TransactionType type) {
+        return addCategory(name, type, null, null, 0);
+    }
+
+    public Category addCategory(String name, TransactionType type, String icon, String color, int order) {
         name = validName(name);
-        if (type == null || type == Type.TRANSFER) throw new Failure(Problem.CATEGORY);
-        for (Category item : state.categories) if (item.archivedAt == null && item.type == type && sameName(item.name, name)) throw new Failure(Problem.NAME);
-        Category category = new Category(UUID.randomUUID().toString(), name, type);
+        if (type == null || type == TransactionType.TRANSFER) throw new FinanceFailure(FinanceProblem.CATEGORY);
+        for (Category item : state.categories) if (item.archivedAt == null && item.type == type && sameName(item.name, name)) throw new FinanceFailure(FinanceProblem.NAME);
+        Category category = new Category(UUID.randomUUID().toString(), name, type, null, icon, color, order);
         state.categories.add(category);
         return category;
     }
 
     // Kiểm tra tính hợp lệ của tên (không được để trống, tối đa 100 ký tự)
-    private static String validName(String name) {
-        if (name == null || name.trim().isEmpty() || name.trim().length() > 100) throw new Failure(Problem.NAME);
+    static String validName(String name) {
+        if (name == null || name.trim().isEmpty() || name.trim().length() > 100) throw new FinanceFailure(FinanceProblem.NAME);
         return Normalizer.normalize(name.trim(), Normalizer.Form.NFC);
     }
 
     // Phân tích và chuyển đổi chuỗi tiền tệ sang số nguyên (long)
     public static long parseAmount(String text) {
-        if (text == null || !text.matches("[0-9]{1,12}|[0-9]{1,3}(\\.[0-9]{3}){1,3}")) throw new Failure(Problem.AMOUNT);
+        if (text == null || !text.matches("[0-9]{1,12}|[0-9]{1,3}(\\.[0-9]{3}){1,3}")) throw new FinanceFailure(FinanceProblem.AMOUNT);
         try { long value = Long.parseLong(text.replace(".", "")); amount(value); return value; }
-        catch (NumberFormatException e) { throw new Failure(Problem.AMOUNT); }
+        catch (NumberFormatException e) { throw new FinanceFailure(FinanceProblem.AMOUNT); }
     }
 
     // Kiểm tra số tiền nằm trong khoảng hợp lệ (> 0 và <= MAX_AMOUNT)
-    private static void amount(long value) { if (value <= 0 || value > MAX_AMOUNT) throw new Failure(Problem.AMOUNT); }
+    static void amount(long value) { if (value <= 0 || value > MAX_AMOUNT) throw new FinanceFailure(FinanceProblem.AMOUNT); }
 
     // Tính toán số dư hiện tại của một ví dựa trên số dư ban đầu cộng/trừ các giao dịch
-    public long balance(String walletId) {
-        Wallet wallet = wallet(walletId);
-        if (wallet == null) throw new Failure(Problem.WALLET);
-        if (wallet.serverBalanceMinor != null) return wallet.serverBalanceMinor;
-        long result = wallet.openingBalance;
-        for (Transaction item : state.transactions) {
-            if ("VOIDED".equals(item.status)) continue;
-            if (walletId.equals(item.walletId)) result = Math.addExact(result, item.type == Type.INCOME ? item.amount : -item.amount);
-            if (item.type == Type.TRANSFER && walletId.equals(item.destinationWalletId)) result = Math.addExact(result, item.amount);
-        }
-        return result;
-    }
+    public long balance(String walletId) { return LedgerCalculations.balance(this, state, walletId); }
 
     // Tính tổng số tiền thu/chi theo tháng
-    public long total(Type type, String month) {
-        long total = 0;
-        for (Transaction item : transactions(month, type, "", null, null)) total = Math.addExact(total, item.amount);
-        return total;
-    }
+    public long total(TransactionType type, String month) { return LedgerCalculations.total(this, state, type, month); }
 
     // Tính tổng tài sản (có thể lọc chỉ tính riêng ví tiết kiệm savingsOnly = true)
-    public long assets(boolean savingsOnly) {
-        long result = 0;
-        for (Wallet wallet : state.wallets) if (wallet.archivedAt == null && wallet.includeInAssets && (!savingsOnly || wallet.walletType == WalletType.SAVINGS))
-            result = Math.addExact(result, balance(wallet.id));
-        return result;
-    }
+    public long assets(boolean savingsOnly) { return LedgerCalculations.assets(this, state, savingsOnly); }
 
     // Tính tổng số tiền đã chi tiêu cho một khoản ngân sách cụ thể
-    public long spent(Budget budget) {
-        if (budget.serverSpentMinor != null) return budget.serverSpentMinor;
-        long total = 0;
-        for (Transaction item : transactions(budget.month, Type.EXPENSE, "", null, budget.categoryId)) total = Math.addExact(total, item.amount);
-        return total;
-    }
-
-    // Lớp chứa thông tin thống kê trạng thái sử dụng ngân sách
-    public static final class BudgetUsage {
-        public final long spent, remaining;
-        public final String percentage;
-        public final int progress;
-        public final boolean warning, exceeded;
-        BudgetUsage(long spent, long limit, int threshold) {
-            this.spent = spent; remaining = Math.subtractExact(limit, spent);
-            if (limit == 0) {
-                // Empty monthly budget (total 0): SAFE until something is spent, like the backend.
-                percentage = spent > 0 ? "100" : "0"; progress = spent > 0 ? 100 : 0;
-                warning = spent > 0; exceeded = spent > 0; return;
-            }
-            java.math.BigInteger percent = java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
-                    .divide(java.math.BigInteger.valueOf(limit));
-            percentage = percent.toString(); progress = percent.min(java.math.BigInteger.valueOf(100)).intValue();
-            warning = java.math.BigInteger.valueOf(spent).multiply(java.math.BigInteger.valueOf(100))
-                    .compareTo(java.math.BigInteger.valueOf(limit).multiply(java.math.BigInteger.valueOf(threshold))) >= 0;
-            exceeded = spent >= limit;
-        }
-    }
+    public long spent(Budget budget) { return LedgerCalculations.spent(this, state, budget); }
 
     // Lấy thông tin chi tiết mức độ sử dụng của một ngân sách
     public BudgetUsage usage(Budget budget) { return new BudgetUsage(spent(budget), budget.limit, budget.warningThresholdPercent); }
 
     // Tổng hạn mức ngân sách trong một tháng
-    public long budgetLimit(String month) {
-        long result = 0; for (Budget item : budgets(month)) result = Math.addExact(result, item.limit); return result;
-    }
+    public long budgetLimit(String month) { return LedgerCalculations.budgetLimit(this, state, month); }
 
     // Tổng số tiền đã chi tiêu theo ngân sách trong một tháng
-    public long budgetSpent(String month) {
-        long result = 0; for (Budget item : budgets(month)) result = Math.addExact(result, spent(item)); return result;
-    }
+    public long budgetSpent(String month) { return LedgerCalculations.budgetSpent(this, state, month); }
 
     // Lấy danh sách tất cả các ngân sách trong một tháng cụ thể
     public List<Budget> budgets(String month) {
@@ -450,46 +252,23 @@ public final class FinanceBook {
     }
 
     /** Derived total = sum of the category limits; the server value wins when present. */
-    public long monthlyTotal(MonthlyBudget monthly) {
-        if (monthly.serverTotalMinor != null) return monthly.serverTotalMinor;
-        long result = 0;
-        for (Budget item : categoryBudgets(monthly)) result = Math.addExact(result, item.limit);
-        return result;
-    }
+    public long monthlyTotal(MonthlyBudget monthly) { return LedgerCalculations.monthlyTotal(this, state, monthly); }
 
     /** All POSTED EXPENSE of the month in any category; TRANSFER never counts. */
-    public long monthlySpent(MonthlyBudget monthly) {
-        if (monthly.serverSpentMinor != null) return monthly.serverSpentMinor;
-        return total(Type.EXPENSE, monthly.month);
-    }
+    public long monthlySpent(MonthlyBudget monthly) { return LedgerCalculations.monthlySpent(this, state, monthly); }
 
     public BudgetUsage monthlyUsage(MonthlyBudget monthly) {
         return new BudgetUsage(monthlySpent(monthly), monthlyTotal(monthly), monthly.warningThresholdPercent);
     }
 
     /** Spendable money: active wallets counted in assets, savings excluded. */
-    public long spendable() {
-        long result = 0;
-        for (Wallet wallet : state.wallets) if (wallet.archivedAt == null && wallet.includeInAssets && wallet.walletType != WalletType.SAVINGS)
-            result = Math.addExact(result, balance(wallet.id));
-        return result;
-    }
+    public long spendable() { return LedgerCalculations.spendable(this, state); }
 
     /** Mock of POST /monthly-budgets: month + at least one category, validated fully before anything is written. */
     public MonthlyBudget createMonthlyBudget(String id, String month, List<Budget> categories) {
         validateMonth(month);
-        if (id == null || id.isEmpty() || monthlyBudget(id) != null) throw new Failure(Problem.NOT_FOUND);
-        if (categories == null || categories.isEmpty()) throw new Failure(Problem.VALIDATION);
-        java.util.Set<String> seen = new java.util.HashSet<>();
-        long total = 0;
-        for (Budget line : categories) {
-            if (line == null || line.categoryId == null || !seen.add(line.categoryId)) throw new Failure(Problem.VALIDATION);
-            amount(line.limit);
-            Category category = category(line.categoryId);
-            if (category == null || category.type != Type.EXPENSE) throw new Failure(Problem.CATEGORY);
-            if (category.archivedAt != null) throw new Failure(Problem.ARCHIVED);
-            total = Math.addExact(total, line.limit);
-        }
+        if (id == null || id.isEmpty() || monthlyBudget(id) != null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
+        long total = BudgetPolicy.allocation(categories, this::category);
         if (monthlyBudgetFor(month) != null) throw conflict(BUDGET_PERIOD_CONFLICT);
         requireBalance(month, 0, total);
         MonthlyBudget monthly = new MonthlyBudget(id, month);
@@ -497,7 +276,7 @@ public final class FinanceBook {
         try {
             for (Budget line : categories) {
                 Budget value = new Budget(line.id == null ? UUID.randomUUID().toString() : line.id, line.categoryId, month, line.limit);
-                value.monthlyBudgetId = id;
+                value = value.withMonthlyBudgetId(id);
                 save(value, false);
             }
         } catch (RuntimeException error) {
@@ -511,18 +290,17 @@ public final class FinanceBook {
 
     /** Mock of POST/PUT /budgets under a monthly budget: parent resolved by month, balance block on increases. */
     public void saveCategoryBudget(Budget value, boolean editing) {
-        if (value == null) throw new Failure(Problem.NOT_FOUND);
+        if (value == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
         validateMonth(value.month);
         MonthlyBudget target = monthlyBudgetFor(value.month);
         if (target == null) throw conflict(BUDGET_MONTH_MISSING);
         Budget old = budget(value.id);
         long before = monthlyTotal(target);
-        boolean sameParent = editing && old != null && old.archivedAt == null && target.id.equals(old.monthlyBudgetId);
-        long after = sameParent ? Math.addExact(Math.subtractExact(before, old.limit), value.limit) : Math.addExact(before, value.limit);
-        value.monthlyBudgetId = target.id;
+        long after = BudgetPolicy.categoryTotal(before, old, value, target, editing);
+        value = value.withMonthlyBudgetId(target.id);
         save(value, editing);
         try { requireBalance(value.month, before, after); }
-        catch (Failure error) {
+        catch (FinanceFailure error) {
             state.budgets.remove(value);
             if (old != null) state.budgets.add(old);
             throw error;
@@ -532,64 +310,40 @@ public final class FinanceBook {
     /** Mock of DELETE /monthly-budgets/{id}: idempotent, not for the current month, archives children too. */
     public void deleteMonthlyBudget(String id, long nowMillis) {
         MonthlyBudget monthly = monthlyBudget(id);
-        if (monthly == null) throw new Failure(Problem.NOT_FOUND);
+        if (monthly == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
         if (monthly.archivedAt != null) return;
-        if (monthly.month.equals(monthAt(nowMillis))) throw conflict(BUDGET_MONTH_CURRENT);
+        BudgetPolicy.validateDeletion(monthly,monthAt(nowMillis));
         String at = now();
-        for (Budget item : state.budgets) if (id.equals(item.monthlyBudgetId) && item.archivedAt == null) item.archivedAt = at;
-        monthly.archivedAt = at;
+        for (int i=0;i<state.budgets.size();i++) {
+            Budget item=state.budgets.get(i);
+            if (id.equals(item.monthlyBudgetId) && item.archivedAt == null) state.budgets.set(i,item.withArchivedAt(at));
+        }
+        state.monthlyBudgets.set(state.monthlyBudgets.indexOf(monthly),monthly.withArchivedAt(at));
     }
 
     /** Balance block: only when the total increases; still-to-spend must be covered by spendable wallets. */
     private void requireBalance(String month, long before, long after) {
-        if (after <= before) return;
-        long stillToSpend = Math.max(0, Math.subtractExact(after, total(Type.EXPENSE, month)));
-        long available = spendable();
-        if (stillToSpend > available) {
-            Failure failure = conflict(BUDGET_EXCEEDS_AVAILABLE_BALANCE);
-            failure.shortfallMinor = Math.subtractExact(stillToSpend, available);
-            throw failure;
-        }
+        BudgetPolicy.requireBalance(before, after, () -> total(TransactionType.EXPENSE, month), this::spendable);
     }
 
-    private static Failure conflict(String code) {
-        Failure failure = new Failure(Problem.CONFLICT); failure.code = code; return failure;
+    private static FinanceFailure conflict(String code) {
+        return new FinanceFailure(FinanceProblem.CONFLICT,code,Collections.emptyList(),null);
     }
 
     // Tìm kiếm và lọc danh sách giao dịch theo tháng, loại, từ khóa, ví hoặc danh mục
-    public List<Transaction> transactions(String month, Type type, String query, String walletId, String categoryId) {
-        validateMonth(month);
-        String search = fold(query == null ? "" : query.trim());
-        List<Transaction> result = new ArrayList<>();
-        for (Transaction item : state.transactions) {
-            if ("VOIDED".equals(item.status) || !monthAt(item.occurredAt).equals(month) || (type != null && item.type != type)) continue;
-            if (walletId != null && !walletId.equals(item.walletId) && !walletId.equals(item.destinationWalletId)) continue;
-            if (categoryId != null && !categoryId.equals(item.categoryId)) continue;
-            Category category = category(item.categoryId);
-            Wallet wallet = wallet(item.walletId), destination = wallet(item.destinationWalletId);
-
-            // Tạo chuỗi gộp để tìm kiếm từ khóa linh hoạt (ghi chú, người nhận, tên danh mục, ví, số tiền)
-            String haystack = item.note + " " + item.payee + " " + (category == null ? "" : category.name)
-                    + " " + (wallet == null ? "" : wallet.name) + " " + (destination == null ? "" : destination.name)
-                    + " " + item.amount;
-            if (fold(haystack).contains(search)) result.add(item);
-        }
-        // Sắp xếp danh sách giao dịch giảm dần theo thời gian thực hiện mới nhất
-        result.sort(Comparator.comparingLong((Transaction item) -> item.occurredAt).reversed().thenComparing(item -> item.id));
-        return Collections.unmodifiableList(result);
-    }
+    public List<Transaction> transactions(String month, TransactionType type, String query, String walletId, String categoryId) { return TransactionQueryEngine.transactions(this, state, month, type, query, walletId, categoryId); }
 
     /** Server-side history filter (contract section 5). Dates are inclusive YYYY-MM-DD in the user's timezone. */
     public static final class Query {
         public final String dateFrom, dateTo, walletId, categoryId, q, sort;
-        public final Type type;
-        public Query(String dateFrom, String dateTo, Type type, String walletId, String categoryId, String q, String sort) {
+        public final TransactionType type;
+        public Query(String dateFrom, String dateTo, TransactionType type, String walletId, String categoryId, String q, String sort) {
             this.dateFrom = dateFrom; this.dateTo = dateTo; this.type = type; this.walletId = walletId; this.categoryId = categoryId;
             String text = q == null ? "" : q.trim();
             this.q = text.isEmpty() ? null : text.length() > 200 ? text.substring(0, 200) : text;
             this.sort = sort == null ? "occurredAt,desc" : sort;
         }
-        public static Query month(String month, Type type, String walletId, String categoryId, String q) {
+        public static Query month(String month, TransactionType type, String walletId, String categoryId, String q) {
             validateMonth(month);
             Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC")); c.clear();
             c.set(Integer.parseInt(month.substring(0, 4)), Integer.parseInt(month.substring(5)) - 1, 1);
@@ -609,44 +363,17 @@ public final class FinanceBook {
     public static final class Page {
         public final List<Transaction> items;
         public final int page, totalPages;
-        public Page(List<Transaction> items, int page, int totalPages) { this.items = items; this.page = page; this.totalPages = totalPages; }
+        public Page(List<Transaction> items, int page, int totalPages) {
+            this.items = Collections.unmodifiableList(new ArrayList<>(items));
+            this.page = page; this.totalPages = totalPages;
+        }
     }
 
     /** Mock implementation of GET /transactions: POSTED only, literal case-insensitive note/payee search, allowlisted sort. */
-    public Page query(Query query, int page, int size) {
-        java.text.SimpleDateFormat days = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
-        days.setTimeZone(TimeZone.getTimeZone(state.timeZone));
-        String search = query.q == null ? null : query.q.toLowerCase(Locale.ROOT);
-        List<Transaction> matches = new ArrayList<>();
-        for (Transaction item : state.transactions) {
-            if ("VOIDED".equals(item.status) || (query.type != null && item.type != query.type)) continue;
-            String day = days.format(new java.util.Date(item.occurredAt));
-            if ((query.dateFrom != null && day.compareTo(query.dateFrom) < 0) || (query.dateTo != null && day.compareTo(query.dateTo) > 0)) continue;
-            // A transfer matches its source or its destination wallet (contract section 5).
-            if (query.walletId != null && !query.walletId.equals(item.walletId) && !query.walletId.equals(item.destinationWalletId)) continue;
-            if (query.categoryId != null && !query.categoryId.equals(item.categoryId)) continue;
-            if (search != null && !item.note.toLowerCase(Locale.ROOT).contains(search)
-                    && !item.payee.toLowerCase(Locale.ROOT).contains(search)) continue;
-            matches.add(item);
-        }
-        Comparator<Transaction> order = query.sort.startsWith("amountMinor")
-                ? Comparator.comparingLong((Transaction item) -> item.amount) : Comparator.comparingLong((Transaction item) -> item.occurredAt);
-        order = order.thenComparing(item -> item.id);
-        if (query.sort.endsWith(",desc")) order = order.reversed();
-        matches.sort(order);
-        int from = (int) Math.min((long) page * size, matches.size());
-        return new Page(Collections.unmodifiableList(new ArrayList<>(matches.subList(from, Math.min(from + size, matches.size())))),
-                page, (matches.size() + size - 1) / size);
-    }
+    public Page query(Query query, int page, int size) { return TransactionQueryEngine.query(this, state, query, page, size); }
 
     /** Appends a later page, skipping IDs already shown (pages may shift under concurrent writes). */
-    public static List<Transaction> merge(List<Transaction> rows, List<Transaction> next) {
-        List<Transaction> result = new ArrayList<>(rows);
-        java.util.Set<String> ids = new java.util.HashSet<>();
-        for (Transaction item : rows) ids.add(item.id);
-        for (Transaction item : next) if (ids.add(item.id)) result.add(item);
-        return Collections.unmodifiableList(result);
-    }
+    public static List<Transaction> merge(List<Transaction> rows, List<Transaction> next) { return TransactionQueryEngine.merge(rows, next); }
 
     // Chuyển đổi timestamp thành định dạng tháng (YYYY-MM)
     public static String month(long timestamp) { return month(timestamp, ZONE); }
@@ -666,27 +393,14 @@ public final class FinanceBook {
     }
 
     // Kiểm tra định dạng tháng hợp lệ (YYYY-MM)
-    public static void validateMonth(String month) {
-        if (month == null || !month.matches("[0-9]{4}-(0[1-9]|1[0-2])")
-                || Integer.parseInt(month.substring(0, 4)) < 1 || Integer.parseInt(month.substring(0, 4)) > 9998)
-            throw new Failure(Problem.DATE);
-    }
+    public static void validateMonth(String month) { BudgetPolicy.validateMonth(month); }
 
     private void checkContributions(Transaction old, Transaction value) {
-        java.util.Set<String> ids = new java.util.HashSet<>();
-        if (old != null) { ids.add(old.walletId); if (old.destinationWalletId != null) ids.add(old.destinationWalletId); }
-        if (value != null) { ids.add(value.walletId); if (value.destinationWalletId != null) ids.add(value.destinationWalletId); }
-        for (String id : ids) {
-            long candidate = Math.addExact(Math.subtractExact(balance(id), contribution(old, id)), contribution(value, id));
-            if (candidate < 0) throw new Failure(Problem.INSUFFICIENT_FUNDS);
+        for (String id : TransactionPolicy.affectedWalletIds(old, value)) {
+            long candidate = Math.addExact(Math.subtractExact(balance(id), TransactionPolicy.contribution(old, id)),
+                    TransactionPolicy.contribution(value, id));
+            if (candidate < 0) throw new FinanceFailure(FinanceProblem.INSUFFICIENT_FUNDS);
         }
-    }
-
-    private static long contribution(Transaction value, String id) {
-        if (value == null || "VOIDED".equals(value.status)) return 0;
-        long delta = id.equals(value.walletId) ? (value.type == Type.INCOME ? value.amount : -value.amount) : 0;
-        if (value.type == Type.TRANSFER && id.equals(value.destinationWalletId)) delta = Math.addExact(delta, value.amount);
-        return delta;
     }
 
     private static boolean sameName(String first, String second) {
@@ -695,54 +409,51 @@ public final class FinanceBook {
 
     public void updateWallet(String id, String name, long opening, WalletType type, boolean included, int order) {
         Wallet old = wallet(id);
-        if (old == null) throw new Failure(Problem.NOT_FOUND);
-        if (old.archivedAt != null) throw new Failure(Problem.ARCHIVED);
+        if (old == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
+        if (old.archivedAt != null) throw new FinanceFailure(FinanceProblem.ARCHIVED);
         name = validName(name);
-        if (opening < 0 || opening > MAX_AMOUNT || type == null || order < 0) throw new Failure(Problem.AMOUNT);
+        if (opening < 0 || opening > MAX_AMOUNT || type == null || order < 0) throw new FinanceFailure(FinanceProblem.AMOUNT);
         for (Wallet item : state.wallets) if (!id.equals(item.id) && item.archivedAt == null && sameName(item.name, name))
-            throw new Failure(Problem.NAME);
+            throw new FinanceFailure(FinanceProblem.NAME);
         if (Math.addExact(Math.subtractExact(balance(id), old.openingBalance), opening) < 0)
-            throw new Failure(Problem.INSUFFICIENT_FUNDS);
-        old.name = name; old.openingBalance = opening; old.walletType = type; old.includeInAssets = included; old.sortOrder = order;
+            throw new FinanceFailure(FinanceProblem.INSUFFICIENT_FUNDS);
+        state.wallets.set(state.wallets.indexOf(old),new Wallet(old.id,name,opening,type,old.archivedAt,included,order,old.serverBalanceMinor));
     }
 
     public void walletStatus(String id, boolean active) {
         Wallet item = wallet(id);
-        if (item == null) throw new Failure(Problem.NOT_FOUND);
+        if (item == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
         if (active) {
             for (Wallet other : state.wallets) if (!id.equals(other.id) && other.archivedAt == null && sameName(other.name, item.name))
-                throw new Failure(Problem.NAME);
-            item.archivedAt = null;
-        } else if (item.archivedAt == null) item.archivedAt = now();
+                throw new FinanceFailure(FinanceProblem.NAME);
+            state.wallets.set(state.wallets.indexOf(item),item.withArchivedAt(null));
+        } else if (item.archivedAt == null) state.wallets.set(state.wallets.indexOf(item),item.withArchivedAt(now()));
     }
 
-    public void updateCategory(String id, String name, Type type, String icon, String color, int order) {
+    public void updateCategory(String id, String name, TransactionType type, String icon, String color, int order) {
         Category old = category(id);
-        if (old == null) throw new Failure(Problem.NOT_FOUND);
-        if (old.archivedAt != null) throw new Failure(Problem.ARCHIVED);
+        if (old == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
+        if (old.archivedAt != null) throw new FinanceFailure(FinanceProblem.ARCHIVED);
         name = validName(name);
-        if (type == null || type == Type.TRANSFER || order < 0) throw new Failure(Problem.CATEGORY);
+        if (type == null || type == TransactionType.TRANSFER || order < 0) throw new FinanceFailure(FinanceProblem.CATEGORY);
         if (old.type != type) {
-            for (Transaction transaction : state.transactions) if (id.equals(transaction.categoryId)) throw new Failure(Problem.CONFLICT);
-            for (Budget budget : state.budgets) if (id.equals(budget.categoryId)) throw new Failure(Problem.CONFLICT);
+            for (Transaction transaction : state.transactions) if (id.equals(transaction.categoryId)) throw new FinanceFailure(FinanceProblem.CONFLICT);
+            for (Budget budget : state.budgets) if (id.equals(budget.categoryId)) throw new FinanceFailure(FinanceProblem.CONFLICT);
         }
         for (Category item : state.categories) if (!id.equals(item.id) && item.archivedAt == null && item.type == type && sameName(item.name, name))
-            throw new Failure(Problem.NAME);
-        old.name = name; old.type = type; old.iconKey = icon; old.colorHex = color; old.sortOrder = order;
+            throw new FinanceFailure(FinanceProblem.NAME);
+        state.categories.set(state.categories.indexOf(old),new Category(old.id,name,type,old.archivedAt,icon,color,order));
     }
 
     public void categoryStatus(String id, boolean active) {
         Category item = category(id);
-        if (item == null) throw new Failure(Problem.NOT_FOUND);
+        if (item == null) throw new FinanceFailure(FinanceProblem.NOT_FOUND);
         if (active) {
             for (Category other : state.categories) if (!id.equals(other.id) && other.archivedAt == null && other.type == item.type && sameName(other.name, item.name))
-                throw new Failure(Problem.NAME);
-            item.archivedAt = null;
-        } else if (item.archivedAt == null) item.archivedAt = now();
+                throw new FinanceFailure(FinanceProblem.NAME);
+            state.categories.set(state.categories.indexOf(item),item.withArchivedAt(null));
+        } else if (item.archivedAt == null) state.categories.set(state.categories.indexOf(item),item.withArchivedAt(now()));
     }
 
     // Chuẩn hóa chuỗi văn bản (bỏ dấu tiếng Việt, chuyển chữ thường) để hỗ trợ tìm kiếm không dấu
-    private static String fold(String text) {
-        return Normalizer.normalize(text.toLowerCase(Locale.ROOT).replace('đ', 'd'), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-    }
 }

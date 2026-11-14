@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityOcrCameraBinding;
 import com.example.fintrack.app.transaction.ui.TransactionReviewActivity;
 
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ public class OcrCameraActivity extends AppCompatActivity {
 
     private static final int CAMERA_PERMISSION_CODE = 101;
 
+    private ActivityOcrCameraBinding binding;
+
     private ImageView btnBack;
     private ImageView btnGalleryPick;
     private FrameLayout btnShutterCapture;
@@ -40,7 +43,7 @@ public class OcrCameraActivity extends AppCompatActivity {
                 if (uri != null) {
                     launchReviewWithUri(uri);
                 } else {
-                    Toast.makeText(this, "Đã hủy chọn ảnh", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.ocr_pick_cancelled, Toast.LENGTH_SHORT).show();
                 }
             }
     );
@@ -48,7 +51,8 @@ public class OcrCameraActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ocr_camera);
+        binding = ActivityOcrCameraBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         initViews();
         checkCameraPermission();
@@ -56,9 +60,9 @@ public class OcrCameraActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
-        btnGalleryPick = findViewById(R.id.btnGalleryPick);
-        btnShutterCapture = findViewById(R.id.btnShutterCapture);
+        btnBack = binding.btnBack;
+        btnGalleryPick = binding.btnGalleryPick;
+        btnShutterCapture = binding.btnShutterCapture;
     }
 
     private void checkCameraPermission() {
@@ -72,9 +76,9 @@ public class OcrCameraActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CAMERA_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Đã cấp quyền Camera", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.ocr_camera_granted, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Bạn có thể chọn ảnh hóa đơn sẵn có từ Thư viện", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.ocr_camera_denied_use_gallery, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -90,7 +94,7 @@ public class OcrCameraActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 galleryLauncher.launch("image/*");
             } else {
-                Toast.makeText(this, "Vui lòng cấp quyền Camera hoặc chọn ảnh từ Thư viện", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.ocr_camera_permission_needed, Toast.LENGTH_SHORT).show();
                 galleryLauncher.launch("image/*");
             }
         });
@@ -100,7 +104,7 @@ public class OcrCameraActivity extends AppCompatActivity {
         ArrayList<String> images = new ArrayList<>();
         images.add(uri.toString());
         Intent intent = new Intent(this, TransactionReviewActivity.class);
-        intent.putStringArrayListExtra("images", images);
+        intent.putStringArrayListExtra(TransactionReviewActivity.EXTRA_IMAGES, images);
         startActivity(intent);
         finish();
     }

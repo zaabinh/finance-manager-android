@@ -1,8 +1,7 @@
 package com.example.fintrack.app.category.ui;
 
-import com.example.fintrack.R;
-
 public class CategoryAddActivity extends CategoryFormActivity {
-    @Override protected int layout() { return R.layout.activity_category_add; }
+    /** TransactionType name (INCOME or EXPENSE) preselected in the form. */
+    public static final String EXTRA_CATEGORY_TYPE = "category_type";
     @Override protected boolean editing() { return false; }
 }

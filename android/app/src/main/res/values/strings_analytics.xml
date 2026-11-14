@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Analytics Feature -->
     <string name="analytics_title">Phân tích</string>
     <string name="category_breakdown">Phân tích theo danh mục</string>
@@ -8,4 +8,22 @@
     <string name="btn_next">Tiếp tục →</string>
     <string name="btn_review">Xem lại →</string>
     <string name="select_report_month">Chọn tháng báo cáo</string>
+    <string name="analytics_not_connected_title">Chưa kết nối dữ liệu phân tích</string>
+    <string name="analytics_not_connected_body">Tính năng này sẽ hiển thị số liệu thật khi được kết nối với máy chủ.</string>
+    <!-- Vietnamese has no plural forms. -->
+    <string name="analytics_peak_week_header" tools:ignore="PluralsCandidate">Tuần %1$d chi tiêu cao nhất</string>
+    <string name="analytics_peak_week_sub">%1$s · chiếm %2$d%% chi tiêu tháng.</string>
+    <string name="analytics_budget_category">Khoản %1$s</string>
+    <string name="analytics_budget_percent">%1$d%% ngân sách</string>
+    <string name="analytics_budget_spent">Đã chi %1$s</string>
+    <string name="analytics_budget_remaining">Còn %1$s</string>
+    <string name="analytics_tip_suggestion">Gợi ý: %1$s</string>
+    <string name="analytics_step_counter">PHÂN TÍCH %1$d / 5 · MINH HỌA</string>
+    <!-- Demo months; the mock analytics provider keys its data by these labels. -->
+    <string-array name="analytics_demo_months">
+        <item>Tháng 10</item>
+        <item>Tháng 9</item>
+        <item>Tháng 8</item>
+        <item>Tháng 7</item>
+    </string-array>
 </resources>

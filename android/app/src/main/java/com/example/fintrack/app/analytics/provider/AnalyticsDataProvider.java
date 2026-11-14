@@ -8,11 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Cung cấp dữ liệu phân tích tài chính (Analytics Data) minh họa nhất quán cho từng tháng (5 slides)
+ * Cung cấp dữ liệu phân tích tài chính (Analytics Data) minh họa nhất quán cho từng tháng (5 slides).
+ * Demo data: only the mock flavor's AppContainer creates it.
  */
-public class AnalyticsDataProvider {
+public class AnalyticsDataProvider implements AnalyticsProvider {
 
-    public static AnalyticsData getAnalyticsDataForMonth(String monthName) {
+    @Override
+    public AnalyticsData getAnalyticsDataForMonth(String monthName) {
         AnalyticsData data = new AnalyticsData();
         String month = monthName != null ? monthName : "Tháng 10";
         data.setMonthName(month);

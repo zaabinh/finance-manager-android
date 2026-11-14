@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -12,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthChangePasswordBinding;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.util.PasswordValidator;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
@@ -24,8 +28,11 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 public class ChangePasswordActivity extends AppCompatActivity {
 
     // Các khóa để lưu tạm email và mã OTP khi xoay màn hình
+    public static final String EXTRA_OTP = "otp";
     private static final String KEY_EMAIL = "key_email";
     private static final String KEY_OTP = "key_otp";
+
+    private ActivityAuthChangePasswordBinding binding;
 
     // Các thành phần giao diện (Ô nhập mật khẩu mới, xác nhận mật khẩu, nút bấm, icon ẩn/hiện mật khẩu)
     private EditText etNewPassword;
@@ -44,18 +51,19 @@ public class ChangePasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_change_password);
+        binding = ActivityAuthChangePasswordBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
         // Khôi phục lại email và OTP nếu Activity bị hủy và tạo lại (ví dụ: khi xoay ngang/dọc màn hình)
         if (savedInstanceState != null) {
-            email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra("email"));
-            otp = savedInstanceState.getString(KEY_OTP, getIntent().getStringExtra("otp"));
+            email = savedInstanceState.getString(KEY_EMAIL, getIntent().getStringExtra(VerifyEmailActivity.EXTRA_EMAIL));
+            otp = savedInstanceState.getString(KEY_OTP, getIntent().getStringExtra(EXTRA_OTP));
         } else {
             // Lấy email và OTP được truyền qua Intent từ màn hình VerifyEmailActivity
-            email = getIntent().getStringExtra("email");
-            otp = getIntent().getStringExtra("otp");
+            email = getIntent().getStringExtra(VerifyEmailActivity.EXTRA_EMAIL);
+            otp = getIntent().getStringExtra(EXTRA_OTP);
         }
 
         if (email == null) email = "";
@@ -73,11 +81,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     /** Ánh xạ các thành phần giao diện từ file XML */
     private void initViews() {
-        etNewPassword = findViewById(R.id.etNewPassword);
-        etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword);
-        ivToggleNewPassword = findViewById(R.id.ivToggleNewPassword);
-        ivToggleConfirmNewPassword = findViewById(R.id.ivToggleConfirmNewPassword);
-        btnSubmit = findViewById(R.id.btnSubmit);
+        etNewPassword = binding.etNewPassword;
+        etConfirmNewPassword = binding.etConfirmNewPassword;
+        ivToggleNewPassword = binding.ivToggleNewPassword;
+        ivToggleConfirmNewPassword = binding.ivToggleConfirmNewPassword;
+        btnSubmit = binding.btnSubmit;
     }
 
     /** Cài đặt các sự kiện tương tác bấm nút và ẩn/hiện mật khẩu */
@@ -114,7 +122,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     // Thất bại -> Bật lại nút và hiển thị thông báo lỗi
                     btnSubmit.setEnabled(true);
                     btnSubmit.setText(R.string.btn_submit);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.reset_password_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.reset_password_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 

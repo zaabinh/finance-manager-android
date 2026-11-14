@@ -8,7 +8,7 @@ import retrofit2.http.POST;
 
 /**
  * Interface định nghĩa các API endpoint xác thực chính xác theo Backend Spring Boot:
- * register, login, refresh, logout, logout-all, change-password, verify-email, resend-verification, forgot-password, reset-password.
+ * register, login, refresh, logout, verify-email, resend-verification, forgot-password, reset-password.
  */
 public interface AuthApiService {
 
@@ -27,10 +27,6 @@ public interface AuthApiService {
     /** Đăng xuất thiết bị hiện tại */
     @POST("api/v1/auth/logout")
     Call<Void> logout(@Body RefreshTokenRequest request);
-
-    /** Đổi mật khẩu tài khoản (khi đã đăng nhập) */
-    @POST("api/v1/auth/change-password")
-    Call<ApiResponse<TokenResponse>> changePassword(@Body ChangePasswordRequest request);
 
     /** Xác thực email bằng mã OTP */
     @POST("api/v1/auth/verify-email")

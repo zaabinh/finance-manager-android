@@ -1,5 +1,7 @@
 package com.example.fintrack.app.wallet.ui;
 
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -9,12 +11,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.fintrack.R;
 import com.example.fintrack.app.core.ui.MoneyInput;
 import com.example.fintrack.app.core.ui.SheetDialog;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.setup.model.PendingWallet;
 import com.example.fintrack.app.wallet.model.WalletDraft;
+import com.example.fintrack.databinding.SheetWalletBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.ChipGroup;
 
 /** Sheet/Wallet (Figma 718:11413, Add): quick wallet creation. The caller decides what saving means. */
 public final class WalletSheet {
@@ -22,12 +25,14 @@ public final class WalletSheet {
 
     private final BottomSheetDialog dialog;
     private final MaterialButton confirm;
-    private FinanceBook.WalletType type = FinanceBook.WalletType.CASH;
+    private WalletType type = WalletType.CASH;
 
     private WalletSheet(AppCompatActivity host, Listener listener) {
-        View content = LayoutInflater.from(host).inflate(R.layout.sheet_wallet, null);
+        View content = SheetWalletBinding.inflate(LayoutInflater.from(host)).getRoot();
+        // form_wallet_fields, sheet_header and sheet_form_actions are included without an android:id, so
+        // ViewBinding does not expose their views.
         EditText name = content.findViewById(R.id.etWalletName), balance = content.findViewById(R.id.etBalance);
-        MoneyInput.attach(balance, content.findViewById(R.id.chipGroupAmountSuggestions));
+        MoneyInput.attach(balance, content.<ChipGroup>findViewById(R.id.chipGroupAmountSuggestions));
         ((TextView) content.findViewById(R.id.tvSheetTitle)).setText(R.string.wallet_add_title);
         confirm = content.findViewById(R.id.btnSheetConfirm);
         confirm.setText(R.string.wallet_add_title);

@@ -2,27 +2,28 @@ package com.example.fintrack.app.wallet.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityWalletListBinding;
 import com.example.fintrack.app.finance.data.FinanceRepository;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
+import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.wallet.adapter.WalletAdapter;
 
 public class WalletListActivity extends FinanceActivity {
+    private ActivityWalletListBinding binding;
     private WalletAdapter adapter;
-    @Override protected int layout() { return R.layout.activity_wallet_list; }
+    @Override protected View contentView() { binding = ActivityWalletListBinding.inflate(getLayoutInflater()); return binding.getRoot(); }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
     @Override protected void bind(Bundle saved) {
-        adapter = new WalletAdapter(wallet -> startActivity(new Intent(this, WalletDetailActivity.class).putExtra("WALLET_ID", wallet.id)));
-        RecyclerView list = findViewById(R.id.rvWallets);
-        list.setLayoutManager(new LinearLayoutManager(this)); list.setAdapter(adapter);
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-        findViewById(R.id.btnAddWallet).setOnClickListener(v -> startActivity(new Intent(this, WalletAddActivity.class)));
+        adapter = new WalletAdapter(wallet -> startActivity(new Intent(this, WalletDetailActivity.class).putExtra(WalletDetailActivity.EXTRA_WALLET_ID, wallet.id)));
+        binding.rvWallets.setLayoutManager(new LinearLayoutManager(this)); binding.rvWallets.setAdapter(adapter);
+        binding.btnBack.setOnClickListener(v -> finish());
+        binding.btnAddWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletAddActivity.class)));
     }
     @Override protected void render() {
         adapter.setWallets(book);
-        visible(R.id.layoutEmptyWallets, book.state().wallets.isEmpty());
-        visible(R.id.rvWallets, !book.state().wallets.isEmpty());
+        FinanceUi.visible(binding.layoutEmptyWallets, book.wallets().isEmpty());
+        FinanceUi.visible(binding.rvWallets, !book.wallets().isEmpty());
     }
 }

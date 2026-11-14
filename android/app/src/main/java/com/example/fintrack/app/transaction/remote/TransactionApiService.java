@@ -1,6 +1,7 @@
 package com.example.fintrack.app.transaction.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -16,7 +17,7 @@ public interface TransactionApiService {
     Call<TransactionPageResponse> transactions(@Query("page") int page, @Query("size") int size,
                                                @Query("dateFrom") String dateFrom, @Query("dateTo") String dateTo,
                                                @Query("walletId") String walletId, @Query("categoryId") String categoryId,
-                                               @Query("type") FinanceBook.Type type, @Query("q") String q, @Query("sort") String sort);
+                                               @Query("type") TransactionType type, @Query("q") String q, @Query("sort") String sort);
 
     /** API Chi tiết giao dịch theo ID (kể cả VOIDED để audit) */
     @GET("api/v1/transactions/{id}")

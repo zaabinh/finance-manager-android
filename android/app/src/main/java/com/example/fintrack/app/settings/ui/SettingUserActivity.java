@@ -1,10 +1,11 @@
 package com.example.fintrack.app.settings.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,8 +14,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySettingUserBinding;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.example.fintrack.app.user.remote.UserProfileResponse;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
@@ -24,9 +27,8 @@ public class SettingUserActivity extends AppCompatActivity {
     public static final String[] TIMEZONE_IDS = {
             "Asia/Ho_Chi_Minh", "Asia/Tokyo", "Europe/London", "America/New_York"
     };
-    public static final String[] TIMEZONE_LABELS = {
-            "Hà Nội · GMT+07:00", "Tokyo · GMT+09:00", "London", "New York"
-    };
+
+    private ActivitySettingUserBinding binding;
 
     private EditText etDisplayName;
     private EditText etEmail;
@@ -39,22 +41,36 @@ public class SettingUserActivity extends AppCompatActivity {
     private View rowTimezone;
     private View btnSaveProfile;
     private View btnCancelEdit;
-    private SessionManager sessionManager;
     private UserViewModel userViewModel;
     private String selectedTimeZone = DEFAULT_TIMEZONE;
     private String savedTimeZone = DEFAULT_TIMEZONE;
     private String savedDisplayName;
+    private static final String STATE_EDITING = "state_editing";
+    private static final String STATE_TIME_ZONE = "state_time_zone";
+    private static final String STATE_SAVED_TIME_ZONE = "state_saved_time_zone";
+    private static final String STATE_SAVED_NAME = "state_saved_name";
+    // Rotated mid-edit: the replayed profile result must not overwrite the name/time zone being edited.
+    private boolean keepDraft = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting_user);
+        binding = ActivitySettingUserBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
+
+        boolean editing = false;
+        if (savedInstanceState != null) {
+            editing = savedInstanceState.getBoolean(STATE_EDITING);
+            keepDraft = editing;
+            selectedTimeZone = savedInstanceState.getString(STATE_TIME_ZONE, selectedTimeZone);
+            savedTimeZone = savedInstanceState.getString(STATE_SAVED_TIME_ZONE, savedTimeZone);
+            savedDisplayName = savedInstanceState.getString(STATE_SAVED_NAME);
+        }
 
         initViews();
-        toggleEditMode(false);
+        toggleEditMode(editing);
         loadUserData();
         setupObservers();
         setupListeners();
@@ -62,22 +78,23 @@ public class SettingUserActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        btnEdit = findViewById(R.id.btnEdit);
-        tvDisplayName = findViewById(R.id.tvDisplayName);
-        tvDisplayEmail = findViewById(R.id.tvDisplayEmail);
-        tvAvatarInitialsHero = findViewById(R.id.tvAvatarInitialsHero);
-        etDisplayName = findViewById(R.id.etDisplayName);
-        etEmail = findViewById(R.id.etEmail);
-        tvCurrencyValue = findViewById(R.id.tvCurrencyValue);
-        tvTimezoneValue = findViewById(R.id.tvTimezoneValue);
-        rowTimezone = findViewById(R.id.rowTimezone);
-        btnSaveProfile = findViewById(R.id.btnSaveProfile);
-        btnCancelEdit = findViewById(R.id.btnCancelEdit);
+        btnEdit = binding.btnEdit;
+        tvDisplayName = binding.tvDisplayName;
+        tvDisplayEmail = binding.tvDisplayEmail;
+        tvAvatarInitialsHero = binding.tvAvatarInitialsHero;
+        etDisplayName = binding.etDisplayName;
+        etEmail = binding.etEmail;
+        tvCurrencyValue = binding.tvCurrencyValue;
+        tvTimezoneValue = binding.tvTimezoneValue;
+        rowTimezone = binding.rowTimezone;
+        btnSaveProfile = binding.btnSaveProfile;
+        btnCancelEdit = binding.btnCancelEdit;
     }
 
     private void loadUserData() {
-        String name = sessionManager.getUserName();
-        String email = sessionManager.getUserEmail();
+        SessionSnapshot session = FintrackApplication.container(this).sessionStore().current();
+        String name = session.name;
+        String email = session.email;
         if (!TextUtils.isEmpty(name)) {
             savedDisplayName = name;
             showName(name);
@@ -96,10 +113,11 @@ public class SettingUserActivity extends AppCompatActivity {
             UserProfileResponse profile = resource.getData();
             String name = profile.getDisplayName();
             String email = profile.getEmail();
-            if (!TextUtils.isEmpty(name)) {
+            boolean draft = keepDraft;
+            keepDraft = false;
+            if (!TextUtils.isEmpty(name) && !draft) {
                 showName(name);
-                savedDisplayName = name;
-                sessionManager.saveUserProfile(profile.getId(), email, name);
+                savedDisplayName = name; // UserViewModel đã lưu hồ sơ này vào Session
             }
             if (!TextUtils.isEmpty(email)) {
                 etEmail.setText(email);
@@ -107,8 +125,8 @@ public class SettingUserActivity extends AppCompatActivity {
             }
             String currency = profile.getCurrencyCode();
             tvCurrencyValue.setText(TextUtils.isEmpty(currency) ? getString(R.string.currency_vnd_read_only) : currency);
-            selectedTimeZone = TextUtils.isEmpty(profile.getTimeZone()) ? DEFAULT_TIMEZONE : profile.getTimeZone();
-            savedTimeZone = selectedTimeZone;
+            savedTimeZone = TextUtils.isEmpty(profile.getTimeZone()) ? DEFAULT_TIMEZONE : profile.getTimeZone();
+            if (!draft) selectedTimeZone = savedTimeZone;
             showTimezone(selectedTimeZone);
         });
 
@@ -126,15 +144,14 @@ public class SettingUserActivity extends AppCompatActivity {
                         savedDisplayName = updatedName;
                         selectedTimeZone = resource.getData().getTimeZone();
                         savedTimeZone = selectedTimeZone;
-                        showName(updatedName);
-                        sessionManager.saveUserProfile(sessionManager.getUserId(), sessionManager.getUserEmail(), updatedName);
+                        showName(updatedName); // UserViewModel đã lưu tên mới vào Session
                     }
                     etDisplayName.setEnabled(false);
                     break;
                 case ERROR:
                     btnSaveProfile.setEnabled(true);
                     btnSaveProfile.setVisibility(View.VISIBLE);
-                    String message = resource.getMessage() != null ? resource.getMessage() : getString(R.string.error_server);
+                    String message = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.error_server);
                     Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                     break;
                 case LOADING:
@@ -145,8 +162,7 @@ public class SettingUserActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        binding.btnBack.setOnClickListener(v -> finish());
         btnEdit.setOnClickListener(v -> toggleEditMode(true));
         btnCancelEdit.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(savedDisplayName)) showName(savedDisplayName);
@@ -165,6 +181,15 @@ public class SettingUserActivity extends AppCompatActivity {
         rowTimezone.setOnClickListener(v -> {
             if (etDisplayName.isEnabled()) showTimezonePicker();
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(@androidx.annotation.NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_EDITING, etDisplayName.isEnabled());
+        outState.putString(STATE_TIME_ZONE, selectedTimeZone);
+        outState.putString(STATE_SAVED_TIME_ZONE, savedTimeZone);
+        outState.putString(STATE_SAVED_NAME, savedDisplayName);
     }
 
     private void toggleEditMode(boolean enable) {
@@ -193,7 +218,7 @@ public class SettingUserActivity extends AppCompatActivity {
     private void showTimezonePicker() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.timezone_picker_title)
-                .setSingleChoiceItems(TIMEZONE_LABELS, selectedTimezoneIndex(), (dialog, which) -> {
+                .setSingleChoiceItems(R.array.timezone_labels, selectedTimezoneIndex(), (dialog, which) -> {
                     String timezoneId = TIMEZONE_IDS[which];
                     selectedTimeZone = timezoneId;
                     showTimezone(timezoneId);
@@ -213,7 +238,7 @@ public class SettingUserActivity extends AppCompatActivity {
     private void showTimezone(String timezoneId) {
         for (int i = 0; i < TIMEZONE_IDS.length; i++) {
             if (TIMEZONE_IDS[i].equals(timezoneId)) {
-                tvTimezoneValue.setText(TIMEZONE_LABELS[i]);
+                tvTimezoneValue.setText(getResources().getStringArray(R.array.timezone_labels)[i]);
                 return;
             }
         }

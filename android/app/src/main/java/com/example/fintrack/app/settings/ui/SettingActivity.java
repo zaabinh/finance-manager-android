@@ -12,13 +12,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivitySettingBinding;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.home.ui.HomeDashboardActivity;
+import com.example.fintrack.app.core.session.SessionSnapshot;
+import com.example.fintrack.app.core.session.SessionStore;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
 // Màn hình Cài đặt ứng dụng (SettingActivity)
 public class SettingActivity extends AppCompatActivity {
+
+    private ActivitySettingBinding binding;
 
     // Khai báo các thành phần giao diện
     private LinearLayout layoutProfile;
@@ -34,16 +38,17 @@ public class SettingActivity extends AppCompatActivity {
     private View rowAboutApp;
 
     // Thanh điều hướng dưới đáy
-    private SessionManager sessionManager;
+    private SessionStore sessionStore;
     private UserViewModel userViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting);
+        binding = ActivitySettingBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        sessionStore = FintrackApplication.container(this).sessionStore();
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
         initViews();
         loadUserData();
@@ -61,23 +66,24 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        layoutProfile = findViewById(R.id.layoutProfile);
-        tvAvatarInitials = findViewById(R.id.tvAvatarInitials);
-        tvProfileName = findViewById(R.id.tvProfileName);
-        tvProfileEmail = findViewById(R.id.tvProfileEmail);
-        btnEditProfile = findViewById(R.id.btnEditProfile);
+        layoutProfile = binding.layoutProfile;
+        tvAvatarInitials = binding.tvAvatarInitials;
+        tvProfileName = binding.tvProfileName;
+        tvProfileEmail = binding.tvProfileEmail;
+        btnEditProfile = binding.btnEditProfile;
 
-        rowNotification = findViewById(R.id.rowNotification);
-        rowWallets = findViewById(R.id.rowWallets);
-        rowCategories = findViewById(R.id.rowCategories);
-        rowSecurity = findViewById(R.id.rowSecurity);
-        rowAboutApp = findViewById(R.id.rowAboutApp);
+        rowNotification = binding.rowNotification;
+        rowWallets = binding.rowWallets;
+        rowCategories = binding.rowCategories;
+        rowSecurity = binding.rowSecurity;
+        rowAboutApp = binding.rowAboutApp;
 
     }
 
     private void loadUserData() {
-        String name = sessionManager.getUserName();
-        String email = sessionManager.getUserEmail();
+        SessionSnapshot session = sessionStore.current();
+        String name = session.name;
+        String email = session.email;
 
         if (name != null && !name.isEmpty()) {
             tvProfileName.setText(name);
@@ -106,7 +112,7 @@ public class SettingActivity extends AppCompatActivity {
                     tvAvatarInitials.setText(getInitials(name));
                 }
                 if (email != null) tvProfileEmail.setText(email);
-                sessionManager.saveUserProfile(resource.getData().getProfile().getId(), email, name);
+                // UserViewModel đã lưu hồ sơ này vào Session.
             }
         });
     }
@@ -148,9 +154,9 @@ public class SettingActivity extends AppCompatActivity {
         if (rowAboutApp != null) {
             rowAboutApp.setOnClickListener(v -> {
                 new AlertDialog.Builder(this)
-                        .setTitle("Đồng - Quản lý tài chính")
-                        .setMessage("Phiên bản: v1.0.0\n\nNgười bạn đồng hành tài chính cá nhân của bạn. Giúp bạn theo dõi số dư, ghi chép giao dịch, đặt ngân sách và phân tích tài chính hiệu quả.")
-                        .setPositiveButton("Đóng", (dialog, which) -> dialog.dismiss())
+                        .setTitle(R.string.about_dialog_title)
+                        .setMessage(R.string.about_dialog_message)
+                        .setPositiveButton(R.string.about_dialog_close, (dialog, which) -> dialog.dismiss())
                         .show();
             });
         }

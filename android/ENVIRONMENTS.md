@@ -47,7 +47,7 @@ Hệ thống hỗ trợ 8 Build Variants chính:
 
 - **Môi trường `mock` & `dev`**: Cho phép giao tiếp HTTP cleartext duy nhất tới địa chỉ Android Emulator (`10.0.2.2`).
 - **Môi trường `staging` & `prod`**: Bắt buộc sử dụng HTTPS mã hóa SSL/TLS, tuân thủ chính sách bảo mật mạng. Không cho phép cleartext HTTP.
-- **Toàn bộ ứng dụng**: Sử dụng EncryptedSharedPreferences (`SessionManager`) để bảo mật token và dữ liệu phiên làm việc.
+- **Toàn bộ ứng dụng**: Sử dụng EncryptedSharedPreferences (`SessionStore` + `EncryptedSessionStorage`) để bảo mật token và dữ liệu phiên làm việc.
 
 ---
 

@@ -39,4 +39,5 @@
     <string name="budget_no_savings_wallet">Chưa có ví tiết kiệm đang hoạt động để chuyển tiền</string>
     <string name="budget_archived_edit">Ngân sách này đã bị xóa nên không thể sửa. Hãy tải lại danh sách.</string>
     <string name="budget_category_exists">Danh mục này đã có ngân sách trong tháng.</string>
+    <string name="budget_month_label">Tháng %1$d/%2$s</string>
 </resources>

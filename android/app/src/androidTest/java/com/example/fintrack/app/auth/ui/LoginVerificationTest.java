@@ -1,5 +1,10 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.util.Event;
+import com.example.fintrack.app.core.error.AppError;
+
+import com.example.fintrack.app.core.network.HttpErrorParser;
+
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
@@ -22,9 +27,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.example.fintrack.R;
 import com.example.fintrack.app.auth.remote.LoginResponse;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
-import com.example.fintrack.app.core.network.ErrorMapper;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.core.session.SessionStore;
+import com.example.fintrack.app.FintrackApplication;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,13 +54,18 @@ public class LoginVerificationTest {
 
     @Before
     public void setUp() {
-        SessionManager.getInstance(instrumentation.getTargetContext()).clearSession();
+        logOut();
+    }
+
+    private void logOut() {
+        SessionStore store = FintrackApplication.container(instrumentation.getTargetContext()).sessionStore();
+        store.clear(store.current());
     }
 
     @After
     public void tearDown() {
         instrumentation.removeMonitor(monitor);
-        SessionManager.getInstance(instrumentation.getTargetContext()).clearSession();
+        logOut();
     }
 
     @Test
@@ -63,11 +73,11 @@ public class LoginVerificationTest {
         try (ActivityScenario<LoginActivity> scenario = ActivityScenario.launch(LoginActivity.class)) {
             instrumentation.addMonitor(monitor);
             scenario.onActivity(activity -> {
-                String error = ErrorMapper.getHttpErrorMessage(activity, Response.error(403,
+                AppError error = HttpErrorParser.parse(Response.error(403,
                         ResponseBody.create(MediaType.get("application/json"),
                                 "{\"errorCode\":\"AUTH_EMAIL_NOT_VERIFIED\"}")));
-                assertEquals("AUTH_EMAIL_NOT_VERIFIED", error);
-                AuthViewModel model = new ViewModelProvider(activity).get(AuthViewModel.class);
+                assertEquals("AUTH_EMAIL_NOT_VERIFIED", error.code);
+                AuthViewModel model = new ViewModelProvider(activity, FintrackApplication.container(activity).viewModelFactory()).get(AuthViewModel.class);
                 ((MutableLiveData<Resource<LoginResponse>>) model.getLoginResult())
                         .setValue(Resource.error(error, null));
             });
@@ -83,13 +93,13 @@ public class LoginVerificationTest {
             instrumentation.addMonitor(monitor);
             scenario.onActivity(activity -> {
                 ((EditText) activity.findViewById(R.id.etUsernameOrEmail)).setText("demo@fintrack.com");
-                AuthViewModel model = new ViewModelProvider(activity).get(AuthViewModel.class);
-                ((MutableLiveData<Resource<Void>>) model.getResendVerificationResult())
-                        .setValue(Resource.success(null));
+                AuthViewModel model = new ViewModelProvider(activity, FintrackApplication.container(activity).viewModelFactory()).get(AuthViewModel.class);
+                ((MutableLiveData<Event<Resource<Void>>>) model.getResendVerificationResult())
+                        .setValue(new Event<>(Resource.success(null)));
             });
             assertNotNull(verificationIntent);
             assertEquals(VerifyEmailActivity.class.getName(), verificationIntent.getComponent().getClassName());
-            assertEquals("demo@fintrack.com", verificationIntent.getStringExtra("email"));
+            assertEquals("demo@fintrack.com", verificationIntent.getStringExtra(VerifyEmailActivity.EXTRA_EMAIL));
         }
     }
 
@@ -98,9 +108,9 @@ public class LoginVerificationTest {
         try (ActivityScenario<LoginActivity> scenario = ActivityScenario.launch(LoginActivity.class)) {
             instrumentation.addMonitor(monitor);
             scenario.onActivity(activity -> {
-                AuthViewModel model = new ViewModelProvider(activity).get(AuthViewModel.class);
-                ((MutableLiveData<Resource<Void>>) model.getResendVerificationResult())
-                        .setValue(Resource.error("Không thể gửi email xác nhận", null));
+                AuthViewModel model = new ViewModelProvider(activity, FintrackApplication.container(activity).viewModelFactory()).get(AuthViewModel.class);
+                ((MutableLiveData<Event<Resource<Void>>>) model.getResendVerificationResult())
+                        .setValue(new Event<>(Resource.error(HttpErrorParser.from(new java.io.IOException()), null)));
             });
             assertNull(verificationIntent);
         }

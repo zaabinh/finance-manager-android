@@ -1,5 +1,8 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.Resource;
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.databinding.ActivityAuthForgotPasswordBinding;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 /**
@@ -23,6 +28,8 @@ import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     private static final String KEY_REQUESTED_EMAIL = "key_requested_email"; // Khóa lưu tạm email khi xoay màn hình
+
+    private ActivityAuthForgotPasswordBinding binding;
 
     // Các thành phần giao diện (Ô nhập email, nút Gửi yêu cầu, chữ quay lại đăng nhập)
     private EditText etEmail;
@@ -35,7 +42,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_forgot_password);
+        binding = ActivityAuthForgotPasswordBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Khôi phục lại email nếu Activity bị hủy và tạo lại (ví dụ: khi xoay ngang/dọc điện thoại)
         if (savedInstanceState != null) {
@@ -43,7 +51,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         }
 
         // Khởi tạo ViewModel
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
         initViews();       // Ánh xạ View từ XML
         setupListeners();  // Cài đặt sự kiện click cho các nút
@@ -52,9 +60,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     /** Ánh xạ các thành phần giao diện từ file XML */
     private void initViews() {
-        etEmail = findViewById(R.id.etEmail);
-        btnSend = findViewById(R.id.btnSend);
-        tvBackToLogin = findViewById(R.id.tvBackToLogin);
+        etEmail = binding.etEmail;
+        btnSend = binding.btnSend;
+        tvBackToLogin = binding.tvBackToLogin;
     }
 
     /** Cài đặt các sự kiện tương tác bấm nút */
@@ -68,7 +76,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     /** Lắng nghe kết quả trả về từ API quên mật khẩu thông qua LiveData trong ViewModel */
     private void setupObservers() {
-        authViewModel.getForgotPasswordResult().observe(this, resource -> {
+        authViewModel.getForgotPasswordResult().observe(this, event -> {
+            if (event == null) return;
+            // LOADING is state (rendered again after recreation); SUCCESS and ERROR are handled once.
+            Resource<Void> resource = event.peekContent().getStatus() == Resource.Status.LOADING
+                    ? event.peekContent() : event.getContentIfNotHandled();
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case SUCCESS:
@@ -85,8 +97,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
                     // Chuyển sang VerifyEmailActivity và đánh dấu cờ is_reset_password = true (để biết đây là luồng quên mật khẩu)
                     Intent intent = new Intent(ForgotPasswordActivity.this, VerifyEmailActivity.class);
-                    intent.putExtra("email", emailToPass);
-                    intent.putExtra("is_reset_password", true);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, emailToPass);
+                    intent.putExtra(VerifyEmailActivity.EXTRA_IS_RESET_PASSWORD, true);
                     startActivity(intent);
                     finish(); // Đóng màn hình quên mật khẩu hiện tại
                     break;
@@ -95,7 +107,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     // Gửi yêu cầu thất bại -> Bật lại nút và hiển thị lỗi
                     btnSend.setEnabled(true);
                     btnSend.setText(R.string.btn_send);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.forgot_password_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.forgot_password_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 
