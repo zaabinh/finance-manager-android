@@ -54,4 +54,22 @@ public class TransactionPrefillTest {
         assertNull(TransactionPrefill.parse("TRANSFER", null, null, FinanceBook.MAX_AMOUNT + 1).amountMinor);
         assertEquals(Long.valueOf(FinanceBook.MAX_AMOUNT), TransactionPrefill.parse("TRANSFER", null, null, FinanceBook.MAX_AMOUNT).amountMinor);
     }
+
+    @Test public void categoryPrefillResolvedWhenActiveAndMatchingType() {
+        TransactionPrefill prefill = TransactionPrefill.parse("EXPENSE", cash, null, 50_000L, "food").resolve(book);
+        assertEquals(TransactionType.EXPENSE, prefill.type);
+        assertEquals("food", prefill.categoryId);
+
+        // Category not applicable on transfer
+        TransactionPrefill transferPrefill = TransactionPrefill.parse("TRANSFER", savings, cash, 50_000L, "food").resolve(book);
+        assertNull(transferPrefill.categoryId);
+
+        // Unknown category is ignored
+        TransactionPrefill unknownPrefill = TransactionPrefill.parse("EXPENSE", cash, null, 50_000L, "unknown-cat").resolve(book);
+        assertNull(unknownPrefill.categoryId);
+
+        // Mismatched category type (salary is INCOME, but type is EXPENSE) is ignored
+        TransactionPrefill mismatchPrefill = TransactionPrefill.parse("EXPENSE", cash, null, 50_000L, "salary").resolve(book);
+        assertNull(mismatchPrefill.categoryId);
+    }
 }

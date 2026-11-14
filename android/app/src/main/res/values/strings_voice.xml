@@ -2,7 +2,7 @@
 <resources>
     <string name="voice_input_title">Nhập bằng giọng nói</string>
     <string name="voice_input_subtitle">Nói tự nhiên số tiền và nội dung thu chi của bạn</string>
-    <string name="voice_input_hint_example">Ví dụ: "Ăn trưa 45 nghìn" hoặc "Thu lương 15 triệu"</string>
+    <string name="voice_input_hint_example">Ví dụ: "Ăn trưa 45 nghìn", "Chi 50k cà phê" hoặc "Thu lương 15 triệu"</string>
     <string name="voice_state_idle">Chạm vào micro để nói</string>
     <string name="voice_state_listening">Đang lắng nghe bạn nói…</string>
     <string name="voice_state_processing">Đang phân tích giao dịch…</string>
@@ -14,8 +14,105 @@
     <string name="voice_amount_label">Số tiền:</string>
     <string name="voice_type_label">Loại giao dịch:</string>
     <string name="voice_note_label">Ghi chú / Khoản chi:</string>
+    <string name="voice_category_label">Danh mục</string>
+    <string name="voice_category_suggested_label">Danh mục (tự động gợi ý)</string>
+    <string name="voice_wallet_label">Ví thanh toán</string>
+    <string name="voice_source_wallet_label">Từ ví</string>
+    <string name="voice_destination_wallet_label">Đến ví</string>
     <string name="voice_btn_confirm">Xác nhận &amp; Lưu giao dịch</string>
+    <string name="voice_btn_confirm_countdown">Xác nhận &amp; Lưu (%ds)</string>
+    <string name="voice_autosave_notice">Tự động lưu sau 5 giây. Chạm bất kỳ đâu để dừng.</string>
+    <string name="voice_autosave_paused">Đã dừng tự động lưu</string>
+    <string name="voice_autosave_enable_label">Tự động lưu sau khi nói</string>
+    <string name="voice_autosave_disabled_notice">Đã tắt tự động lưu. Hãy bấm nút để lưu khi kiểm tra xong.</string>
+    <string name="voice_saved_success_format">Đã lưu: %1$s · %2$s</string>
+    <string name="voice_action_undo">Hoàn tác</string>
+    <string name="voice_undo_success">Đã hoàn tác giao dịch. Bạn có thể kiểm tra và lưu lại.</string>
     <string name="voice_btn_edit_more">Chỉnh sửa chi tiết</string>
     <string name="voice_btn_retry">Nói lại</string>
+    <string name="voice_btn_manual">Nhập thủ công</string>
     <string name="quick_action_voice">Giọng nói</string>
+    <string name="voice_error_no_match">Không nghe rõ giọng nói. Vui lòng nói to và rõ hơn!</string>
+    <string name="voice_error_network">Không có kết nối mạng để nhận diện giọng nói.</string>
+    <string name="voice_error_audio">Lỗi thu âm từ Micro. Vui lòng kiểm tra thiết bị và thử lại.</string>
+    <string name="voice_error_not_available">Thiết bị chưa bật hoặc không hỗ trợ dịch vụ nhận diện giọng nói.</string>
+    <string name="voice_amount_required">Vui lòng nhập số tiền hợp lệ lớn hơn 0.</string>
+    <string name="voice_wallet_required">Vui lòng chọn ví thanh toán.</string>
+    <string name="voice_destination_wallet_required">Vui lòng chọn ví đích để chuyển tiền.</string>
+    <string name="voice_destination_same_error">Ví nguồn và ví đích không được trùng nhau.</string>
+
+    <!-- App Shortcut -->
+    <string name="shortcut_voice_short">Nói để ghi</string>
+    <string name="shortcut_voice_long">Ghi chép giao dịch bằng giọng nói</string>
+
+    <!-- Micro-Adjustment Chips -->
+    <string name="voice_chip_add_10k">+10k</string>
+    <string name="voice_chip_add_20k">+20k</string>
+    <string name="voice_chip_add_50k">+50k</string>
+    <string name="voice_chip_minus_10k">-10k</string>
+    <string name="voice_chip_add_000">+000</string>
+    <string name="voice_chip_remove_0">Xóa 0</string>
+
+    <!-- Preset Amount Chips (When Amount is Missing) -->
+    <string name="voice_amount_missing_notice">Chưa nhận diện được số tiền. Chạm chọn nhanh hoặc nhập số:</string>
+    <string name="voice_chip_preset_10k">10k</string>
+    <string name="voice_chip_preset_20k">20k</string>
+    <string name="voice_chip_preset_30k">30k</string>
+    <string name="voice_chip_preset_50k">50k</string>
+    <string name="voice_chip_preset_100k">100k</string>
+    <string name="voice_chip_preset_200k">200k</string>
+    <string name="voice_chip_preset_500k">500k</string>
+
+    <!-- Speech Error Fallback -->
+    <string name="voice_btn_try_system_speech">Thử bộ lọc ồn Google</string>
+    <string name="voice_hint_speak_clearly">Mẹo: Hãy nói rõ ràng, ví dụ: "Ăn trưa 45k" hoặc "Đổ xăng 70k"</string>
+
+    <!-- Voice Guidance & Interactive Prompts -->
+    <string name="voice_guidance_question">Hôm nay bạn vừa chi tiêu hay thu tiền khoản gì?</string>
+    <string name="voice_examples_header">Gợi ý mẫu câu (Chạm để thử ngay):</string>
+    <string name="voice_prompt_lunch">🍜 Ăn trưa 45k</string>
+    <string name="voice_prompt_coffee">☕ Cà phê 30k</string>
+    <string name="voice_prompt_gas">⛽ Đổ xăng 50k</string>
+    <string name="voice_prompt_salary">💵 Thu lương 15 triệu</string>
+    <string name="voice_prompt_transfer">🔄 Chuyển 200k vào Momo</string>
+    <string name="voice_prompt_yesterday">📅 Hôm qua mua sách 120k</string>
+
+    <!-- Rotating Hints -->
+    <string name="voice_rotating_hint_1">Bạn có thể nói: "Ăn trưa 45 nghìn"…</string>
+    <string name="voice_rotating_hint_2">Hoặc: "Cà phê 30k quẹt thẻ"…</string>
+    <string name="voice_rotating_hint_3">Hoặc: "Đổ xăng 50k bằng momo"…</string>
+    <string name="voice_rotating_hint_4">Hoặc: "Hôm qua mua sách 120k"…</string>
+    <string name="voice_rotating_hint_5">Hoặc: "Thu lương tháng này 15 triệu"…</string>
+
+    <!-- Help Sheet -->
+    <string name="voice_help_title">Cách nói để FinTrack hiểu chuẩn</string>
+    <string name="voice_help_formula_title">1. Công thức đơn giản nhất</string>
+    <string name="voice_help_formula_desc">[Khoản gì] + [Bao nhiêu tiền] + [Bằng ví nào/Khi nào]</string>
+    <string name="voice_help_examples_title">2. Một số ví dụ thường ngày</string>
+    <string name="voice_help_example_item_1">• Chi tiêu: "Ăn phở 45k", "Cà phê 30 nghìn", "Đổ xăng 50k"</string>
+    <string name="voice_help_example_item_2">• Ví &amp; Thẻ: "Quẹt thẻ 350k siêu thị", "Bắn momo 45k trà sữa"</string>
+    <string name="voice_help_example_item_3">• Thời gian: "Hôm qua ăn tối 150k", "Hôm kia mua áo 200k"</string>
+    <string name="voice_help_example_item_4">• Thu nhập: "Thu lương 15 triệu", "Được thưởng 500k"</string>
+    <string name="voice_help_example_item_5">• Chuyển tiền: "Chuyển 500k sang ví Momo"</string>
+    <string name="voice_help_slang_title">3. Hỗ trợ từ lóng &amp; cách đọc dân dã</string>
+    <string name="voice_help_slang_desc">k, ngàn, lít (100k), lốp (100k), vé (100k), sọi (10k), củ (1 triệu), chai (1 triệu), rưỡi (50k/500k), hăm lăm (25k), năm nhăm (55k), trăm hai (120k)...</string>
+    <string name="voice_help_btn_got_it">Đã hiểu, thử ngay!</string>
+
+    <!-- Conversational Guidance & Supplement -->
+    <string name="voice_conversational_question_amount_expense">Bạn đã chi bao nhiêu cho \"%s\"?</string>
+    <string name="voice_conversational_question_amount_income">Bạn nhận được bao nhiêu từ \"%s\"?</string>
+    <string name="voice_conversational_question_amount_transfer">Bạn muốn chuyển bao nhiêu tiền?</string>
+    <string name="voice_conversational_hint_amount">Chạm nút dưới để nói số tiền (vd: "35 nghìn", "50k") hoặc chọn số tiền nhanh bên dưới:</string>
+    <string name="voice_action_speak_amount">Nói số tiền</string>
+    <string name="voice_conversational_question_note_expense">Bạn đã chi %s cho việc gì?</string>
+    <string name="voice_conversational_question_note_income">Bạn nhận được %s từ nguồn nào?</string>
+    <string name="voice_conversational_hint_note">Chạm nút dưới để nói nội dung (vd: "Cà phê sáng", "Đổ xăng", "Mua sách"):</string>
+    <string name="voice_action_speak_note">Nói nội dung</string>
+    <string name="voice_conversational_question_dest_wallet">Chuyển %s sang ví nào?</string>
+    <string name="voice_conversational_hint_dest_wallet">Chạm nút dưới để nói ví nhận (vd: "Sang MoMo", "Sang Tiền mặt"):</string>
+    <string name="voice_action_speak_dest_wallet">Nói ví nhận</string>
+    <string name="voice_supplement_listening_amount">Đang lắng nghe số tiền…</string>
+    <string name="voice_supplement_listening_note">Đang lắng nghe nội dung…</string>
+    <string name="voice_supplement_listening_dest">Đang lắng nghe ví nhận…</string>
+    <string name="voice_supplement_success_toast">Đã bổ sung thông tin thành công!</string>
 </resources>
