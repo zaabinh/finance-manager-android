@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarVoice"
+        style="@style/Widget.App.Toolbar.Back"
+        app:title="@string/voice_input_title" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/spacing_20"
+            android:paddingTop="@dimen/spacing_16"
+            android:paddingEnd="@dimen/spacing_20"
+            android:paddingBottom="@dimen/spacing_32">
+
+            <!-- Container for max width on tablets -->
+            <LinearLayout
+                android:id="@+id/containerContent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="480dp">
+
+                <!-- Instruction Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/voice_input_subtitle"
+                        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="@string/voice_input_hint_example"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/color_primary" />
+                </LinearLayout>
+
+                <!-- Voice Status Visualizer Section -->
+                <FrameLayout
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="@dimen/spacing_32">
+
+                    <!-- Outer Animated Pulse Ring -->
+                    <View
+                        android:id="@+id/viewPulseRingOuter"
+                        android:layout_width="220dp"
+                        android:layout_height="220dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_voice_pulse_ring"
+                        android:visibility="invisible" />
+
+                    <!-- Inner Animated Pulse Ring -->
+                    <View
+                        android:id="@+id/viewPulseRingInner"
+                        android:layout_width="160dp"
+                        android:layout_height="160dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_voice_pulse_ring"
+                        android:visibility="invisible" />
+
+                    <!-- Center Mic FAB Button -->
+                    <FrameLayout
+                        android:id="@+id/btnMicTrigger"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_voice_mic_button"
+                        android:clickable="true"
+                        android:elevation="8dp"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/ivMicIcon"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@string/voice_input_title"
+                            android:src="@drawable/ic_mic"
+                            app:tint="@color/text_on_primary" />
+
+                        <ProgressBar
+                            android:id="@+id/pbVoiceLoading"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="@color/text_on_primary"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <!-- Status Label -->
+                <TextView
+                    android:id="@+id/tvVoiceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:text="@string/voice_state_idle"
+                    android:textAppearance="@style/TextAppearance.App.TitleSection" />
+
+                <!-- Live / Recognized Transcript Preview -->
+                <TextView
+                    android:id="@+id/tvVoiceTranscript"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_12"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_12"
+                    android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                    android:textColor="@color/text_primary"
+                    android:visibility="gone"
+                    tools:text="&quot;Ăn trưa 45 nghìn&quot;"
+                    tools:visibility="visible" />
+
+                <!-- Permission Rationale Card (if mic permission not granted) -->
+                <LinearLayout
+                    android:id="@+id/layoutPermissionRationale"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_20"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/voice_permission_rationale"
+                        android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
+
+                    <Button
+                        android:id="@+id/btnGrantPermission"
+                        style="@style/Widget.App.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:text="@string/voice_permission_grant" />
+                </LinearLayout>
+
+                <!-- Parsed Result Card (Visible upon recognition) -->
+                <LinearLayout
+                    android:id="@+id/cardRecognitionResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_24"
+                    android:background="@drawable/bg_card_white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_16"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/voice_result_title"
+                        android:textAppearance="@style/TextAppearance.App.TitleSection" />
+
+                    <!-- Type Selector -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/segmented_height"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:background="@drawable/bg_segmented_track"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/spacing_4">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTypeExpense"
+                            style="@style/Widget.App.Button.Segment"
+                            android:checked="true"
+                            android:text="@string/transaction_type_expense" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTypeIncome"
+                            style="@style/Widget.App.Button.Segment"
+                            android:layout_marginStart="@dimen/spacing_4"
+                            android:text="@string/transaction_type_income" />
+                    </LinearLayout>
+
+                    <!-- Amount Field -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:labelFor="@id/etResultAmount"
+                        android:text="@string/voice_amount_label"
+                        android:textAppearance="@style/TextAppearance.App.Label" />
+
+                    <EditText
+                        android:id="@+id/etResultAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_min_height"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="0"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:paddingHorizontal="@dimen/spacing_12"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+                        android:textStyle="bold" />
+
+                    <!-- Note / Payee Field -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:labelFor="@id/etResultNote"
+                        android:text="@string/voice_note_label"
+                        android:textAppearance="@style/TextAppearance.App.Label" />
+
+                    <EditText
+                        android:id="@+id/etResultNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_min_height"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="@string/transaction_note_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="textCapSentences"
+                        android:paddingHorizontal="@dimen/spacing_12"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
+
+                    <!-- Action Buttons -->
+                    <Button
+                        android:id="@+id/btnConfirmTransaction"
+                        style="@style/Widget.App.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:text="@string/voice_btn_confirm" />
+
+                    <Button
+                        android:id="@+id/btnRetryVoice"
+                        style="@style/Widget.App.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/voice_btn_retry" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

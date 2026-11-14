@@ -15,16 +15,19 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.example.fintrack.R;
 import com.example.fintrack.databinding.ActivityOcrCameraBinding;
 import com.example.fintrack.app.transaction.ui.TransactionReviewActivity;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
  * Màn hình chụp / chọn ảnh hóa đơn OCR.
- * Lấy ảnh thực tế từ Camera hoặc Gallery và truyền URI thật sang TransactionReviewActivity để trích xuất dữ liệu.
+ * Lấy ảnh thực tế từ Camera (FileProvider + TakePicture) hoặc Gallery và truyền URI thật sang TransactionReviewActivity để trích xuất dữ liệu.
  */
 public class OcrCameraActivity extends AppCompatActivity {
 
@@ -35,6 +38,20 @@ public class OcrCameraActivity extends AppCompatActivity {
     private ImageView btnBack;
     private ImageView btnGalleryPick;
     private FrameLayout btnShutterCapture;
+
+    private Uri cameraImageUri;
+
+    // Camera Capture Launcher
+    private final ActivityResultLauncher<Uri> takePictureLauncher = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(),
+            success -> {
+                if (Boolean.TRUE.equals(success) && cameraImageUri != null) {
+                    launchReviewWithUri(cameraImageUri);
+                } else {
+                    Toast.makeText(this, R.string.ocr_pick_cancelled, Toast.LENGTH_SHORT).show();
+                }
+            }
+    );
 
     // Gallery Image Picker Launcher
     private final ActivityResultLauncher<String> galleryLauncher = registerForActivityResult(
@@ -89,15 +106,33 @@ public class OcrCameraActivity extends AppCompatActivity {
         // Chọn ảnh thực tế từ thư viện thiết bị
         btnGalleryPick.setOnClickListener(v -> galleryLauncher.launch("image/*"));
 
-        // Bấm nút chụp: Mở bộ chọn ảnh hoặc sử dụng ảnh mẫu nếu chạy trên Emulator không có Camera vật lý
+        // Bấm nút chụp: Chụp ảnh bằng ứng dụng Camera hệ thống thông qua FileProvider
         btnShutterCapture.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                galleryLauncher.launch("image/*");
+                captureFromCamera();
             } else {
-                Toast.makeText(this, R.string.ocr_camera_permission_needed, Toast.LENGTH_SHORT).show();
-                galleryLauncher.launch("image/*");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
             }
         });
+    }
+
+    private void captureFromCamera() {
+        try {
+            File receiptsDir = new File(getCacheDir(), "receipts");
+            if (!receiptsDir.exists() && !receiptsDir.mkdirs()) {
+                Toast.makeText(this, R.string.ocr_camera_denied_use_gallery, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            File photoFile = File.createTempFile("receipt_", ".jpg", receiptsDir);
+            cameraImageUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".receipts",
+                    photoFile
+            );
+            takePictureLauncher.launch(cameraImageUri);
+        } catch (IOException | IllegalArgumentException e) {
+            Toast.makeText(this, R.string.ocr_camera_denied_use_gallery, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void launchReviewWithUri(Uri uri) {
