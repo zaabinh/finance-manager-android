@@ -186,6 +186,26 @@
                             android:layout_weight="1"
                             android:text="@string/voice_btn_manual" />
                     </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnSystemSpeechFromError"
+                        style="@style/Widget.App.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/voice_btn_try_system_speech"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/tvVoiceTip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:gravity="center"
+                        android:text="@string/voice_hint_speak_clearly"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/text_secondary" />
                 </LinearLayout>
 
                 <!-- Permission Rationale Card (if mic permission not granted) -->
@@ -283,8 +303,137 @@
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary"
                         android:textStyle="bold" />
 
+                    <!-- Notice when amount is missing from voice input -->
+                    <TextView
+                        android:id="@+id/tvAmountMissingNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="@string/voice_amount_missing_notice"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/color_primary"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <!-- Preset Amount Chips (Visible when amount is missing / 0) -->
+                    <HorizontalScrollView
+                        android:id="@+id/layoutAmountPresets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipPreset10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset20k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_20k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset30k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_30k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset50k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_50k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/color_primary"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipPreset100k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_100k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset200k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_200k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset500k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_500k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
                     <!-- Quick Amount Adjustment Chips -->
                     <HorizontalScrollView
+                        android:id="@+id/layoutAmountAdjustment"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_8"

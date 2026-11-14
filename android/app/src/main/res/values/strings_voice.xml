@@ -33,6 +33,7 @@
     <string name="voice_error_not_available">Thiết bị chưa bật hoặc không hỗ trợ dịch vụ nhận diện giọng nói.</string>
     <string name="voice_amount_required">Vui lòng nhập số tiền hợp lệ lớn hơn 0.</string>
     <string name="voice_wallet_required">Vui lòng chọn ví thanh toán.</string>
+    <string name="voice_destination_wallet_required">Vui lòng chọn ví đích để chuyển tiền.</string>
     <string name="voice_destination_same_error">Ví nguồn và ví đích không được trùng nhau.</string>
 
     <!-- App Shortcut -->
@@ -46,4 +47,18 @@
     <string name="voice_chip_minus_10k">-10k</string>
     <string name="voice_chip_add_000">+000</string>
     <string name="voice_chip_remove_0">Xóa 0</string>
+
+    <!-- Preset Amount Chips (When Amount is Missing) -->
+    <string name="voice_amount_missing_notice">Chưa nhận diện được số tiền. Chạm chọn nhanh hoặc nhập số:</string>
+    <string name="voice_chip_preset_10k">10k</string>
+    <string name="voice_chip_preset_20k">20k</string>
+    <string name="voice_chip_preset_30k">30k</string>
+    <string name="voice_chip_preset_50k">50k</string>
+    <string name="voice_chip_preset_100k">100k</string>
+    <string name="voice_chip_preset_200k">200k</string>
+    <string name="voice_chip_preset_500k">500k</string>
+
+    <!-- Speech Error Fallback -->
+    <string name="voice_btn_try_system_speech">Thử bộ lọc ồn Google</string>
+    <string name="voice_hint_speak_clearly">Mẹo: Hãy nói rõ ràng, ví dụ: "Ăn trưa 45k" hoặc "Đổ xăng 70k"</string>
 </resources>

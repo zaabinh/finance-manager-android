@@ -3,6 +3,7 @@ package com.example.fintrack.app.voice.domain;
 import com.example.fintrack.app.finance.domain.TransactionType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -136,6 +137,23 @@ public final class VoiceTransactionParser {
             }
         }
 
+        // Trường hợp 2b: Chai (1 chai = 1 triệu, 2 chai rưỡi = 2.5 triệu, 2.5 chai)
+        if (amount == 0) {
+            Pattern pChai = Pattern.compile("(\\d+([.,]\\d+)?)\\s*(chai)(\\s*(rưỡi|ruoi))?(?![\\p{L}\\d])");
+            Matcher mChai = pChai.matcher(lower);
+            if (mChai.find()) {
+                try {
+                    String numStr = mChai.group(1).replace(",", ".");
+                    double val = Double.parseDouble(numStr);
+                    amount = (long) (val * 1_000_000L);
+                    if (mChai.group(4) != null) {
+                        amount += 500_000L;
+                    }
+                    amountMatchStr = mChai.group(0);
+                } catch (Exception ignored) {}
+            }
+        }
+
         // Trường hợp 3: Nghìn / Ngàn / K (45 nghìn, 50k, 120 ngàn, 1.5k)
         if (amount == 0) {
             Pattern pNghin = Pattern.compile("(\\d+([.,]\\d+)?)\\s*(nghìn|nghin|ngàn|ngan|k)(?![\\p{L}\\d])");
@@ -150,7 +168,43 @@ public final class VoiceTransactionParser {
             }
         }
 
-        // Trường hợp 4: Trăm (1 trăm, 2 trăm rưỡi = 250k, 5 trăm = 500k)
+        // Trường hợp 4: Trăm đi kèm số chục (2 trăm 3 = 230k, 1 trăm 2 = 120k, 5 trăm 8 = 580k)
+        if (amount == 0) {
+            Pattern pTramChuc = Pattern.compile("(\\d+)\\s*(trăm|tram)\\s*(mốt|mot|hai|ba|bốn|bon|tư|tu|rưỡi|ruoi|sáu|sau|bảy|bay|tám|tam|chín|chin|\\d)(?![\\p{L}\\d])");
+            Matcher mTramChuc = pTramChuc.matcher(lower);
+            if (mTramChuc.find()) {
+                try {
+                    long hundredVal = Long.parseLong(mTramChuc.group(1));
+                    String second = mTramChuc.group(3);
+                    long offset = 0;
+                    if (second.matches("\\d")) {
+                        offset = Long.parseLong(second) * 10_000L;
+                    } else if (second.equals("mốt") || second.equals("mot")) {
+                        offset = 10_000L;
+                    } else if (second.equals("hai")) {
+                        offset = 20_000L;
+                    } else if (second.equals("ba")) {
+                        offset = 30_000L;
+                    } else if (second.equals("bốn") || second.equals("bon") || second.equals("tư") || second.equals("tu")) {
+                        offset = 40_000L;
+                    } else if (second.equals("rưỡi") || second.equals("ruoi")) {
+                        offset = 50_000L;
+                    } else if (second.equals("sáu") || second.equals("sau")) {
+                        offset = 60_000L;
+                    } else if (second.equals("bảy") || second.equals("bay")) {
+                        offset = 70_000L;
+                    } else if (second.equals("tám") || second.equals("tam")) {
+                        offset = 80_000L;
+                    } else if (second.equals("chín") || second.equals("chin")) {
+                        offset = 90_000L;
+                    }
+                    amount = hundredVal * 100_000L + offset;
+                    amountMatchStr = mTramChuc.group(0);
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // Trường hợp 4b: Trăm (1 trăm, 2 trăm rưỡi = 250k, 5 trăm = 500k)
         if (amount == 0) {
             Pattern pTram = Pattern.compile("(\\d+)\\s*(trăm|tram)(\\s*(rưỡi|ruoi))?(?![\\p{L}\\d])");
             Matcher mTram = pTram.matcher(lower);
@@ -176,6 +230,19 @@ public final class VoiceTransactionParser {
             }
         }
 
+        // Trường hợp 5b: Lốp / Loét / Vé (1 lốp = 100k, 2 vé = 200k)
+        if (amount == 0) {
+            Pattern pLop = Pattern.compile("(\\d+)\\s*(lốp|lop|loét|loet|vé|ve)(\\s*(rưỡi|ruoi))?(?![\\p{L}\\d])");
+            Matcher mLop = pLop.matcher(lower);
+            if (mLop.find()) {
+                try {
+                    long val = Long.parseLong(mLop.group(1));
+                    amount = val * 100_000L + (mLop.group(3) != null ? 50_000L : 0);
+                    amountMatchStr = mLop.group(0);
+                } catch (Exception ignored) {}
+            }
+        }
+
         // Trường hợp 6: Chục (5 chục = 50k, 2 chục = 20k)
         if (amount == 0) {
             Pattern pChuc = Pattern.compile("(\\d+)\\s*(chục|chuc)(\\s*(nghìn|ngàn|k))?(?![\\p{L}\\d])");
@@ -189,6 +256,19 @@ public final class VoiceTransactionParser {
             }
         }
 
+        // Trường hợp 6b: Sọi (5 sọi = 50k, 2 sọi = 20k)
+        if (amount == 0) {
+            Pattern pSoi = Pattern.compile("(\\d+)\\s*(sọi|soi)(?![\\p{L}\\d])");
+            Matcher mSoi = pSoi.matcher(lower);
+            if (mSoi.find()) {
+                try {
+                    long val = Long.parseLong(mSoi.group(1));
+                    amount = val * 10_000L;
+                    amountMatchStr = mSoi.group(0);
+                } catch (Exception ignored) {}
+            }
+        }
+
         // Trường hợp 7: Tiếng lóng không kèm số phía trước
         if (amount == 0) {
             if (lower.contains("trăm rưỡi") || lower.contains("tram ruoi")) {
@@ -197,12 +277,36 @@ public final class VoiceTransactionParser {
             } else if (lower.contains("nửa triệu") || lower.contains("nua trieu")) {
                 amount = 500_000L;
                 amountMatchStr = lower.contains("nửa triệu") ? "nửa triệu" : "nua trieu";
+            } else if (lower.contains("nửa chai") || lower.contains("nua chai")) {
+                amount = 500_000L;
+                amountMatchStr = lower.contains("nửa chai") ? "nửa chai" : "nua chai";
             } else if (lower.contains("nửa củ") || lower.contains("nua cu")) {
                 amount = 500_000L;
                 amountMatchStr = lower.contains("nửa củ") ? "nửa củ" : "nua cu";
-            } else if (lower.contains("nửa lít") || lower.contains("nua lit")) {
+            } else if (lower.contains("nửa lít") || lower.contains("nua lit") || lower.contains("nửa lốp") || lower.contains("nua lop") || lower.contains("nửa vé") || lower.contains("nua ve")) {
                 amount = 50_000L;
-                amountMatchStr = lower.contains("nửa lít") ? "nửa lít" : "nua lit";
+                amountMatchStr = lower.contains("nửa lít") ? "nửa lít" : (lower.contains("nửa lốp") ? "nửa lốp" : "nửa vé");
+            } else if (lower.contains("trăm hai") || lower.contains("tram hai")) {
+                amount = 120_000L;
+                amountMatchStr = lower.contains("trăm hai") ? "trăm hai" : "tram hai";
+            } else if (lower.contains("trăm ba") || lower.contains("tram ba")) {
+                amount = 130_000L;
+                amountMatchStr = lower.contains("trăm ba") ? "trăm ba" : "tram ba";
+            } else if (lower.contains("trăm tư") || lower.contains("tram tu") || lower.contains("trăm bốn") || lower.contains("tram bon")) {
+                amount = 140_000L;
+                amountMatchStr = lower.contains("trăm tư") ? "trăm tư" : "tram tu";
+            } else if (lower.contains("trăm sáu") || lower.contains("tram sau")) {
+                amount = 160_000L;
+                amountMatchStr = lower.contains("trăm sáu") ? "trăm sáu" : "tram sau";
+            } else if (lower.contains("trăm bảy") || lower.contains("tram bay")) {
+                amount = 170_000L;
+                amountMatchStr = lower.contains("trăm bảy") ? "trăm bảy" : "tram bay";
+            } else if (lower.contains("trăm tám") || lower.contains("tram tam")) {
+                amount = 180_000L;
+                amountMatchStr = lower.contains("trăm tám") ? "trăm tám" : "tram tam";
+            } else if (lower.contains("trăm chín") || lower.contains("tram chin")) {
+                amount = 190_000L;
+                amountMatchStr = lower.contains("trăm chín") ? "trăm chín" : "tram chin";
             }
         }
 
@@ -285,7 +389,7 @@ public final class VoiceTransactionParser {
         // Loại bỏ gợi ý phương thức thanh toán khỏi ghi chú
         note = note.replaceAll("(?i)(?<![\\p{L}\\d])(quẹt thẻ|thẻ tín dụng|thẻ visa|visa|mastercard|bằng thẻ|qua thẻ|ví momo|bắn momo|momo|tiền mặt|zalopay|zalo)(?![\\p{L}\\d])", " ");
         // Loại bỏ các từ cú pháp thừa
-        note = note.replaceAll("(?i)(?<![\\p{L}\\d])(chi|thu|bắn|hết|mất|tiền|đã|đồng|dong|vnd|vnđ|d|đ|tổng cộng|hết thảy|vừa|mới|được)(?![\\p{L}\\d])", " ");
+        note = note.replaceAll("(?i)(?<![\\p{L}\\d])(chi|tiêu|thu|bắn|hết|mất|tiền|đã|đồng|dong|vnd|vnđ|d|đ|tổng cộng|hết thảy|vừa|mới|được)(?![\\p{L}\\d])", " ");
         note = note.trim().replaceAll("\\s+", " ");
 
         if (note.isEmpty()) {
@@ -309,6 +413,8 @@ public final class VoiceTransactionParser {
             "(một|hai|ba|bốn|năm|sáu|bảy|tám|chín)\\s*trăm\\s*(nghìn|ngàn)",
             "(mười|hai mươi|ba mươi|bốn mươi|năm mươi|sáu mươi|bảy mươi|tám mươi|chín mươi)\\s*(lăm|năm|mốt|một|hai|ba|bốn|sáu|bảy|tám|chín)?\\s*(nghìn|ngàn)",
             "(hai|ba|bốn|năm|sáu|bảy|tám|chín)\\s*chục(\\s*(nghìn|ngàn))?",
+            "(một|hai|ba|bốn|năm|sáu|bảy|tám|chín)\\s*trăm\\s*(mốt|hai|ba|bốn|tư|rưỡi|sáu|bảy|tám|chín)(?![\\p{L}\\d])",
+            "(hăm|hai|ba|bốn|năm|sáu|bảy|tám|chín)\\s*(lăm|nhăm)(\\s*(nghìn|ngàn|k))?",
             "(hai|ba|năm)\\s*lít"
         };
 
@@ -353,6 +459,41 @@ public final class VoiceTransactionParser {
 
         if (clean.contains("trăm năm mươi") || clean.contains("trăm lăm")) {
             return 150_000L;
+        }
+
+        if (clean.contains("lăm") || clean.contains("nhăm")) {
+            long tens = 0;
+            if (clean.contains("nhăm") || clean.startsWith("năm")) tens = 50;
+            else if (clean.contains("hăm") || clean.contains("hai")) tens = 20;
+            else if (clean.contains("ba")) tens = 30;
+            else if (clean.contains("bốn")) tens = 40;
+            else if (clean.contains("sáu")) tens = 60;
+            else if (clean.contains("bảy")) tens = 70;
+            else if (clean.contains("tám")) tens = 80;
+            else if (clean.contains("chín")) tens = 90;
+            else if (clean.contains("mười")) tens = 10;
+            if (tens > 0) {
+                return (tens + 5) * 1_000L;
+            }
+        }
+
+        Pattern pWordHundredTens = Pattern.compile("(một|hai|ba|bốn|năm|sáu|bảy|tám|chín)\\s*trăm\\s*(mốt|hai|ba|bốn|tư|rưỡi|sáu|bảy|tám|chín)");
+        Matcher mWordHundredTens = pWordHundredTens.matcher(clean);
+        if (mWordHundredTens.find()) {
+            String w1 = mWordHundredTens.group(1);
+            String w2 = mWordHundredTens.group(2);
+            long h = WORD_DIGITS.containsKey(w1) ? WORD_DIGITS.get(w1) : 1;
+            long tens = 0;
+            if (w2.equals("mốt")) tens = 10_000L;
+            else if (w2.equals("hai")) tens = 20_000L;
+            else if (w2.equals("ba")) tens = 30_000L;
+            else if (w2.equals("bốn") || w2.equals("tư")) tens = 40_000L;
+            else if (w2.equals("rưỡi")) tens = 50_000L;
+            else if (w2.equals("sáu")) tens = 60_000L;
+            else if (w2.equals("bảy")) tens = 70_000L;
+            else if (w2.equals("tám")) tens = 80_000L;
+            else if (w2.equals("chín")) tens = 90_000L;
+            return h * 100_000L + tens;
         }
 
         if (clean.contains("trăm")) {
@@ -402,5 +543,26 @@ public final class VoiceTransactionParser {
         }
 
         return 0;
+    }
+
+    /**
+     * Duyệt mảng các phỏng đoán N-Best từ SpeechRecognizer để chọn câu tốt nhất có chứa số tiền.
+     */
+    public static ParsedResult parseBest(List<String> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            return parse("");
+        }
+        ParsedResult firstNonEmpty = null;
+        for (String cand : candidates) {
+            if (cand == null || cand.trim().isEmpty()) continue;
+            ParsedResult res = parse(cand);
+            if (res.amount > 0) {
+                return res; // Tìm thấy câu phỏng đoán có số tiền hợp lệ -> chọn ngay!
+            }
+            if (firstNonEmpty == null) {
+                firstNonEmpty = res;
+            }
+        }
+        return firstNonEmpty != null ? firstNonEmpty : parse(candidates.get(0));
     }
 }

@@ -2,6 +2,7 @@ package com.example.fintrack.app.voice.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +42,7 @@ import com.example.fintrack.databinding.ActivityVoiceTransactionBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -75,6 +78,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
     private String parsedNote = "";
     private String recognizedTranscript = "";
     private long occurredAt = System.currentTimeMillis();
+    private int consecutiveErrorCount = 0;
 
     // Bộ đếm ngược tự động lưu rảnh tay (Auto-save Countdown)
     private CountDownTimer autoSaveTimer;
@@ -107,7 +111,9 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     if (matches != null && !matches.isEmpty()) {
-                        handleRecognitionSuccess(matches.get(0));
+                        consecutiveErrorCount = 0;
+                        binding.btnSystemSpeechFromError.setVisibility(View.GONE);
+                        handleRecognitionSuccess(matches);
                     } else {
                         showErrorUi(getString(R.string.voice_error_no_match));
                     }
@@ -144,6 +150,7 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
         setupListeners();
         setupMicroAdjustmentChips();
+        setupPresetAmountChips();
 
         if (isResultShowing) {
             binding.cardRecognitionResult.setVisibility(View.VISIBLE);
@@ -243,6 +250,34 @@ public class VoiceTransactionActivity extends FinanceActivity {
             binding.layoutVoiceError.setVisibility(View.GONE);
             checkPermissionAndStart();
         });
+
+        binding.btnSystemSpeechFromError.setOnClickListener(v -> {
+            cancelAutoSaveCountdown(false);
+            launchSystemSpeechRecognizer();
+        });
+    }
+
+    private void setupPresetAmountChips() {
+        binding.chipPreset10k.setOnClickListener(v -> applyPresetAmount(10_000));
+        binding.chipPreset20k.setOnClickListener(v -> applyPresetAmount(20_000));
+        binding.chipPreset30k.setOnClickListener(v -> applyPresetAmount(30_000));
+        binding.chipPreset50k.setOnClickListener(v -> applyPresetAmount(50_000));
+        binding.chipPreset100k.setOnClickListener(v -> applyPresetAmount(100_000));
+        binding.chipPreset200k.setOnClickListener(v -> applyPresetAmount(200_000));
+        binding.chipPreset500k.setOnClickListener(v -> applyPresetAmount(500_000));
+    }
+
+    private void applyPresetAmount(long amount) {
+        cancelAutoSaveCountdown(false);
+        updateAmountUi(amount);
+        binding.layoutAmountPresets.setVisibility(View.GONE);
+        binding.tvAmountMissingNotice.setVisibility(View.GONE);
+        binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(binding.etResultAmount.getWindowToken(), 0);
+        }
+        startAutoSaveCountdown();
     }
 
     private void setupMicroAdjustmentChips() {
@@ -526,6 +561,13 @@ public class VoiceTransactionActivity extends FinanceActivity {
                 binding.pbVoiceLoading.setVisibility(View.GONE);
                 binding.ivMicIcon.setVisibility(View.VISIBLE);
 
+                consecutiveErrorCount++;
+                if (consecutiveErrorCount >= 2) {
+                    binding.btnSystemSpeechFromError.setVisibility(View.VISIBLE);
+                } else {
+                    binding.btnSystemSpeechFromError.setVisibility(View.GONE);
+                }
+
                 String errorMsg = getErrorMessage(error);
                 showErrorUi(errorMsg);
             }
@@ -539,8 +581,14 @@ public class VoiceTransactionActivity extends FinanceActivity {
 
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (matches != null && !matches.isEmpty()) {
-                    handleRecognitionSuccess(matches.get(0));
+                    consecutiveErrorCount = 0;
+                    binding.btnSystemSpeechFromError.setVisibility(View.GONE);
+                    handleRecognitionSuccess(matches);
                 } else {
+                    consecutiveErrorCount++;
+                    if (consecutiveErrorCount >= 2) {
+                        binding.btnSystemSpeechFromError.setVisibility(View.VISIBLE);
+                    }
                     showErrorUi(getString(R.string.voice_error_no_match));
                 }
             }
@@ -603,7 +651,11 @@ public class VoiceTransactionActivity extends FinanceActivity {
     }
 
     private void handleRecognitionSuccess(String speechText) {
-        VoiceTransactionParser.ParsedResult parsed = VoiceTransactionParser.parse(speechText);
+        handleRecognitionSuccess(Collections.singletonList(speechText));
+    }
+
+    private void handleRecognitionSuccess(List<String> candidates) {
+        VoiceTransactionParser.ParsedResult parsed = VoiceTransactionParser.parseBest(candidates);
         selectedType = parsed.type;
         parsedAmount = parsed.amount;
         parsedNote = parsed.note;
@@ -647,9 +699,24 @@ public class VoiceTransactionActivity extends FinanceActivity {
         binding.tvVoiceStatus.setText(R.string.voice_result_title);
         render();
 
-        // Kích hoạt đếm ngược tự động lưu rảnh tay 3 giây
+        // Kích hoạt đếm ngược tự động lưu rảnh tay 3 giây nếu có đủ số tiền
         if (parsedAmount > 0) {
+            binding.layoutAmountPresets.setVisibility(View.GONE);
+            binding.tvAmountMissingNotice.setVisibility(View.GONE);
+            binding.layoutAmountAdjustment.setVisibility(View.VISIBLE);
             startAutoSaveCountdown();
+        } else {
+            // Trường hợp người dùng nói thiếu số tiền: hiển thị dãy chip gợi ý số tiền nhanh
+            binding.layoutAmountAdjustment.setVisibility(View.GONE);
+            binding.layoutAmountPresets.setVisibility(View.VISIBLE);
+            binding.tvAmountMissingNotice.setVisibility(View.VISIBLE);
+            binding.etResultAmount.requestFocus();
+            binding.etResultAmount.postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(binding.etResultAmount, InputMethodManager.SHOW_IMPLICIT);
+                }
+            }, 200);
         }
     }
 
@@ -757,8 +824,14 @@ public class VoiceTransactionActivity extends FinanceActivity {
         }
 
         if (selectedType == TransactionType.TRANSFER) {
-            if (selectedDestinationWalletId == null || selectedDestinationWalletId.equals(selectedWalletId)) {
+            if (selectedDestinationWalletId == null) {
+                Toast.makeText(this, R.string.voice_destination_wallet_required, Toast.LENGTH_SHORT).show();
+                chooseDestinationWallet();
+                return;
+            }
+            if (selectedDestinationWalletId.equals(selectedWalletId)) {
                 Toast.makeText(this, R.string.voice_destination_same_error, Toast.LENGTH_SHORT).show();
+                chooseDestinationWallet();
                 return;
             }
         }

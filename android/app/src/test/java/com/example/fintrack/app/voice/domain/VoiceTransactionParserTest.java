@@ -4,6 +4,9 @@ import com.example.fintrack.app.finance.domain.TransactionType;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -137,6 +140,65 @@ public class VoiceTransactionParserTest {
         assertEquals(45_000L, momo.amount);
         assertEquals("Trà sữa", momo.note);
         assertEquals("momo", momo.sourceWalletHint);
+    }
+
+    @Test
+    public void parse_slangAndSpokenNumerals_extractsAccurately() {
+        // Chai (1 chai = 1M, 2 chai rưỡi = 2.5M, nửa chai = 500k)
+        VoiceTransactionParser.ParsedResult chai = VoiceTransactionParser.parse("Mua bàn làm việc 2 chai");
+        assertEquals(2_000_000L, chai.amount);
+        assertEquals("Mua bàn làm việc", chai.note);
+
+        VoiceTransactionParser.ParsedResult nuaChai = VoiceTransactionParser.parse("Nửa chai tiền điện");
+        assertEquals(500_000L, nuaChai.amount);
+        assertEquals("Điện", nuaChai.note);
+
+        // Lốp, vé, sọi
+        VoiceTransactionParser.ParsedResult lop = VoiceTransactionParser.parse("Tiêu 2 lốp mua sách");
+        assertEquals(200_000L, lop.amount);
+        assertEquals("Mua sách", lop.note);
+
+        VoiceTransactionParser.ParsedResult ve = VoiceTransactionParser.parse("Vé xe 2 vé");
+        assertEquals(200_000L, ve.amount);
+
+        VoiceTransactionParser.ParsedResult soi = VoiceTransactionParser.parse("Trà đá 3 sọi");
+        assertEquals(30_000L, soi.amount);
+
+        // Trăm chục (2 trăm 3 = 230k, trăm hai = 120k)
+        VoiceTransactionParser.ParsedResult tramChuc = VoiceTransactionParser.parse("Ăn lẩu 2 trăm 3");
+        assertEquals(230_000L, tramChuc.amount);
+        assertEquals("Ăn lẩu", tramChuc.note);
+
+        VoiceTransactionParser.ParsedResult tramHai = VoiceTransactionParser.parse("Tiền chợ trăm hai");
+        assertEquals(120_000L, tramHai.amount);
+        assertEquals("Chợ", tramHai.note);
+
+        // Phát âm hăm lăm, năm nhăm
+        VoiceTransactionParser.ParsedResult hamLam = VoiceTransactionParser.parse("Cà phê hăm lăm k");
+        assertEquals(25_000L, hamLam.amount);
+        assertEquals("Cà phê", hamLam.note);
+
+        VoiceTransactionParser.ParsedResult namNham = VoiceTransactionParser.parse("Ăn phở năm nhăm k");
+        assertEquals(55_000L, namNham.amount);
+        assertEquals("Ăn phở", namNham.note);
+    }
+
+    @Test
+    public void parseBest_selectsCandidateWithAmount() {
+        // Giả sử câu phỏng đoán đầu tiên của Google STT bị thiếu số tiền (chỉ nhận diện "ăn tối")
+        // nhưng câu phỏng đoán thứ hai lại nhận diện đúng "ăn tối 120k"
+        VoiceTransactionParser.ParsedResult best = VoiceTransactionParser.parseBest(
+                Arrays.asList("ăn tối", "ăn tối 120k", "an toi 120")
+        );
+        assertEquals(120_000L, best.amount);
+        assertEquals("Ăn tối", best.note);
+
+        // Trường hợp tất cả câu đều thiếu tiền: trả về candidate đầu tiên an toàn với amount = 0
+        VoiceTransactionParser.ParsedResult missing = VoiceTransactionParser.parseBest(
+                Arrays.asList("uống bia", "uong bia")
+        );
+        assertEquals(0L, missing.amount);
+        assertEquals("Uống bia", missing.note);
     }
 
     @Test
