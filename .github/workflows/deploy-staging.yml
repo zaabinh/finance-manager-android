@@ -1,0 +1,110 @@
+name: Deploy Staging
+
+# Continuous deployment of the backend to the staging VPS. Setup: docs/deployment/CD_STAGING.md.
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'backend/**'
+      - 'deploy/staging/**'
+      - '.github/workflows/deploy-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer push waits instead of cancelling a deploy halfway.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/zaabinh/finance-manager-backend
+
+jobs:
+  test:
+    name: Test merged commit
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validate deployment before publishing
+        working-directory: .
+        run: |
+          bash -n deploy/staging/deploy.sh
+          python3 -m unittest discover -s deploy/staging/tests -p 'test_*.py' -v
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Run tests
+        run: bash ./mvnw -B -ntp test
+
+  image:
+    name: Build and push image
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          # deploy.sh refuses an image whose revision label does not match the requested SHA.
+          labels: org.opencontainers.image.revision=${{ github.sha }}
+
+  deploy:
+    name: Deploy to staging
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: staging
+      url: https://api-staging-dongfinance.zaabinh.id.vn/actuator/health/readiness
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+      - name: Deploy ${{ github.sha }}
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        # Pinned host key + key-only auth; the server allows this user to run only deploy.sh via sudo.
+        run: >
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes
+          "$SSH_USER@$SSH_HOST" "sudo /usr/local/sbin/dong-deploy-staging ${{ github.sha }}"
+      - name: Public readiness check
+        run: |
+          for i in $(seq 1 12); do
+            curl -fsS --connect-timeout 5 --max-time 10 https://api-staging-dongfinance.zaabinh.id.vn/actuator/health/readiness | grep -q '"status":"UP"' && exit 0
+            sleep 5
+          done
+          echo "Staging is not ready through Cloudflare" >&2; exit 1
