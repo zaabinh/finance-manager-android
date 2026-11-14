@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_toStartOf="@id/flNotification"
+            android:layout_toStartOf="@id/flChatbot"
             android:layout_marginEnd="@dimen/spacing_8"
             android:maxLines="1"
             android:ellipsize="end"
@@ -35,6 +35,26 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/flChatbot"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toStartOf="@id/flNotification"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/chatbot_title"
+                android:src="@drawable/ic_chatbot"
+                app:tint="@color/color_primary" />
+        </FrameLayout>
 
         <FrameLayout
             android:id="@+id/flNotification"
