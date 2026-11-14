@@ -1,11 +1,15 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.finance.domain.Budget;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+import com.example.fintrack.app.finance.domain.MonthlyBudget;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Toast;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
@@ -63,15 +67,15 @@ public final class BudgetFormActivity extends FinanceActivity {
     /** Categories already budgeted in this month, except the one being edited. */
     private Set<String> usedCategories() {
         Set<String> used = new HashSet<>();
-        FinanceBook.MonthlyBudget monthly = book == null ? null : book.monthlyBudget(monthlyId);
-        if (monthly != null) for (FinanceBook.Budget item : book.categoryBudgets(monthly)) if (!item.id.equals(id)) used.add(item.categoryId);
+        MonthlyBudget monthly = book == null ? null : book.monthlyBudget(monthlyId);
+        if (monthly != null) for (Budget item : book.categoryBudgets(monthly)) if (!item.id.equals(id)) used.add(item.categoryId);
         return used;
     }
 
     @Override
     protected void render() {
         if (book == null) return;
-        FinanceBook.MonthlyBudget monthly = book.monthlyBudget(monthlyId);
+        MonthlyBudget monthly = book.monthlyBudget(monthlyId);
         if (monthly == null || monthly.archivedAt != null) {
             if (!model.busy()) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); }
             return;
@@ -79,7 +83,7 @@ public final class BudgetFormActivity extends FinanceActivity {
         if (!initialized) {
             month = monthly.month;
             if (editing) {
-                FinanceBook.Budget value = book.budget(id);
+                Budget value = book.budget(id);
                 if (value == null || value.archivedAt != null) { Toast.makeText(this, R.string.finance_not_found, Toast.LENGTH_LONG).show(); finish(); return; }
                 category = value.categoryId; text(R.id.etAmount, Long.toString(value.limit));
             }
@@ -104,15 +108,15 @@ public final class BudgetFormActivity extends FinanceActivity {
 
         long limit;
         try { limit = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
-        catch (FinanceBook.Failure error) {
+        catch (FinanceFailure error) {
             text(R.id.tvAmountError, getString(R.string.finance_amount_error)); visible(R.id.tvAmountError, true);
             findViewById(R.id.etAmount).requestFocus(); return;
         }
         visible(R.id.tvAmountError, false);
         BudgetUi.hideShortfall(this);
 
-        FinanceBook.Budget value = new FinanceBook.Budget(id, category, month, limit);
-        value.monthlyBudgetId = monthlyId;
+        Budget value = new Budget(id, category, month, limit);
+        value = value.withMonthlyBudgetId(monthlyId);
         model.change(FinanceAction.budget(value, editing), true);
     }
 

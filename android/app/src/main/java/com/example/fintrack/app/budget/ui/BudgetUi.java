@@ -1,11 +1,16 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
@@ -29,9 +34,9 @@ final class BudgetUi {
     /** Active EXPENSE categories not yet used in this monthly budget (each category once). */
     static void pickExpenseCategory(Activity activity, FinanceBook book, Set<String> excluded, Consumer<String> selected) {
         if (book == null) { Toast.makeText(activity, R.string.finance_category_empty, Toast.LENGTH_SHORT).show(); return; }
-        List<FinanceBook.Category> options = new ArrayList<>();
-        for (FinanceBook.Category item : book.state().categories)
-            if (item.type == FinanceBook.Type.EXPENSE && item.archivedAt == null && !excluded.contains(item.id)) options.add(item);
+        List<Category> options = new ArrayList<>();
+        for (Category item : book.categories())
+            if (item.type == TransactionType.EXPENSE && item.archivedAt == null && !excluded.contains(item.id)) options.add(item);
         if (options.isEmpty()) { Toast.makeText(activity, R.string.monthly_budget_all_categories_used, Toast.LENGTH_SHORT).show(); return; }
         CharSequence[] names = new CharSequence[options.size()];
         for (int i = 0; i < options.size(); i++) names[i] = options.get(i).name;
@@ -67,16 +72,16 @@ final class BudgetUi {
 
     /** Opens the transfer form prefilled: source = the active SAVINGS wallet with the largest balance, amount = shortfall. */
     static void transferFromSavings(Activity activity, FinanceBook book, long shortfall) {
-        FinanceBook.Wallet source = null;
+        Wallet source = null;
         long best = Long.MIN_VALUE;
-        if (book != null) for (FinanceBook.Wallet wallet : book.state().wallets) {
-            if (wallet.archivedAt != null || wallet.walletType != FinanceBook.WalletType.SAVINGS) continue;
+        if (book != null) for (Wallet wallet : book.wallets()) {
+            if (wallet.archivedAt != null || wallet.walletType != WalletType.SAVINGS) continue;
             long balance = book.balance(wallet.id);
             if (balance > best) { best = balance; source = wallet; }
         }
         if (source == null) { Toast.makeText(activity, R.string.budget_no_savings_wallet, Toast.LENGTH_LONG).show(); return; }
         Intent intent = new Intent(activity, TransactionFormActivity.class)
-                .putExtra(PREFILL_TYPE, FinanceBook.Type.TRANSFER.name())
+                .putExtra(PREFILL_TYPE, TransactionType.TRANSFER.name())
                 .putExtra(PREFILL_WALLET_ID, source.id);
         if (shortfall > 0) intent.putExtra(PREFILL_AMOUNT_MINOR, shortfall);
         activity.startActivity(intent);

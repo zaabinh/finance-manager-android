@@ -1,11 +1,12 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.finance.domain.MonthlyBudget;
+
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.budget.adapter.MonthlyBudgetAdapter;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -44,11 +45,11 @@ public final class BudgetListActivity extends FinanceActivity {
         String month = book.monthAt(System.currentTimeMillis());
         ((MaterialToolbar) findViewById(R.id.toolbarBudgets)).setSubtitle(FinanceUi.monthLabel(month));
 
-        List<FinanceBook.MonthlyBudget> items = book.monthlyBudgets();
+        List<MonthlyBudget> items = book.monthlyBudgets();
         ((RecyclerView) findViewById(R.id.rvBudgets)).setAdapter(new MonthlyBudgetAdapter(book, items));
 
         // Thẻ tóm tắt: ngân sách tháng hiện tại (giá trị từ server; mock tính cùng công thức)
-        FinanceBook.MonthlyBudget current = book.monthlyBudgetFor(month);
+        MonthlyBudget current = book.monthlyBudgetFor(month);
         long spent = current == null ? 0 : book.monthlySpent(current), total = current == null ? 0 : book.monthlyTotal(current);
         text(R.id.tvTotalBudgetSummary, FinanceUi.money(spent) + " / " + FinanceUi.money(total));
         ((LinearProgressIndicator) findViewById(R.id.progressTotalBudget)).setProgress(current == null ? 0 : book.monthlyUsage(current).progress);

@@ -1,5 +1,10 @@
 package com.example.fintrack.app.home.ui;
 
+import com.example.fintrack.app.finance.ui.FinanceErrors;
+
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.MonthlyBudget;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -11,22 +16,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.analytics.ui.AnalyticsActivity;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
 import com.example.fintrack.app.budget.ui.MonthlyBudgetFormActivity;
 import com.example.fintrack.app.budget.ui.BudgetListActivity;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.core.session.SessionSnapshot;
+import com.example.fintrack.app.core.session.SessionStore;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
 import com.example.fintrack.app.notification.ui.NotificationActivity;
 import com.example.fintrack.app.transaction.ui.TransactionImportActivity;
 import com.example.fintrack.app.transaction.ui.TransactionFormActivity;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
-
-import java.util.Objects;
 
 // Màn hình chính của ứng dụng (HomeDashboardActivity) - Hiển thị tổng quan số dư, ngân sách và các thao tác nhanh
 public class HomeDashboardActivity extends AppCompatActivity {
@@ -50,10 +54,10 @@ public class HomeDashboardActivity extends AppCompatActivity {
     private View homeBudgetLink;
 
     // Khai báo quản lý phiên đăng nhập và các ViewModel xử lý dữ liệu
-    private SessionManager sessionManager;
+    private SessionStore sessionStore;
     private UserViewModel userViewModel;
     private FinanceViewModel financeModel;
-    private String financeOwner;
+    private SessionSnapshot origin; // phiên đăng nhập lúc mở màn hình
 
     // Biến lưu trạng thái hiển thị số dư và các giá trị tiền tệ (tính theo đơn vị cents)
     private boolean isBalanceHidden = false;
@@ -68,13 +72,14 @@ public class HomeDashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_dashboard);
 
-        // Khởi tạo SessionManager và lấy ID người dùng hiện tại
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        financeOwner = sessionManager.getUserId();
+        // Lấy SessionStore và ghi nhớ phiên đăng nhập hiện tại
+        sessionStore = FintrackApplication.container(this).sessionStore();
+        origin = sessionStore.current();
 
         // Khởi tạo các ViewModel để kết nối dữ liệu
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
-        financeModel = new ViewModelProvider(this).get(FinanceViewModel.class);
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
+        financeModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory().forFinance(
+                com.example.fintrack.app.finance.data.FinanceRepository.Scope.BUDGETS, null)).get(FinanceViewModel.class);
 
         // Gọi các hàm thiết lập giao diện, lắng nghe dữ liệu và sự kiện bấm nút
         initViews();
@@ -105,23 +110,17 @@ public class HomeDashboardActivity extends AppCompatActivity {
     // Lắng nghe dữ liệu thay đổi từ ViewModel (LiveData)
     private void setupObservers() {
         // Hiển thị tên người dùng từ Local Session trước (nếu có)
-        String name = sessionManager.getUserName();
+        String name = origin.name;
         if (name != null && !name.isEmpty()) {
             tvUserName.setText(getString(R.string.greeting_format, name));
         }
 
-        // Lắng nghe kết quả lấy thông tin profile từ server
+        // Lắng nghe kết quả lấy thông tin profile từ server (UserViewModel đã lưu vào Session)
         userViewModel.getProfileResult().observe(this, resource -> {
             if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 String fetchedName = resource.getData().getDisplayName();
                 if (fetchedName != null && !fetchedName.isEmpty()) {
                     tvUserName.setText(getString(R.string.greeting_format, fetchedName));
-                    // Cập nhật lại thông tin vào bộ nhớ tạm (Session)
-                    sessionManager.saveUserProfile(
-                            resource.getData().getId(),
-                            resource.getData().getEmail(),
-                            fetchedName
-                    );
                 }
             }
         });
@@ -131,7 +130,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
             // Xử lý khi có lỗi tải dữ liệu tài chính
             if (resource.getStatus() == Resource.Status.ERROR) {
                 com.google.android.material.snackbar.Snackbar.make(findViewById(android.R.id.content),
-                                FinanceUi.error(FinanceBook.Problem.valueOf(resource.getMessage())), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                FinanceUi.error(FinanceErrors.problem(resource.getError())), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                         .setAction(R.string.action_retry, view -> financeModel.refresh()).show();
             }
             if (resource.getData() == null) return;
@@ -147,7 +146,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
             updateBalanceDisplay();
 
             // Ngân sách tháng hiện tại: tổng (dẫn xuất) và đã chi lấy từ server (mock tính cùng công thức)
-            FinanceBook.MonthlyBudget currentBudget = book.monthlyBudgetFor(month);
+            MonthlyBudget currentBudget = book.monthlyBudgetFor(month);
             currentMonthlyBudgetId = currentBudget == null ? null : currentBudget.id;
             long spent = currentBudget == null ? book.budgetSpent(month) : book.monthlySpent(currentBudget);
             long limit = currentBudget == null ? 0 : book.monthlyTotal(currentBudget);
@@ -247,8 +246,8 @@ public class HomeDashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Nếu chưa đăng nhập hoặc đổi tài khoản thì đá về màn hình Login
-        if (sessionManager != null && (!sessionManager.isLoggedIn() || !Objects.equals(financeOwner, sessionManager.getUserId()))) {
+        // Nếu phiên lúc mở màn hình không còn là phiên hiện tại (đăng xuất, đổi tài khoản, đăng nhập lại) thì đá về màn hình Login
+        if (sessionStore != null && !sessionStore.isCurrent(origin)) {
             startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             finish();
             return;

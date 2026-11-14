@@ -1,6 +1,8 @@
 package com.example.fintrack.app.category.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import com.google.gson.annotations.SerializedName;
 
 /** Response DTO nhận dữ liệu Danh mục trả về từ Server */
@@ -13,18 +15,13 @@ public class CategoryResponse {
     public String name;
 
     @SerializedName("categoryType")
-    public FinanceBook.Type categoryType;
+    public TransactionType categoryType;
 
     public String iconKey, colorHex, archivedAt, createdAt, updatedAt;
     public int sortOrder;
 
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
-    public FinanceBook.Category domain() {
-        FinanceBook.Category value = new FinanceBook.Category(categoryId, name, categoryType);
-        value.iconKey = iconKey;
-        value.colorHex = colorHex;
-        value.archivedAt = archivedAt;
-        value.sortOrder = sortOrder;
-        return value;
+    public Category domain() {
+        return new Category(categoryId,name,categoryType,archivedAt,iconKey,colorHex,sortOrder);
     }
 }

@@ -1,141 +1,132 @@
 package com.example.fintrack.app.finance.ui;
 
-import android.app.Application;
-import android.os.Handler;
-import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+import com.example.fintrack.app.core.di.AppExecutors;
+import com.example.fintrack.app.core.error.AppError;
+import com.example.fintrack.app.core.network.RequestHandle;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.finance.data.FinanceRepository;
+import com.example.fintrack.app.core.session.SessionSnapshot;
+import com.example.fintrack.app.core.session.SessionStore;
+import com.example.fintrack.app.core.util.Event;
 import com.example.fintrack.app.finance.data.FinanceAction;
+import com.example.fintrack.app.finance.data.FinanceRepository;
+import com.example.fintrack.app.finance.data.MutationReceipt;
 import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-/**
- * ViewModel quản lý trạng thái dữ liệu tài chính (FinanceBook) và các lệnh thao tác (Commands),
- * đảm bảo thực hiện các tác vụ nặng trên luồng nền (Background IO Thread) và cập nhật UI qua LiveData.
- */
-public final class FinanceViewModel extends AndroidViewModel {
-    
-    // LiveData lưu trữ trạng thái dữ liệu tài chính hiện tại (Loading, Success, Error)
+/** One stable scoped snapshot and commands, bound to the login that created this model. */
+public final class FinanceViewModel extends ViewModel {
     private final MutableLiveData<Resource<FinanceBook>> state = new MutableLiveData<>();
-    
-    // LiveData lưu trữ sự kiện lệnh thực thi (thêm, sửa, xóa) để UI hiển thị thông báo
-    private final MutableLiveData<Command> command = new MutableLiveData<>();
-    
-    private final Handler main = new Handler(Looper.getMainLooper());
-    private final String owner;
-    private boolean busy;
-    private FinanceRepository.Scope scope = FinanceRepository.Scope.BUDGETS;
-    private String detailId;
-    // Transaction history (server paged). Survives rotation with the ViewModel.
-    private FinanceBook.Query query;
-    private java.util.List<FinanceBook.Transaction> rows = java.util.Collections.emptyList();
-    private int page = -1, totalPages;
+    private final MutableLiveData<Event<Command>> command = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> saving = new MutableLiveData<>(false);
+    private final SessionStore session;
+    private final Function<SessionSnapshot, FinanceRepository> repositories;
+    private final AppExecutors executors;
+    private final SessionSnapshot origin;
+    private final FinanceRepository.Scope scope;
+    private final String detailId;
+    private RequestHandle read = RequestHandle.NONE;
+    private long generation;
+    private boolean snapshotLoading, saveLoading;
+    private volatile boolean cleared;
 
-    /** Lớp đại diện cho một lệnh thao tác (Command) thành công hoặc thất bại */
     public static final class Command {
-        public final FinanceBook.Problem error;
+        public final FinanceProblem error;
         public final boolean complete;
-        public final String message;
-        /** Server errorCode/fieldErrors when known; null otherwise. */
-        public final FinanceBook.Failure failure;
-        private boolean consumed;
-
-        Command(FinanceBook.Problem error, boolean complete) { this(error, complete, null, null); }
-        Command(FinanceBook.Problem error, boolean complete, String message, FinanceBook.Failure failure) {
-            this.error = error;
-            this.complete = complete;
-            this.message = message;
-            this.failure = failure;
-        }
-
-        public boolean consume() {
-            if (consumed) return false;
-            consumed = true;
-            return true;
+        public final FinanceFailure failure;
+        public final MutationReceipt receipt;
+        Command(FinanceProblem error, boolean complete, FinanceFailure failure, MutationReceipt receipt) {
+            this.error = error; this.complete = complete;
+            this.failure = failure; this.receipt = receipt;
         }
     }
 
-    public FinanceViewModel(@NonNull Application application) {
-        super(application);
-        owner = SessionManager.getInstance(application).getUserId();
+    public FinanceViewModel(SessionStore session, Function<SessionSnapshot, FinanceRepository> repositories,
+                            AppExecutors executors, FinanceRepository.Scope scope, String detailId) {
+        this.session = session; this.repositories = repositories; this.executors = executors;
+        this.scope = java.util.Objects.requireNonNull(scope); this.detailId = detailId;
+        origin = session.current();
     }
-
     public LiveData<Resource<FinanceBook>> state() { return state; }
-    public LiveData<Command> command() { return command; }
-    public boolean busy() { return busy; }
-    public void configure(FinanceRepository.Scope scope, String detailId) { this.scope = scope; this.detailId = detailId; }
+    public LiveData<Event<Command>> command() { return command; }
+    public LiveData<Boolean> saveLoadingState() { return saving; }
+    public boolean snapshotLoading() { return snapshotLoading; }
+    public boolean saveLoading() { return saveLoading; }
+    public boolean busy() { return saveLoading; }
+    private boolean active() { return !cleared && session.isCurrent(origin); }
+    private FinanceBook previous() { return state.getValue() == null ? null : state.getValue().getData(); }
 
-    /** Làm mới dữ liệu tài chính từ server hoặc bộ nhớ local (trang lịch sử quay về page 0) */
-    public void refresh() { if (!busy) execute(null, false, 0); }
-
-    /** Thực hiện một hành động thay đổi dữ liệu (thêm/sửa/xóa giao dịch, ví, ngân sách) */
-    public void change(FinanceAction mutation, boolean complete) { if (!busy) execute(mutation, complete, 0); }
-
-    public FinanceBook.Query query() { return query; }
-    public java.util.List<FinanceBook.Transaction> rows() { return rows; }
-    public boolean hasMore() { return page + 1 < totalPages; }
-    /** Changes the history filter and reloads page 0; an in-flight response for the old filter is dropped. */
-    public void query(FinanceBook.Query value) {
-        if (value.equals(query)) return;
-        query = value; rows = java.util.Collections.emptyList(); page = -1; totalPages = 0;
-        refresh();
-    }
-    public void more() { if (!busy && query != null && page >= 0 && hasMore()) execute(null, false, page + 1); }
-
-    /** Kiểm tra xem phiên đăng nhập của user có khớp không */
-    private boolean sameSession() {
-        SessionManager session = SessionManager.getInstance(getApplication());
-        return session.isLoggedIn() && owner != null && owner.equals(session.getUserId());
-    }
-
-    /** Thực thi tác vụ đọc hoặc ghi dữ liệu trên luồng nền (Background IO Thread) */
-    private void execute(FinanceAction mutation, boolean complete, int pageIndex) {
-        if (!sameSession()) return;
-        busy = true;
-        final FinanceBook.Query requested = query;
-        Resource<FinanceBook> old = state.getValue();
-        FinanceBook previous = old == null ? null : old.getData();
+    public void refresh() {
+        if (!active() || saveLoading) return;
+        read.cancel();
+        long requested = ++generation;
+        FinanceBook previous = previous();
+        snapshotLoading = true;
         state.setValue(Resource.loading(previous));
+        resolve(repository -> {
+            if (!active() || requested != generation) return;
+            read = repository.readAsync(scope, detailId, executors, result -> {
+                if (!active() || requested != generation) return;
+                snapshotLoading = false;
+                state.setValue(result.getStatus() == Resource.Status.ERROR
+                        ? Resource.error(result.getError(), previous) : Resource.success(result.getData()));
+            });
+        }, error -> {
+            if (!active() || requested != generation) return;
+            snapshotLoading = false;
+            state.setValue(Resource.error(error, previous));
+        });
+    }
 
-        FinanceRepository.IO.execute(() -> {
+    public void change(FinanceAction action, boolean complete) {
+        if (!active() || saveLoading) return;
+        ++generation;
+        read.cancel();
+        snapshotLoading = false;
+        FinanceBook previous = previous();
+        if (state.getValue() != null && state.getValue().getStatus() == Resource.Status.LOADING)
+            state.setValue(Resource.success(previous));
+        saveLoading = true;
+        saving.setValue(true);
+        resolve(repository -> repository.mutateAsync(action, previous, () -> session.isCurrent(origin), executors, result -> {
+            if (!active()) return;
+            saveLoading = false;
+            saving.setValue(false);
+            if (result.getStatus() == Resource.Status.ERROR) { failed(result.getError()); return; }
+            MutationReceipt receipt = result.getData();
+            if (receipt.snapshot != null) state.setValue(Resource.success(receipt.snapshot));
+            command.setValue(new Event<>(new Command(null, complete, null, receipt)));
+            if (!complete && receipt.snapshot == null) refresh();
+        }), error -> {
+            if (!active()) return;
+            saveLoading = false;
+            saving.setValue(false);
+            failed(error);
+        });
+    }
+    private void failed(AppError error) {
+        command.setValue(new Event<>(new Command(FinanceErrors.problem(error), false, FinanceErrors.failure(error), null)));
+    }
+    private void resolve(Consumer<FinanceRepository> ready, Consumer<AppError> failed) {
+        executors.serial().execute(() -> {
+            if (!active()) return;
             try {
-                if (!sameSession()) throw new FinanceBook.Failure(FinanceBook.Problem.UNAUTHORIZED);
-                FinanceRepository repository = new FinanceRepository(getApplication(), owner);
-                FinanceBook book = mutation != null ? repository.mutate(mutation, previous)
-                        : pageIndex > 0 ? null : repository.read(scope, detailId);
-                FinanceBook.Page result = mutation == null && requested != null ? repository.transactions(requested, pageIndex) : null;
-
-                main.post(() -> {
-                    busy = false;
-                    if (!sameSession()) return;
-                    if (requested != query && mutation == null) { refresh(); return; }
-                    if (result != null) {
-                        rows = pageIndex == 0 ? result.items : FinanceBook.merge(rows, result.items);
-                        page = pageIndex; totalPages = result.totalPages;
-                    }
-                    state.setValue(Resource.success(book == null ? previous : book));
-                    if (mutation != null) command.setValue(new Command(null, complete));
-                    if (mutation != null && !complete && book == null) refresh();
-                });
-            } catch (Exception e) {
-                FinanceBook.Problem problem = e instanceof FinanceBook.Failure
-                        ? ((FinanceBook.Failure) e).problem : com.example.fintrack.BuildConfig.USE_MOCK
-                        ? FinanceBook.Problem.STORAGE : FinanceBook.Problem.SERVER;
-                
-                main.post(() -> {
-                    busy = false;
-                    if (!sameSession() && problem != FinanceBook.Problem.UNAUTHORIZED) return;
-                    if (requested != query && mutation == null) { refresh(); return; }
-                    state.setValue(Resource.error(problem.name(), previous));
-                    FinanceBook.Failure failure = e instanceof FinanceBook.Failure ? (FinanceBook.Failure) e : null;
-                    if (mutation != null) command.setValue(new Command(problem, false, failure == null ? null : failure.userMessage, failure));
-                });
+                FinanceRepository repository = repositories.apply(origin);
+                executors.main().execute(() -> { if (active()) ready.accept(repository); });
+            } catch (Exception error) {
+                AppError failure = FinanceRepository.error(error);
+                executors.main().execute(() -> { if (active()) failed.accept(failure); });
             }
         });
+    }
+    @Override protected void onCleared() {
+        cleared = true;
+        ++generation;
+        read.cancel();
     }
 }

@@ -1,6 +1,8 @@
 package com.example.fintrack.app.transaction.domain;
 
 import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+
 import java.text.Normalizer;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -32,7 +34,7 @@ public final class TransactionParser {
             while (matcher.find()) {
                 numbers++;
                 try { value = FinanceBook.parseAmount(matcher.group().replace(',', '.')); }
-                catch (FinanceBook.Failure ignored) { value = null; }
+                catch (FinanceFailure ignored) { value = null; }
             }
             if (value != null && numbers == 1) candidates.add(value);
         }

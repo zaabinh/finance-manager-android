@@ -1,16 +1,16 @@
 package com.example.fintrack.app.category.ui;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
-import com.example.fintrack.app.category.adapter.IconPickerAdapter;
-import com.example.fintrack.app.category.model.CategoryIcons;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.data.FinanceRepository;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -24,7 +24,7 @@ abstract class CategoryFormActivity extends FinanceActivity {
     private CategoryAppearance appearance;
     private String id, iconKey, manualColor, colorHex;
     private int sortOrder;
-    private FinanceBook.Type type = FinanceBook.Type.EXPENSE;
+    private TransactionType type = TransactionType.EXPENSE;
     private boolean initialized, restoredForm, bindingStatus;
     protected abstract boolean editing();
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.CATEGORIES; }
@@ -32,9 +32,9 @@ abstract class CategoryFormActivity extends FinanceActivity {
     @Override protected void bind(Bundle saved) {
         id = getIntent().getStringExtra("CATEGORY_ID");
         if (editing() && (id == null || id.isEmpty())) { finish(); return; }
-        if ("INCOME".equals(getIntent().getStringExtra("category_type"))) type = FinanceBook.Type.INCOME;
+        if ("INCOME".equals(getIntent().getStringExtra("category_type"))) type = TransactionType.INCOME;
         if (saved != null) {
-            type = FinanceBook.Type.valueOf(saved.getString("categoryType", "EXPENSE"));
+            type = TransactionType.valueOf(saved.getString("categoryType", "EXPENSE"));
             iconKey = saved.getString("iconKey"); manualColor = saved.getString("manualColor");
             restoredForm = saved.getBoolean("categoryLoaded");
         }
@@ -57,8 +57,8 @@ abstract class CategoryFormActivity extends FinanceActivity {
             if (!bindingStatus && initialized && !model.busy())
                 model.change(FinanceAction.categoryStatus(id, active), false);
         });
-        findViewById(R.id.btnTypeExpense).setOnClickListener(v -> { type = FinanceBook.Type.EXPENSE; showType(); appearance.setType(type); });
-        findViewById(R.id.btnTypeIncome).setOnClickListener(v -> { type = FinanceBook.Type.INCOME; showType(); appearance.setType(type); });
+        findViewById(R.id.btnTypeExpense).setOnClickListener(v -> { type = TransactionType.EXPENSE; showType(); appearance.setType(type); });
+        findViewById(R.id.btnTypeIncome).setOnClickListener(v -> { type = TransactionType.INCOME; showType(); appearance.setType(type); });
         save.setOnClickListener(v -> {
             if (!initialized || model.busy()) return;
             String value = name.getText().toString().trim();
@@ -77,15 +77,15 @@ abstract class CategoryFormActivity extends FinanceActivity {
     }
 
     private void showType() {
-        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeExpense)).setChecked(type == FinanceBook.Type.EXPENSE);
-        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeIncome)).setChecked(type == FinanceBook.Type.INCOME);
+        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeExpense)).setChecked(type == TransactionType.EXPENSE);
+        ((com.google.android.material.button.MaterialButton) findViewById(R.id.btnTypeIncome)).setChecked(type == TransactionType.INCOME);
     }
     private void showIcons(String manual) {
         appearance = new CategoryAppearance(this, icons, findViewById(R.id.rvColorPicker), type, iconKey, manual);
     }
     @Override protected void render() {
         if (name == null) return;
-        FinanceBook.Category current = editing() ? book.category(id) : null;
+        Category current = editing() ? book.category(id) : null;
         if (editing() && current == null) { save.setEnabled(false); return; }
         if (!initialized) {
             if (current != null) {

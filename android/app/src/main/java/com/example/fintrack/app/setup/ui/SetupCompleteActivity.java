@@ -6,10 +6,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
-import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
+import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
 // Màn hình hoàn tất cài đặt (SetupCompleteActivity)
 public class SetupCompleteActivity extends AppCompatActivity {
@@ -22,15 +24,14 @@ public class SetupCompleteActivity extends AppCompatActivity {
     // Dữ liệu mặc định (nếu không nhận được dữ liệu từ màn hình trước)
     private String displayName = "Minh Anh";
     private String reminderTime = "20:00";
-    private SessionManager sessionManager;  // Quản lý trạng thái đăng nhập và dữ liệu phiên làm việc
+    private UserViewModel userViewModel;    // Ghi trạng thái hoàn tất setup và tên hiển thị vào phiên làm việc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup_complete); // Gắn giao diện XML vào Activity
 
-        // Khởi tạo SessionManager để lưu trữ thông tin
-        sessionManager = SessionManager.getInstance(getApplicationContext());
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
         // Lấy dữ liệu (Tên và Giờ nhắc nhở) được truyền từ các màn hình thiết lập trước đó
         if (getIntent() != null) {
@@ -63,17 +64,10 @@ public class SetupCompleteActivity extends AppCompatActivity {
     // Xử lý sự kiện khi người dùng bấm nút "Vào ứng dụng"
     private void setupListeners() {
         btnEnterApp.setOnClickListener(v -> {
-            // 1. Đánh dấu trạng thái là đã hoàn tất cài đặt (Setup)
-            sessionManager.setSetupCompleted(true);
+            // 1. Đánh dấu đã hoàn tất cài đặt (Setup) và lưu tên hiển thị vào phiên hiện tại
+            userViewModel.confirmSetupCompleted(displayName);
 
-            // 2. Lưu thông tin hồ sơ người dùng vào SessionManager
-            sessionManager.saveUserProfile(
-                    sessionManager.getUserId(),
-                    sessionManager.getUserEmail(),
-                    displayName
-            );
-
-            // 3. Chuyển hướng sang màn hình chính (HomeDashboardActivity)
+            // 2. Chuyển hướng sang màn hình chính (HomeDashboardActivity)
             Intent intent = new Intent(SetupCompleteActivity.this, HomeDashboardActivity.class);
             // Xóa sạch lịch sử màn hình cũ để người dùng không bấm nút Back quay lại trang cài đặt được nữa
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

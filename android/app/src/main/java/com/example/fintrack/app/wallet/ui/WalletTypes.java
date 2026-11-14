@@ -1,10 +1,11 @@
 package com.example.fintrack.app.wallet.ui;
 
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.content.Context;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 import com.example.fintrack.R;
-import com.example.fintrack.app.finance.domain.FinanceBook.WalletType;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.function.Consumer;
 

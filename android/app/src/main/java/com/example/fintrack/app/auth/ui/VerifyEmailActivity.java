@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -17,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 import java.util.Locale;
@@ -53,7 +56,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth_verify_email);
 
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
         initViews();
         setupOtpInputs();
@@ -178,7 +181,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
                 case ERROR:
                     btnVerify.setEnabled(true);
                     btnVerify.setText(R.string.btn_verify);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.verify_email_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.verify_email_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 
@@ -199,7 +202,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
                 case ERROR:
                     resetResendUi();
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 
@@ -220,7 +223,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
                 case ERROR:
                     resetResendUi();
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 
@@ -241,7 +244,7 @@ public class VerifyEmailActivity extends AppCompatActivity {
 
                 case ERROR:
                     resetResendUi();
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.resend_otp_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.resend_otp_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 

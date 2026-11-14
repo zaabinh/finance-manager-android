@@ -1,5 +1,7 @@
 package com.example.fintrack.app.category.ui;
 
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import android.content.Context;
 import android.graphics.Color;
 import androidx.recyclerview.widget.RecyclerView;
@@ -8,7 +10,6 @@ import com.example.fintrack.app.category.adapter.ColorSwatchAdapter;
 import com.example.fintrack.app.category.adapter.IconPickerAdapter;
 import com.example.fintrack.app.category.model.CategoryColorChoice;
 import com.example.fintrack.app.category.model.CategoryIcons;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 
 /**
  * Icon grid + colour swatches shared by Sheet/Category and the category screens. The icon grid previews
@@ -21,7 +22,7 @@ final class CategoryAppearance {
     private String iconKey;
 
     /** iconKey may be null (first icon); manualColor is a stored or previously picked hex, null = follow the type. */
-    CategoryAppearance(Context context, RecyclerView iconList, RecyclerView colorList, FinanceBook.Type type,
+    CategoryAppearance(Context context, RecyclerView iconList, RecyclerView colorList, TransactionType type,
             String iconKey, String manualColor) {
         this.iconKey = iconKey == null ? CategoryIcons.KEYS.get(0) : iconKey;
         color = new CategoryColorChoice(type, manualColor);
@@ -34,7 +35,7 @@ final class CategoryAppearance {
         refresh();
     }
 
-    void setType(FinanceBook.Type type) { color.setType(type); refresh(); }
+    void setType(TransactionType type) { color.setType(type); refresh(); }
     String iconKey() { return iconKey; }
     /** Hex to save: always a swatch value or the stored one. */
     String colorHex() { return color.selected(); }

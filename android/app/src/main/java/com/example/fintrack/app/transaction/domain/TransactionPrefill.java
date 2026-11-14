@@ -1,6 +1,8 @@
 package com.example.fintrack.app.transaction.domain;
 
 import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.Wallet;
 
 /**
  * Optional form prefill from another screen (e.g. budget shortfall → "Chuyển từ tiết kiệm").
@@ -8,19 +10,19 @@ import com.example.fintrack.app.finance.domain.FinanceBook;
  * wallet IDs are dropped silently so the form opens with whatever is still usable.
  */
 public final class TransactionPrefill {
-    public final FinanceBook.Type type;
+    public final TransactionType type;
     public final String walletId, destinationWalletId;
     public final Long amountMinor;
 
-    private TransactionPrefill(FinanceBook.Type type, String walletId, String destinationWalletId, Long amountMinor) {
+    private TransactionPrefill(TransactionType type, String walletId, String destinationWalletId, Long amountMinor) {
         this.type = type; this.walletId = walletId; this.destinationWalletId = destinationWalletId; this.amountMinor = amountMinor;
     }
 
     /** Parses raw Intent extras; returns null when nothing usable was supplied. amountMinor null means absent. */
     public static TransactionPrefill parse(String type, String walletId, String destinationWalletId, Long amountMinor) {
-        FinanceBook.Type parsedType = null;
+        TransactionType parsedType = null;
         if (type != null) {
-            for (FinanceBook.Type value : FinanceBook.Type.values()) if (value.name().equals(type.trim())) parsedType = value;
+            for (TransactionType value : TransactionType.values()) if (value.name().equals(type.trim())) parsedType = value;
         }
         Long amount = amountMinor != null && amountMinor > 0 && amountMinor <= FinanceBook.MAX_AMOUNT ? amountMinor : null;
         String wallet = blank(walletId) ? null : walletId.trim();
@@ -31,16 +33,16 @@ public final class TransactionPrefill {
 
     /** Keeps only wallets that exist and are active in the loaded references; a destination needs a TRANSFER. */
     public TransactionPrefill resolve(FinanceBook book) {
-        FinanceBook.Type resolvedType = type == null ? FinanceBook.Type.EXPENSE : type;
+        TransactionType resolvedType = type == null ? TransactionType.EXPENSE : type;
         String wallet = active(book, walletId) ? walletId : null;
-        String destination = resolvedType == FinanceBook.Type.TRANSFER && active(book, destinationWalletId)
+        String destination = resolvedType == TransactionType.TRANSFER && active(book, destinationWalletId)
                 && !destinationWalletId.equals(wallet) ? destinationWalletId : null;
         return new TransactionPrefill(resolvedType, wallet, destination, amountMinor);
     }
 
     private static boolean active(FinanceBook book, String id) {
         if (id == null || book == null) return false;
-        FinanceBook.Wallet wallet = book.wallet(id);
+        Wallet wallet = book.wallet(id);
         return wallet != null && wallet.archivedAt == null;
     }
 

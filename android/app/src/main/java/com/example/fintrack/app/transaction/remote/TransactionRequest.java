@@ -1,6 +1,8 @@
 package com.example.fintrack.app.transaction.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.Transaction;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import com.google.gson.annotations.SerializedName;
 
 /** Request DTO đóng gói dữ liệu khi Tạo hoặc Sửa Giao dịch gửi lên Server */
@@ -28,19 +30,19 @@ public class TransactionRequest {
     public final String payee;
 
     @SerializedName("transactionType")
-    public final FinanceBook.Type transactionType;
+    public final TransactionType transactionType;
 
     @SerializedName("amountMinor")
     public final long amountMinor;
 
     /** PUT omits clientRequestId (contract section 5); POST keeps the form's stable key across retries. */
-    public TransactionRequest(FinanceBook.Transaction value, boolean editing) {
+    public TransactionRequest(Transaction value, boolean editing) {
         clientRequestId = editing ? null : value.clientRequestId != null ? value.clientRequestId : value.id;
         transactionType = value.type;
         amountMinor = value.amount;
-        categoryId = value.type == FinanceBook.Type.TRANSFER ? null : value.categoryId;
+        categoryId = value.type == TransactionType.TRANSFER ? null : value.categoryId;
         walletId = value.walletId;
-        destinationWalletId = value.type == FinanceBook.Type.TRANSFER ? value.destinationWalletId : null;
+        destinationWalletId = value.type == TransactionType.TRANSFER ? value.destinationWalletId : null;
         occurredAt = TransactionResponse.timestamp(value.occurredAt);
         note = value.note;
         payee = value.payee;

@@ -1,5 +1,7 @@
 package com.example.fintrack.app.wallet.ui;
 
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -9,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.fintrack.R;
 import com.example.fintrack.app.core.ui.MoneyInput;
 import com.example.fintrack.app.core.ui.SheetDialog;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.setup.model.PendingWallet;
 import com.example.fintrack.app.wallet.model.WalletDraft;
@@ -22,7 +23,7 @@ public final class WalletSheet {
 
     private final BottomSheetDialog dialog;
     private final MaterialButton confirm;
-    private FinanceBook.WalletType type = FinanceBook.WalletType.CASH;
+    private WalletType type = WalletType.CASH;
 
     private WalletSheet(AppCompatActivity host, Listener listener) {
         View content = LayoutInflater.from(host).inflate(R.layout.sheet_wallet, null);

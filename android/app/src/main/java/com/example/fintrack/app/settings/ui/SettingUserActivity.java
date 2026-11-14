@@ -1,5 +1,7 @@
 package com.example.fintrack.app.settings.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -13,8 +15,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.example.fintrack.app.user.remote.UserProfileResponse;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
@@ -39,7 +42,6 @@ public class SettingUserActivity extends AppCompatActivity {
     private View rowTimezone;
     private View btnSaveProfile;
     private View btnCancelEdit;
-    private SessionManager sessionManager;
     private UserViewModel userViewModel;
     private String selectedTimeZone = DEFAULT_TIMEZONE;
     private String savedTimeZone = DEFAULT_TIMEZONE;
@@ -50,8 +52,7 @@ public class SettingUserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_user);
 
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
         initViews();
         toggleEditMode(false);
@@ -76,8 +77,9 @@ public class SettingUserActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
-        String name = sessionManager.getUserName();
-        String email = sessionManager.getUserEmail();
+        SessionSnapshot session = FintrackApplication.container(this).sessionStore().current();
+        String name = session.name;
+        String email = session.email;
         if (!TextUtils.isEmpty(name)) {
             savedDisplayName = name;
             showName(name);
@@ -98,8 +100,7 @@ public class SettingUserActivity extends AppCompatActivity {
             String email = profile.getEmail();
             if (!TextUtils.isEmpty(name)) {
                 showName(name);
-                savedDisplayName = name;
-                sessionManager.saveUserProfile(profile.getId(), email, name);
+                savedDisplayName = name; // UserViewModel đã lưu hồ sơ này vào Session
             }
             if (!TextUtils.isEmpty(email)) {
                 etEmail.setText(email);
@@ -126,15 +127,14 @@ public class SettingUserActivity extends AppCompatActivity {
                         savedDisplayName = updatedName;
                         selectedTimeZone = resource.getData().getTimeZone();
                         savedTimeZone = selectedTimeZone;
-                        showName(updatedName);
-                        sessionManager.saveUserProfile(sessionManager.getUserId(), sessionManager.getUserEmail(), updatedName);
+                        showName(updatedName); // UserViewModel đã lưu tên mới vào Session
                     }
                     etDisplayName.setEnabled(false);
                     break;
                 case ERROR:
                     btnSaveProfile.setEnabled(true);
                     btnSaveProfile.setVisibility(View.VISIBLE);
-                    String message = resource.getMessage() != null ? resource.getMessage() : getString(R.string.error_server);
+                    String message = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.error_server);
                     Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                     break;
                 case LOADING:

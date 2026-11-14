@@ -22,7 +22,7 @@ public class WalletListActivity extends FinanceActivity {
     }
     @Override protected void render() {
         adapter.setWallets(book);
-        visible(R.id.layoutEmptyWallets, book.state().wallets.isEmpty());
-        visible(R.id.rvWallets, !book.state().wallets.isEmpty());
+        visible(R.id.layoutEmptyWallets, book.wallets().isEmpty());
+        visible(R.id.rvWallets, !book.wallets().isEmpty());
     }
 }

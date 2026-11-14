@@ -1,5 +1,9 @@
 package com.example.fintrack.app.setup.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -14,7 +18,6 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.fintrack.app.core.ui.MoneyFormat;
 import com.example.fintrack.app.core.ui.MoneyInput;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.setup.model.PendingWallet;
 import com.example.fintrack.app.setup.model.PendingWalletList;
@@ -23,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.FirstSetupRequest;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
@@ -67,7 +71,7 @@ public class SetupWalletActivity extends AppCompatActivity {
         } else if (getIntent().getSerializableExtra(EXTRA_PENDING_WALLETS) instanceof PendingWalletList) {
             pending = (PendingWalletList) getIntent().getSerializableExtra(EXTRA_PENDING_WALLETS);
         }
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
         initViews();       // Ánh xạ các thành phần giao diện
         setupListeners();  // Gán sự kiện bấm cho các nút
         observeFirstSetup();
@@ -99,8 +103,8 @@ public class SetupWalletActivity extends AppCompatActivity {
     }
 
     private static int typeLabel(String type) {
-        if (FinanceBook.WalletType.BANK.name().equals(type)) return R.string.wallet_type_bank;
-        if (FinanceBook.WalletType.CASH.name().equals(type)) return R.string.wallet_type_cash;
+        if (WalletType.BANK.name().equals(type)) return R.string.wallet_type_bank;
+        if (WalletType.CASH.name().equals(type)) return R.string.wallet_type_cash;
         return R.string.wallet_type_savings;
     }
 
@@ -173,7 +177,7 @@ public class SetupWalletActivity extends AppCompatActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
             } else if (resource.getStatus() == Resource.Status.ERROR) {
-                Toast.makeText(this, resource.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, ErrorMapper.text(this, resource.getError()), Toast.LENGTH_LONG).show();
             }
         });
     }

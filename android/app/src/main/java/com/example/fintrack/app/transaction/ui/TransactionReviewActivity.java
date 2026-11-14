@@ -1,5 +1,12 @@
 package com.example.fintrack.app.transaction.ui;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+import com.example.fintrack.app.finance.domain.Transaction;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.Wallet;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,8 +14,8 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
@@ -65,7 +72,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
         text(R.id.tvReviewFeedback, getString(R.string.finance_receipt_check));
 
         // Thiết lập sự kiện chọn danh mục, ví, thời gian và cửa hàng
-        findViewById(R.id.fieldCategory).setOnClickListener(view -> FinanceUi.category(this, FinanceBook.Type.EXPENSE, value -> { category = value; render(); }));
+        findViewById(R.id.fieldCategory).setOnClickListener(view -> FinanceUi.category(this, TransactionType.EXPENSE, value -> { category = value; render(); }));
         findViewById(R.id.fieldWallet).setOnClickListener(view -> FinanceUi.wallet(this, value -> { wallet = value; render(); }));
         findViewById(R.id.fieldDate).setOnClickListener(view -> FinanceUi.dateTime(this, date, value -> { date = value; render(); }));
         findViewById(R.id.fieldStore).setOnClickListener(view -> {
@@ -82,7 +89,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
         findViewById(R.id.btnManualEntry).setOnClickListener(view -> { startActivity(new Intent(this, TransactionFormActivity.class)); finish(); });
 
         // Đọc dữ liệu từ ảnh bằng OCR ViewModel
-        TransactionReceiptViewModel receipt = new ViewModelProvider(this).get(TransactionReceiptViewModel.class);
+        TransactionReceiptViewModel receipt = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(TransactionReceiptViewModel.class);
         receipt.draft().observe(this, resource -> {
             reading = resource.getStatus() == Resource.Status.LOADING;
             unreadable = resource.getStatus() == Resource.Status.ERROR;
@@ -112,13 +119,13 @@ public final class TransactionReviewActivity extends FinanceActivity {
         }
 
         if (book == null) return;
-        if (wallet == null && !book.state().wallets.isEmpty()) wallet = book.state().wallets.get(0).id;
+        if (wallet == null && !book.wallets().isEmpty()) wallet = book.wallets().get(0).id;
 
         text(R.id.tvStoreValue, payee);
         text(R.id.tvDateValue, FinanceUi.date(date));
-        FinanceBook.Category catObj = book.category(category);
+        Category catObj = book.category(category);
         text(R.id.tvCategoryValue, catObj == null ? "" : catObj.name);
-        FinanceBook.Wallet walletObj = book.wallet(wallet);
+        Wallet walletObj = book.wallet(wallet);
         text(R.id.tvWalletValue, walletObj == null ? "" : walletObj.name);
     }
 
@@ -127,10 +134,10 @@ public final class TransactionReviewActivity extends FinanceActivity {
         if (reading || book == null || model.busy()) return;
         long amount;
         try { amount = FinanceBook.parseAmount(((EditText) findViewById(R.id.etAmount)).getText().toString()); }
-        catch (FinanceBook.Failure error) { visible(R.id.tvAmountError, true); text(R.id.tvAmountError, getString(R.string.finance_amount_error)); return; }
+        catch (FinanceFailure error) { visible(R.id.tvAmountError, true); text(R.id.tvAmountError, getString(R.string.finance_amount_error)); return; }
         visible(R.id.tvAmountError, false);
 
-        FinanceBook.Transaction value = new FinanceBook.Transaction(id, FinanceBook.Type.EXPENSE, amount, category, wallet, null, date, "", payee);
+        Transaction value = new Transaction(id, TransactionType.EXPENSE, amount, category, wallet, null, date, "", payee);
         model.change(FinanceAction.transaction(value, false), true);
     }
 

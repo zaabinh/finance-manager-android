@@ -1,5 +1,7 @@
 package com.example.fintrack.app.settings.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.Manifest;
 import android.app.TimePickerDialog;
 import android.content.pm.PackageManager;
@@ -15,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
 import com.example.fintrack.app.user.remote.NotificationSettingsResponse;
 import com.example.fintrack.app.user.remote.UpdateNotificationSettingsRequest;
@@ -47,7 +50,7 @@ public class SettingNotificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_notification);
-        viewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        viewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
         initViews();
         btnSave.setEnabled(false);
         setupListeners();
@@ -106,7 +109,7 @@ public class SettingNotificationActivity extends AppCompatActivity {
             } else {
                 settingsLoaded = false;
                 btnSave.setEnabled(false);
-                if (resource.getStatus() == Resource.Status.ERROR) showError(resource.getMessage());
+                if (resource.getStatus() == Resource.Status.ERROR) showError(ErrorMapper.text(this, resource.getError()));
             }
         });
         viewModel.getUpdateNotificationSettingsResult().observe(this, resource -> {
@@ -117,7 +120,7 @@ public class SettingNotificationActivity extends AppCompatActivity {
                 apply(resource.getData());
                 Toast.makeText(this, R.string.notification_settings_saved, Toast.LENGTH_SHORT).show();
             } else if (resource.getStatus() == Resource.Status.ERROR) {
-                showError(resource.getMessage());
+                showError(ErrorMapper.text(this, resource.getError()));
             }
         });
     }

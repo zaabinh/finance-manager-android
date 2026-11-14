@@ -1,12 +1,15 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.finance.domain.Budget;
+import com.example.fintrack.app.finance.domain.BudgetUsage;
+import com.example.fintrack.app.finance.domain.MonthlyBudget;
+
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.budget.adapter.BudgetAdapter;
 import com.example.fintrack.app.finance.data.FinanceAction;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
@@ -44,7 +47,7 @@ public final class BudgetDetailActivity extends FinanceActivity {
                 .setNegativeButton(R.string.btn_cancel, null)
                 .setPositiveButton(R.string.btn_delete, (dialog, which) -> model.change(FinanceAction.deleteMonthlyBudget(id), true)).show());
         findViewById(R.id.btnBudgetHistory).setOnClickListener(view -> {
-            FinanceBook.MonthlyBudget monthly = book == null ? null : book.monthlyBudget(id);
+            MonthlyBudget monthly = book == null ? null : book.monthlyBudget(id);
             if (monthly != null) startActivity(new Intent(this, TransactionListActivity.class).putExtra("month", monthly.month));
         });
     }
@@ -52,9 +55,9 @@ public final class BudgetDetailActivity extends FinanceActivity {
     @Override
     protected void render() {
         if (book == null) return;
-        FinanceBook.MonthlyBudget monthly = book.monthlyBudget(id);
+        MonthlyBudget monthly = book.monthlyBudget(id);
         if (monthly == null) { if (!model.busy()) finish(); return; }
-        FinanceBook.BudgetUsage usage = book.monthlyUsage(monthly);
+        BudgetUsage usage = book.monthlyUsage(monthly);
         long total = book.monthlyTotal(monthly);
         boolean active = monthly.archivedAt == null;
 
@@ -68,7 +71,7 @@ public final class BudgetDetailActivity extends FinanceActivity {
         LinearProgressIndicator progress = findViewById(R.id.progressDetailBudget); progress.setProgress(usage.progress);
         progress.setIndicatorColor(getColor(usage.exceeded ? R.color.status_error : usage.warning ? R.color.status_warning : R.color.color_primary));
 
-        List<FinanceBook.Budget> children = book.categoryBudgets(monthly);
+        List<Budget> children = book.categoryBudgets(monthly);
         ((RecyclerView) findViewById(R.id.rvCategoryBudgets)).setAdapter(new BudgetAdapter(book, children,
                 active ? this::categoryActions : null));
         visible(R.id.rvCategoryBudgets, !children.isEmpty());
@@ -79,7 +82,7 @@ public final class BudgetDetailActivity extends FinanceActivity {
     }
 
     /** Sửa hạn mức hoặc xóa một ngân sách danh mục khỏi ngân sách tháng. */
-    private void categoryActions(FinanceBook.Budget budget) {
+    private void categoryActions(Budget budget) {
         CharSequence[] actions = {getString(R.string.budget_category_edit_limit), getString(R.string.budget_category_remove)};
         new MaterialAlertDialogBuilder(this).setItems(actions, (dialog, which) -> {
             if (which == 0) startActivity(new Intent(this, BudgetFormActivity.class)

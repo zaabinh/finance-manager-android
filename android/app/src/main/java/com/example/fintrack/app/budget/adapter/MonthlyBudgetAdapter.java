@@ -1,5 +1,9 @@
 package com.example.fintrack.app.budget.adapter;
 
+import com.example.fintrack.app.finance.domain.BudgetUsage;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.MonthlyBudget;
+
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -11,7 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.budget.ui.BudgetDetailActivity;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import java.util.List;
@@ -19,9 +22,9 @@ import java.util.List;
 /** Danh sách ngân sách tháng: tháng, tổng (dẫn xuất), đã chi, còn lại và tiến độ. Dùng lại layout item_budget. */
 public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudgetAdapter.Holder> {
     private final FinanceBook book;
-    private final List<FinanceBook.MonthlyBudget> items;
+    private final List<MonthlyBudget> items;
 
-    public MonthlyBudgetAdapter(FinanceBook book, List<FinanceBook.MonthlyBudget> items) {
+    public MonthlyBudgetAdapter(FinanceBook book, List<MonthlyBudget> items) {
         this.book = book;
         this.items = items;
     }
@@ -33,9 +36,9 @@ public final class MonthlyBudgetAdapter extends RecyclerView.Adapter<MonthlyBudg
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
-        FinanceBook.MonthlyBudget monthly = items.get(position);
+        MonthlyBudget monthly = items.get(position);
         Context context = holder.itemView.getContext();
-        FinanceBook.BudgetUsage usage = book.monthlyUsage(monthly);
+        BudgetUsage usage = book.monthlyUsage(monthly);
         long total = book.monthlyTotal(monthly);
         int count = book.categoryBudgets(monthly).size();
 

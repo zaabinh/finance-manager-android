@@ -1,5 +1,8 @@
 package com.example.fintrack.app.finance.ui;
 
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -8,10 +11,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -22,7 +25,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public abstract class FinanceActivity extends AppCompatActivity {
     protected FinanceViewModel model;
     protected FinanceBook book;
-    private String owner;
+    private SessionSnapshot origin; // phiên đăng nhập lúc mở màn hình
 
     protected abstract int layout(); // Khai báo layout XML của màn hình con
     protected abstract void bind(Bundle saved); // Khởi tạo các view và sự kiện
@@ -36,21 +39,20 @@ public abstract class FinanceActivity extends AppCompatActivity {
     @Override 
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
-        owner = SessionManager.getInstance(this).getUserId();
+        origin = FintrackApplication.container(this).sessionStore().current();
         if (!authenticated()) return; // Kiểm tra đăng nhập
         setContentView(layout());
         FinanceUi.insets(findViewById(android.R.id.content));
-        model = new ViewModelProvider(this).get(FinanceViewModel.class);
-        model.configure(readScope(), detailId());
+        model = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory().forFinance(readScope(), detailId())).get(FinanceViewModel.class);
         bind(saved);
 
         // Quan sát dữ liệu tài chính (FinanceBook) từ LiveData
         model.state().observe(this, resource -> {
-            loading(resource.getStatus() == Resource.Status.LOADING);
+            loading(model.snapshotLoading() || model.saveLoading());
             if (resource.getData() != null) { book = resource.getData(); render(); }
             if (resource.getStatus() == Resource.Status.ERROR) {
-                FinanceBook.Problem problem = FinanceBook.Problem.valueOf(resource.getMessage());
-                if (problem == FinanceBook.Problem.UNAUTHORIZED) { authenticated(); return; }
+                FinanceProblem problem = FinanceErrors.problem(resource.getError());
+                if (problem == FinanceProblem.UNAUTHORIZED) { authenticated(); return; }
                 
                 // Hiển thị hộp thoại báo lỗi hoặc Snackbar thử lại
                 if (resource.getData() == null) new MaterialAlertDialogBuilder(this)
@@ -63,8 +65,12 @@ public abstract class FinanceActivity extends AppCompatActivity {
         });
 
         // Quan sát sự kiện hoàn tất lệnh (Command) thêm/sửa/xóa
-        model.command().observe(this, command -> {
-            if (!command.consume()) return;
+        model.saveLoadingState().observe(this, value -> loading(model.snapshotLoading() || Boolean.TRUE.equals(value)));
+        model.command().observe(this, event -> {
+            FinanceViewModel.Command command = event.getContentIfNotHandled();
+            if (command == null) return;
+            loading(model.snapshotLoading() || model.saveLoading());
+            onCommand(command);
             if (command.error != null) { CharSequence text = failure(command); if (text != null) Toast.makeText(this, text, Toast.LENGTH_LONG).show(); }
             else if (command.complete) {
                 Toast.makeText(this, R.string.finance_saved, Toast.LENGTH_SHORT).show();
@@ -72,6 +78,8 @@ public abstract class FinanceActivity extends AppCompatActivity {
             }
         });
     }
+
+    protected void onCommand(FinanceViewModel.Command command) { }
 
     protected void completed() { setResult(RESULT_OK); finish(); }
 
@@ -81,11 +89,10 @@ public abstract class FinanceActivity extends AppCompatActivity {
         return getString(FinanceUi.error(command.error));
     }
 
-    /** Kiểm tra xem người dùng đã đăng nhập đúng tài khoản hay chưa */
+    /** Kiểm tra phiên đăng nhập lúc mở màn hình có còn là phiên hiện tại hay không */
     private boolean authenticated() {
-        SessionManager session = SessionManager.getInstance(this);
-        if (session.isLoggedIn() && session.getUserId() != null && !session.getUserId().trim().isEmpty()
-                && java.util.Objects.equals(owner, session.getUserId())) return true;
+        if (origin.userId != null && !origin.userId.trim().isEmpty()
+                && FintrackApplication.container(this).sessionStore().isCurrent(origin)) return true;
         startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish(); return false;
     }
 

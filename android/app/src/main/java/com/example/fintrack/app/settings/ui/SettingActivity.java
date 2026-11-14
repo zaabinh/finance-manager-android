@@ -12,9 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
-import com.example.fintrack.app.home.ui.HomeDashboardActivity;
+import com.example.fintrack.app.core.session.SessionSnapshot;
+import com.example.fintrack.app.core.session.SessionStore;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 
 // Màn hình Cài đặt ứng dụng (SettingActivity)
@@ -34,7 +35,7 @@ public class SettingActivity extends AppCompatActivity {
     private View rowAboutApp;
 
     // Thanh điều hướng dưới đáy
-    private SessionManager sessionManager;
+    private SessionStore sessionStore;
     private UserViewModel userViewModel;
 
     @Override
@@ -42,8 +43,8 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        sessionStore = FintrackApplication.container(this).sessionStore();
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
         initViews();
         loadUserData();
@@ -76,8 +77,9 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
-        String name = sessionManager.getUserName();
-        String email = sessionManager.getUserEmail();
+        SessionSnapshot session = sessionStore.current();
+        String name = session.name;
+        String email = session.email;
 
         if (name != null && !name.isEmpty()) {
             tvProfileName.setText(name);
@@ -106,7 +108,7 @@ public class SettingActivity extends AppCompatActivity {
                     tvAvatarInitials.setText(getInitials(name));
                 }
                 if (email != null) tvProfileEmail.setText(email);
-                sessionManager.saveUserProfile(resource.getData().getProfile().getId(), email, name);
+                // UserViewModel đã lưu hồ sơ này vào Session.
             }
         });
     }

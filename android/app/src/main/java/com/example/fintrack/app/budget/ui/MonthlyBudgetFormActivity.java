@@ -1,5 +1,10 @@
 package com.example.fintrack.app.budget.ui;
 
+import com.example.fintrack.app.finance.domain.Budget;
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.finance.ui.FinanceViewModel;
@@ -71,7 +75,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
         // Only refresh category names; rebuilding would drop focus while the user types.
         LinearLayout container = findViewById(R.id.containerBudgetRows);
         for (int i = 0; i < container.getChildCount() && i < categories.size(); i++) {
-            FinanceBook.Category category = book.category(categories.get(i));
+            Category category = book.category(categories.get(i));
             ((TextView) container.getChildAt(i).findViewById(R.id.tvRowCategory)).setText(category == null
                     ? getString(R.string.transaction_category_placeholder) : category.name);
         }
@@ -85,7 +89,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
         for (int i = 0; i < categories.size(); i++) {
             final int index = i;
             View row = inflater.inflate(R.layout.item_monthly_budget_row, container, false);
-            FinanceBook.Category category = book == null ? null : book.category(categories.get(i));
+            Category category = book == null ? null : book.category(categories.get(i));
             ((TextView) row.findViewById(R.id.tvRowCategory)).setText(category == null
                     ? getString(R.string.transaction_category_placeholder) : category.name);
             EditText limit = row.findViewById(R.id.etRowLimit);
@@ -111,7 +115,7 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
         long total = 0;
         for (String value : limits) {
             try { total = Math.addExact(total, FinanceBook.parseAmount(value.trim())); }
-            catch (FinanceBook.Failure | ArithmeticException ignored) { }
+            catch (FinanceFailure | ArithmeticException ignored) { }
         }
         text(R.id.tvMonthlyBudgetTotal, getString(R.string.monthly_budget_live_total, FinanceUi.money(total)));
     }
@@ -120,18 +124,18 @@ public final class MonthlyBudgetFormActivity extends FinanceActivity {
         if (book == null || model.busy()) return;
         if (categories.isEmpty()) { Toast.makeText(this, R.string.monthly_budget_category_required, Toast.LENGTH_SHORT).show(); return; }
         if (book.monthlyBudgetFor(currentMonth()) != null) { Toast.makeText(this, R.string.monthly_budget_exists, Toast.LENGTH_SHORT).show(); return; }
-        List<FinanceBook.Budget> lines = new ArrayList<>();
+        List<Budget> lines = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         LinearLayout container = findViewById(R.id.containerBudgetRows);
         for (int i = 0; i < categories.size(); i++) {
             long limit;
             try { limit = FinanceBook.parseAmount(limits.get(i).trim()); }
-            catch (FinanceBook.Failure error) {
+            catch (FinanceFailure error) {
                 Toast.makeText(this, R.string.finance_amount_error, Toast.LENGTH_SHORT).show();
                 container.getChildAt(i).findViewById(R.id.etRowLimit).requestFocus(); return;
             }
             if (!seen.add(categories.get(i))) continue;
-            lines.add(new FinanceBook.Budget(UUID.randomUUID().toString(), categories.get(i), currentMonth(), limit));
+            lines.add(new Budget(UUID.randomUUID().toString(), categories.get(i), currentMonth(), limit));
         }
         BudgetUi.hideShortfall(this);
         model.change(FinanceAction.monthlyBudget(id, currentMonth(), lines), true);

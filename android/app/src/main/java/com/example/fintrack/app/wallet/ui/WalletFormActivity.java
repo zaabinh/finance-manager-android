@@ -1,5 +1,8 @@
 package com.example.fintrack.app.wallet.ui;
 
+import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -7,7 +10,6 @@ import android.widget.Toast;
 import com.example.fintrack.R;
 import com.example.fintrack.app.finance.data.FinanceAction;
 import com.example.fintrack.app.finance.data.FinanceRepository;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.example.fintrack.app.finance.ui.FinanceActivity;
 import com.example.fintrack.app.finance.ui.FinanceUi;
 import com.example.fintrack.app.core.ui.MoneyInput;
@@ -19,7 +21,7 @@ public abstract class WalletFormActivity extends FinanceActivity {
     private CheckBox assets;
     private String id;
     private boolean initialized;
-    private FinanceBook.WalletType type = FinanceBook.WalletType.CASH;
+    private WalletType type = WalletType.CASH;
     protected abstract boolean editing();
     @Override protected int layout() { return editing() ? R.layout.activity_wallet_edit : R.layout.activity_wallet_add; }
     @Override protected FinanceRepository.Scope readScope() { return FinanceRepository.Scope.WALLETS; }
@@ -30,7 +32,7 @@ public abstract class WalletFormActivity extends FinanceActivity {
         MoneyInput.attach(opening, findViewById(R.id.chipGroupAmountSuggestions));
         if (saved != null) {
             initialized = saved.getBoolean("walletInitialized");
-            type = FinanceBook.WalletType.valueOf(saved.getString("walletType", "CASH"));
+            type = WalletType.valueOf(saved.getString("walletType", "CASH"));
         }
         toolbar(R.id.toolbarForm);
         findViewById(R.id.fieldWalletType).setOnClickListener(v -> WalletTypes.choose(this, selected -> { type = selected; showType(); }));
@@ -40,7 +42,7 @@ public abstract class WalletFormActivity extends FinanceActivity {
     }
     @Override protected void render() {
         if (editing() && !initialized) {
-            FinanceBook.Wallet wallet = book.wallet(id);
+            Wallet wallet = book.wallet(id);
             if (wallet == null || wallet.archivedAt != null) {
                 Toast.makeText(this, R.string.wallet_missing_or_archived, Toast.LENGTH_LONG).show(); finish(); return;
             }

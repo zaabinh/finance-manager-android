@@ -1,8 +1,12 @@
 package com.example.fintrack.app.transaction.remote;
 
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
+import com.example.fintrack.app.finance.domain.Transaction;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import static org.junit.Assert.*;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.HttpUrl;
@@ -19,7 +23,7 @@ public class TransactionApiContractTest {
 
     @Test public void historyPassesPagingFiltersAndLiteralSearchToServer() {
         HttpUrl url = api.transactions(3, 50, "2026-11-01", "2026-11-30", "wallet", "category",
-                FinanceBook.Type.EXPENSE, "50%_ off", "amountMinor,asc").request().url();
+                TransactionType.EXPENSE, "50%_ off", "amountMinor,asc").request().url();
         assertEquals("/api/v1/transactions", url.encodedPath());
         assertEquals("3", url.queryParameter("page"));
         assertEquals("2026-11-30", url.queryParameter("dateTo"));
@@ -33,9 +37,8 @@ public class TransactionApiContractTest {
     }
 
     @Test public void postKeepsStableKeyAndPutOmitsItAndMoneyIsInteger() throws Exception {
-        FinanceBook.Transaction value = new FinanceBook.Transaction("local", FinanceBook.Type.EXPENSE, 999_999_999_999L,
-                "category", "wallet", null, 1_793_522_700_123L, "note", "payee");
-        value.clientRequestId = "stable-key";
+        Transaction value = new Transaction("local", TransactionType.EXPENSE, 999_999_999_999L,
+                "category", "wallet", null, 1_793_522_700_123L, "note", "payee").withClientRequestId("stable-key");
         Buffer post = new Buffer(); api.addTransaction(new TransactionRequest(value, false)).request().body().writeTo(post);
         JsonObject created = json.fromJson(post.readUtf8(), JsonObject.class);
         assertEquals("stable-key", created.get("clientRequestId").getAsString());
@@ -49,7 +52,7 @@ public class TransactionApiContractTest {
     @Test public void voidedReplayRemainsVoidedAndUtcFractionsRoundTrip() {
         TransactionResponse response = json.fromJson("{\"transactionId\":\"id\",\"transactionType\":\"INCOME\",\"amountMinor\":5,"
                 + "\"occurredAt\":\"2026-11-07T08:45:00.123456Z\",\"status\":\"VOIDED\",\"voidedAt\":\"2026-11-08T00:00:00Z\"}", TransactionResponse.class);
-        FinanceBook.Transaction domain = response.domain();
+        Transaction domain = response.domain();
         assertEquals("VOIDED", domain.status);
         assertEquals("2026-11-08T00:00:00Z", domain.voidedAt);
         assertEquals("2026-11-07T08:45:00.123Z", TransactionResponse.timestamp(domain.occurredAt));
@@ -57,7 +60,7 @@ public class TransactionApiContractTest {
         assertEquals("", domain.payee);
         for (String malformed : new String[]{"2026-11-07", "2026-11-07T08:45:00", "2026-02-30T08:45:00Z", "garbage"}) {
             try { TransactionResponse.parseTimestamp(malformed); fail("Accepted " + malformed); }
-            catch (FinanceBook.Failure expected) { assertEquals(FinanceBook.Problem.SERVER, expected.problem); }
+            catch (FinanceFailure expected) { assertEquals(FinanceProblem.SERVER, expected.problem); }
         }
     }
 }

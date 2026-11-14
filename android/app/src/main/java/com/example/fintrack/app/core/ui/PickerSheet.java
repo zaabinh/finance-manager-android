@@ -1,5 +1,9 @@
 package com.example.fintrack.app.core.ui;
 
+import com.example.fintrack.app.finance.domain.Category;
+import com.example.fintrack.app.finance.domain.TransactionType;
+import com.example.fintrack.app.finance.domain.Wallet;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.fintrack.R;
 import com.example.fintrack.app.category.model.CategoryIcons;
-import com.example.fintrack.app.finance.domain.FinanceBook;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,17 +37,17 @@ public final class PickerSheet {
     }
 
     /** Active wallets, minus excludeId (e.g. the other side of a transfer). */
-    public static List<Option> wallets(List<FinanceBook.Wallet> all, String excludeId) {
+    public static List<Option> wallets(List<Wallet> all, String excludeId) {
         List<Option> out = new ArrayList<>();
-        for (FinanceBook.Wallet w : all)
+        for (Wallet w : all)
             if (w.archivedAt == null && !w.id.equals(excludeId)) out.add(new Option(w.id, w.name, R.drawable.ic_wallet));
         return out;
     }
 
     /** Active categories of exactly the given type. */
-    public static List<Option> categories(List<FinanceBook.Category> all, FinanceBook.Type type) {
+    public static List<Option> categories(List<Category> all, TransactionType type) {
         List<Option> out = new ArrayList<>();
-        for (FinanceBook.Category c : all)
+        for (Category c : all)
             if (c.archivedAt == null && c.type == type) out.add(new Option(c.id, c.name, CategoryIcons.resource(c.iconKey), CategoryIcons.color(c.colorHex, c.type)));
         return out;
     }

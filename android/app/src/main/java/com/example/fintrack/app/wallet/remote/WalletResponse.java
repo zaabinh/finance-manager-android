@@ -1,6 +1,8 @@
 package com.example.fintrack.app.wallet.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
+
 import com.google.gson.annotations.SerializedName;
 
 /** Response DTO nhận dữ liệu Ví tiền trả về từ Server */
@@ -13,7 +15,7 @@ public class WalletResponse {
     public String name;
 
     @SerializedName("walletType")
-    public FinanceBook.WalletType walletType;
+    public WalletType walletType;
 
     @SerializedName("openingBalanceMinor")
     public long openingBalanceMinor;
@@ -25,13 +27,7 @@ public class WalletResponse {
     public String currencyCode, createdAt, updatedAt;
 
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
-    public FinanceBook.Wallet domain() {
-        FinanceBook.Wallet wallet = new FinanceBook.Wallet(walletId, name, openingBalanceMinor);
-        wallet.walletType = walletType;
-        wallet.serverBalanceMinor = balanceMinor;
-        wallet.archivedAt = archivedAt;
-        wallet.includeInAssets = includeInAssets;
-        wallet.sortOrder = sortOrder;
-        return wallet;
+    public Wallet domain() {
+        return new Wallet(walletId,name,openingBalanceMinor,walletType,archivedAt,includeInAssets,sortOrder,balanceMinor);
     }
 }

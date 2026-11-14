@@ -1,5 +1,7 @@
 package com.example.fintrack.app.settings.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -14,11 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.ui.LoginActivity;
 import com.example.fintrack.app.auth.util.PasswordValidator;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 import com.example.fintrack.app.core.network.Resource;
-import com.example.fintrack.app.core.session.SessionManager;
 import com.example.fintrack.app.user.viewmodel.UserViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -35,7 +37,6 @@ public class SettingSecurityActivity extends AppCompatActivity {
     private EditText etNewPassword;
     private EditText etConfirmPassword;
     private Button btnChangePassword;
-    private SessionManager sessionManager;
     private AuthViewModel authViewModel;
     private UserViewModel userViewModel;
 
@@ -44,9 +45,8 @@ public class SettingSecurityActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_security);
 
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
+        userViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(UserViewModel.class);
 
         initViews();
         setupObservers();
@@ -61,31 +61,30 @@ public class SettingSecurityActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        // Quan sát kết quả Đăng xuất thiết bị hiện tại
-        authViewModel.getLogoutResult().observe(this, resource -> {
+        // Quan sát kết quả Đăng xuất thiết bị hiện tại (sự kiện một lần; AuthViewModel đã xóa phiên local)
+        authViewModel.getLogoutResult().observe(this, event -> {
+            Resource<Void> resource = event == null ? null : event.getContentIfNotHandled();
             if (resource == null) return;
             if (resource.getStatus() == Resource.Status.SUCCESS) {
-                sessionManager.clearSession();
                 Toast.makeText(this, R.string.msg_logged_out_device, Toast.LENGTH_SHORT).show();
                 redirectToLogin();
             } else if (resource.getStatus() == Resource.Status.ERROR) {
                 // Đăng xuất local vẫn được thực hiện, nhưng thông báo rõ trạng thái server
-                sessionManager.clearSession();
-                String msg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.msg_logged_out_device);
+                String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.msg_logged_out_device);
                 Toast.makeText(this, "Đã đăng xuất thiết bị local. (" + msg + ")", Toast.LENGTH_LONG).show();
                 redirectToLogin();
             }
         });
 
-        // Quan sát kết quả Vô hiệu hóa/Xóa tài khoản người dùng
-        userViewModel.getDeactivateAccountResult().observe(this, resource -> {
+        // Quan sát kết quả Vô hiệu hóa/Xóa tài khoản người dùng (sự kiện một lần; UserViewModel đã xóa phiên local khi thành công)
+        userViewModel.getDeactivateAccountResult().observe(this, event -> {
+            Resource<Void> resource = event == null ? null : event.getContentIfNotHandled();
             if (resource == null) return;
             if (resource.getStatus() == Resource.Status.SUCCESS) {
-                sessionManager.clearSession();
                 Toast.makeText(this, "Đã vô hiệu hóa tài khoản thành công.", Toast.LENGTH_LONG).show();
                 redirectToLogin();
             } else if (resource.getStatus() == Resource.Status.ERROR) {
-                String msg = resource.getMessage() != null ? resource.getMessage() : "Vô hiệu hóa tài khoản thất bại";
+                String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : "Vô hiệu hóa tài khoản thất bại";
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             }
         });
@@ -104,7 +103,7 @@ public class SettingSecurityActivity extends AppCompatActivity {
             btnLogoutThisDevice.setOnClickListener(v -> confirmAction(
                     getString(R.string.logout_this_device),
                     getString(R.string.msg_logged_out_device),
-                    () -> authViewModel.logout(sessionManager.getRefreshToken())
+                    () -> authViewModel.logout()
             ));
         }
 

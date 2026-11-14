@@ -1,6 +1,10 @@
 package com.example.fintrack.app.transaction.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.FinanceFailure;
+import com.example.fintrack.app.finance.domain.FinanceProblem;
+import com.example.fintrack.app.finance.domain.Transaction;
+import com.example.fintrack.app.finance.domain.TransactionType;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.text.ParsePosition;
@@ -34,7 +38,7 @@ public class TransactionResponse {
     public String payee;
 
     @SerializedName("transactionType")
-    public FinanceBook.Type transactionType;
+    public TransactionType transactionType;
 
     @SerializedName("amountMinor")
     public long amountMinor;
@@ -46,14 +50,10 @@ public class TransactionResponse {
     @SerializedName("updatedAt") public String updatedAt;
 
     /** Chuyển đổi Response DTO sang mô hình dữ liệu Domain */
-    public FinanceBook.Transaction domain() {
-        FinanceBook.Transaction value = new FinanceBook.Transaction(transactionId, transactionType, amountMinor, categoryId, walletId,
-                destinationWalletId, parseTimestamp(occurredAt),
-                note == null ? "" : note, payee == null ? "" : payee);
-        value.status = status == null ? "POSTED" : status;
-        value.voidedAt = voidedAt;
-        value.clientRequestId = clientRequestId;
-        return value;
+    public Transaction domain() {
+        return new Transaction(transactionId,transactionType,amountMinor,categoryId,walletId,destinationWalletId,
+                parseTimestamp(occurredAt),note == null ? "" : note,payee == null ? "" : payee,
+                status == null ? "POSTED" : status,voidedAt,clientRequestId);
     }
 
     public static String timestamp(long value) {
@@ -64,7 +64,7 @@ public class TransactionResponse {
 
     public static long parseTimestamp(String text) {
         if (text == null || !text.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"))
-            throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
+            throw new FinanceFailure(FinanceProblem.SERVER);
 
         String normalized = text.substring(0, 19) + ".";
         String fraction = text.length() > 20 ? text.substring(20, text.length() - 1) : "";
@@ -77,7 +77,7 @@ public class TransactionResponse {
         ParsePosition position = new ParsePosition(0);
         Date date = format.parse(normalized, position);
         if (date == null || position.getIndex() != normalized.length())
-            throw new FinanceBook.Failure(FinanceBook.Problem.SERVER);
+            throw new FinanceFailure(FinanceProblem.SERVER);
 
         return date.getTime();
     }

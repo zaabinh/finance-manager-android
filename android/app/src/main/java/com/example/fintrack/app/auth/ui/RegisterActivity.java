@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ import androidx.core.widget.TextViewCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.util.PasswordValidator;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
@@ -68,7 +71,7 @@ public class RegisterActivity extends AppCompatActivity {
             registeredEmail = savedInstanceState.getString(KEY_REGISTERED_EMAIL, "");
         }
 
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
         initViews();
         setupListeners();
@@ -173,7 +176,7 @@ public class RegisterActivity extends AppCompatActivity {
                 case ERROR:
                     btnRegister.setEnabled(true);
                     btnRegister.setText(R.string.btn_register);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.register_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.register_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 

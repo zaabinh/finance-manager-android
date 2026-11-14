@@ -6,7 +6,7 @@ import java.io.Serializable;
 public final class PendingWallet implements Serializable {
     private static final long serialVersionUID = 1L;
     public final String name;
-    public final String walletType; // FinanceBook.WalletType name, e.g. CASH
+    public final String walletType; // WalletType name, e.g. CASH
     public final long openingBalance;
     public final boolean includeInAssets;
     public final int sortOrder;

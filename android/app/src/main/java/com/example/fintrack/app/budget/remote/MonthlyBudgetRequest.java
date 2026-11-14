@@ -1,6 +1,7 @@
 package com.example.fintrack.app.budget.remote;
 
-import com.example.fintrack.app.finance.domain.FinanceBook;
+import com.example.fintrack.app.finance.domain.Budget;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +16,8 @@ public class MonthlyBudgetRequest {
         Line(String categoryId, long limitMinor) { this.categoryId = categoryId; this.limitMinor = limitMinor; }
     }
 
-    public MonthlyBudgetRequest(String month, List<FinanceBook.Budget> lines) {
+    public MonthlyBudgetRequest(String month, List<Budget> lines) {
         this.month = month;
-        for (FinanceBook.Budget line : lines) categories.add(new Line(line.categoryId, line.limit));
+        for (Budget line : lines) categories.add(new Line(line.categoryId, line.limit));
     }
 }

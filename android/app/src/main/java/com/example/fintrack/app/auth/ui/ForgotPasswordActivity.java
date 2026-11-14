@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
 
 /**
@@ -43,7 +46,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         }
 
         // Khởi tạo ViewModel
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
 
         initViews();       // Ánh xạ View từ XML
         setupListeners();  // Cài đặt sự kiện click cho các nút
@@ -95,7 +98,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     // Gửi yêu cầu thất bại -> Bật lại nút và hiển thị lỗi
                     btnSend.setEnabled(true);
                     btnSend.setText(R.string.btn_send);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.forgot_password_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.forgot_password_failed);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     break;
 

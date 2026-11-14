@@ -1,5 +1,7 @@
 package com.example.fintrack.app.auth.ui;
 
+import com.example.fintrack.app.core.network.ErrorMapper;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -18,13 +20,11 @@ import androidx.core.splashscreen.SplashScreen;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.fintrack.R;
+import com.example.fintrack.app.FintrackApplication;
 import com.example.fintrack.app.auth.util.PasswordToggleHelper;
 import com.example.fintrack.app.auth.viewmodel.AuthViewModel;
-import com.example.fintrack.app.core.session.SessionManager;
+import com.example.fintrack.app.core.session.SessionSnapshot;
 import com.example.fintrack.app.home.ui.HomeDashboardActivity;
-import com.example.fintrack.app.user.remote.UserProfileResponse;
-import com.example.fintrack.app.user.viewmodel.UserViewModel;
-import com.example.fintrack.app.core.network.Resource;
 
 /**
  * Màn hình đăng nhập người dùng.
@@ -42,13 +42,9 @@ public class LoginActivity extends AppCompatActivity {
     // States & Controllers
     private boolean isPasswordVisible = false;
     private AuthViewModel authViewModel;
-    private UserViewModel userViewModel;
-    private SessionManager sessionManager;
     private static final String KEY_PENDING_VERIFICATION_EMAIL = "key_pending_verification_email";
     // Email the last resend-verification request was sent for; survives rotation while the request runs.
     private String pendingVerificationEmail;
-    private boolean onboardingCompletedAfterLogin;
-    private boolean awaitingLoginProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,28 +52,22 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Chuyển hướng ngay nếu đã đăng nhập trước đó
-        sessionManager = SessionManager.getInstance(getApplicationContext());
-        if (sessionManager.isLoggedIn() && !TextUtils.isEmpty(sessionManager.getUserId())) {
+        SessionSnapshot session = FintrackApplication.container(this).sessionStore().current();
+        if (session.loggedIn && !TextUtils.isEmpty(session.userId)) {
             // Chuyển sang đăng nhập nếu đã setup
-            Class<?> nextActivity = sessionManager.isSetupCompleted()
-                    ? HomeDashboardActivity.class
-                    : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
-
-            Intent intent = new Intent(this, nextActivity);
-            startActivity(intent);
+            startActivity(new Intent(this, destination(session.setupCompleted)));
             finish();
             return;
-        } else if (sessionManager.isLoggedIn()) {
-            // Discard a partially saved session if profile loading did not finish after login.
-            sessionManager.clearSession();
         }
 
         setContentView(R.layout.activity_auth_login);
         if (savedInstanceState != null)
             pendingVerificationEmail = savedInstanceState.getString(KEY_PENDING_VERIFICATION_EMAIL);
 
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        authViewModel = new ViewModelProvider(this, FintrackApplication.container(this).viewModelFactory()).get(AuthViewModel.class);
+        // Discard a partially saved session if profile loading did not finish after login. A login that is
+        // still running in the retained ViewModel (Activity recreated) is left alone.
+        authViewModel.discardIncompleteSession();
 
         initViews();
         setupListeners();
@@ -130,19 +120,9 @@ public class LoginActivity extends AppCompatActivity {
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
 
-                    // Đăng nhập thành công: Lưu phiên làm việc và chuyển màn hình
-                    if (resource.getData() != null && resource.getData().getToken() != null
-                            && !TextUtils.isEmpty(resource.getData().getToken().getAccessToken())) {
-                        var login = resource.getData();
-                        onboardingCompletedAfterLogin = login.isOnboardingCompleted();
-                        awaitingLoginProfile = true;
-                        sessionManager.saveAuthToken(
-                                login.getToken().getAccessToken(),
-                                login.getToken().getRefreshToken()
-                        );
-                        sessionManager.setSetupCompleted(onboardingCompletedAfterLogin);
-                        userViewModel.fetchProfile();
-                    } else {
+                    // Đăng nhập thành công: AuthViewModel lưu phiên làm việc, tải hồ sơ rồi phát sự kiện chuyển màn hình
+                    if (resource.getData() == null || resource.getData().getToken() == null
+                            || TextUtils.isEmpty(resource.getData().getToken().getAccessToken())) {
                         Toast.makeText(this, R.string.login_response_invalid, Toast.LENGTH_LONG).show();
                     }
                     break;
@@ -150,9 +130,9 @@ public class LoginActivity extends AppCompatActivity {
                 case ERROR:
                     btnLogin.setEnabled(true);
                     btnLogin.setText(R.string.btn_login);
-                    String errorMsg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.login_failed);
+                    String errorMsg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.login_failed);
 
-                    if ("AUTH_EMAIL_NOT_VERIFIED".equals(errorMsg)) {
+                    if ("AUTH_EMAIL_NOT_VERIFIED".equals(resource.getError().code)) {
                         promptResendVerification(etUsernameOrEmail.getText().toString().trim());
                     } else {
                         Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
@@ -166,28 +146,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        userViewModel.getProfileResult().observe(this, resource -> {
-            if (!awaitingLoginProfile || resource == null) return;
-            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                UserProfileResponse profile = resource.getData();
-                sessionManager.saveUserProfile(profile.getId(), profile.getEmail(), profile.getDisplayName());
-                awaitingLoginProfile = false;
-                Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
-                Class<?> nextActivity = onboardingCompletedAfterLogin
-                        ? HomeDashboardActivity.class
-                        : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
-                Intent intent = new Intent(LoginActivity.this, nextActivity);
-                startActivity(intent);
-                finish();
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                awaitingLoginProfile = false;
-                sessionManager.clearSession();
-                btnLogin.setEnabled(true);
-                btnLogin.setText(R.string.btn_login);
-                String message = resource.getMessage() != null
-                        ? resource.getMessage() : getString(R.string.login_failed);
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            }
+        // Sự kiện một lần: phiên và hồ sơ đã được lưu. Lỗi tải hồ sơ đi qua getLoginResult() ở trên.
+        authViewModel.getLoginNavigation().observe(this, event -> {
+            AuthViewModel.LoginDestination destination = event == null ? null : event.getContentIfNotHandled();
+            if (destination == null) return;
+            Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(LoginActivity.this, destination(destination == AuthViewModel.LoginDestination.HOME)));
+            finish();
         });
 
         authViewModel.getResendVerificationResult().observe(this, resource -> {
@@ -206,7 +171,7 @@ public class LoginActivity extends AppCompatActivity {
                 case ERROR:
                     if (pendingVerificationEmail == null) break;
                     pendingVerificationEmail = null;
-                    String msg = resource.getMessage() != null ? resource.getMessage() : getString(R.string.verify_resend_failed);
+                    String msg = ErrorMapper.text(this, resource.getError()) != null ? ErrorMapper.text(this, resource.getError()) : getString(R.string.verify_resend_failed);
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                     break;
                 case LOADING:
@@ -214,6 +179,10 @@ public class LoginActivity extends AppCompatActivity {
                     break;
             }
         });
+    }
+
+    private static Class<?> destination(boolean setupCompleted) {
+        return setupCompleted ? HomeDashboardActivity.class : com.example.fintrack.app.setup.ui.SetupWelcomeActivity.class;
     }
 
     /**
