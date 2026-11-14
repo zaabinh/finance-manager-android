@@ -24,6 +24,7 @@ env:
 jobs:
   test:
     name: Test merged commit
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
@@ -33,6 +34,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - name: Validate deployment before publishing
+        working-directory: .
+        run: |
+          bash -n deploy/staging/deploy.sh
+          python3 -m unittest discover -s deploy/staging/tests -p 'test_*.py' -v
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -44,6 +50,7 @@ jobs:
 
   image:
     name: Build and push image
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -69,6 +76,7 @@ jobs:
 
   deploy:
     name: Deploy to staging
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
     needs: image
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -92,11 +100,11 @@ jobs:
         # Pinned host key + key-only auth; the server allows this user to run only deploy.sh via sudo.
         run: >
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes
-          "$SSH_USER@$SSH_HOST" "sudo /srv/dong/deploy.sh ${{ github.sha }}"
+          "$SSH_USER@$SSH_HOST" "sudo /usr/local/sbin/dong-deploy-staging ${{ github.sha }}"
       - name: Public readiness check
         run: |
           for i in $(seq 1 12); do
-            curl -fsS https://api-staging-dongfinance.zaabinh.id.vn/actuator/health/readiness | grep -q '"status":"UP"' && exit 0
+            curl -fsS --connect-timeout 5 --max-time 10 https://api-staging-dongfinance.zaabinh.id.vn/actuator/health/readiness | grep -q '"status":"UP"' && exit 0
             sleep 5
           done
           echo "Staging is not ready through Cloudflare" >&2; exit 1
