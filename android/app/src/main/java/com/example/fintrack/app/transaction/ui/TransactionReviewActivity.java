@@ -6,6 +6,7 @@ import com.example.fintrack.app.finance.domain.FinanceFailure;
 import com.example.fintrack.app.finance.domain.Transaction;
 import com.example.fintrack.app.finance.domain.TransactionType;
 import com.example.fintrack.app.finance.domain.Wallet;
+import com.example.fintrack.app.finance.domain.WalletType;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -37,13 +38,14 @@ import java.util.UUID;
 public final class TransactionReviewActivity extends FinanceActivity {
     private static final String STATE_ID = "id", STATE_CATEGORY = "category", STATE_WALLET = "wallet",
             STATE_PAYEE = "payee", STATE_DATE = "date", STATE_NOTE = "note", STATE_APPLIED = "applied",
-            STATE_OCR_DATE = "ocrDate", STATE_OCR_CATEGORY = "ocrCategory", STATE_ITEM_COUNT = "itemCount";
+            STATE_OCR_DATE = "ocrDate", STATE_OCR_CATEGORY = "ocrCategory", STATE_OCR_WALLET = "ocrWallet",
+            STATE_ITEM_COUNT = "itemCount";
 
     /** Receipt image URIs (strings); one screen reviews the image at EXTRA_INDEX, then opens the next. */
     public static final String EXTRA_IMAGES = "images", EXTRA_INDEX = "index";
     private ArrayList<String> images;
     private int index;
-    private String id = UUID.randomUUID().toString(), category, wallet, payee = "", note = "", ocrCategory;
+    private String id = UUID.randomUUID().toString(), category, wallet, payee = "", note = "", ocrCategory, ocrWalletHint;
     private long date = System.currentTimeMillis();
     private Long ocrDate = null;
     private int itemCount = 0;
@@ -70,6 +72,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
             applied = saved.getBoolean(STATE_APPLIED);
             if (saved.containsKey(STATE_OCR_DATE)) ocrDate = saved.getLong(STATE_OCR_DATE);
             ocrCategory = saved.getString(STATE_OCR_CATEGORY);
+            ocrWalletHint = saved.getString(STATE_OCR_WALLET);
             itemCount = saved.getInt(STATE_ITEM_COUNT, 0);
         }
 
@@ -97,7 +100,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
 
         // Thiết lập sự kiện chọn danh mục, ví, thời gian, cửa hàng và ghi chú
         binding.fieldCategory.setOnClickListener(view -> FinanceUi.category(this, TransactionType.EXPENSE, value -> { category = value; render(); }));
-        binding.fieldWallet.setOnClickListener(view -> FinanceUi.wallet(this, value -> { wallet = value; render(); }));
+        binding.fieldWallet.setOnClickListener(view -> FinanceUi.wallet(this, value -> { wallet = value; ocrWalletHint = null; render(); }));
         binding.fieldDate.setOnClickListener(view -> FinanceUi.dateTime(this, date, value -> { date = value; ocrDate = value; render(); }));
         binding.fieldStore.setOnClickListener(view -> {
             EditText edit = new EditText(this);
@@ -173,6 +176,10 @@ public final class TransactionReviewActivity extends FinanceActivity {
                     ocrCategory = d.categoryHint;
                     resolveCategory(d.categoryHint);
                 }
+                if (d.walletHint != null) {
+                    ocrWalletHint = d.walletHint;
+                    resolveWallet(d.walletHint);
+                }
                 if (d.note != null && !d.note.isEmpty() && note.isEmpty()) {
                     note = d.note;
                 }
@@ -211,6 +218,40 @@ public final class TransactionReviewActivity extends FinanceActivity {
         }
     }
 
+    private void resolveWallet(String walletHint) {
+        if (wallet != null || book == null || walletHint == null) return;
+        String normalizedHint = walletHint.toLowerCase().trim();
+
+        // 1. Tìm ví có tên chứa hint (VD: "momo", "vnpay", "techcombank", "vietcombank", "tiền mặt")
+        for (Wallet w : book.wallets()) {
+            if (w.archivedAt != null) continue;
+            String name = w.name.toLowerCase();
+            if (name.contains(normalizedHint) || normalizedHint.contains(name)) {
+                wallet = w.id;
+                return;
+            }
+        }
+
+        // 2. Phân loại theo WalletType
+        if ("cash".equals(normalizedHint)) {
+            for (Wallet w : book.wallets()) {
+                if (w.archivedAt != null) continue;
+                if (w.walletType == WalletType.CASH) {
+                    wallet = w.id;
+                    return;
+                }
+            }
+        } else if ("bank".equals(normalizedHint)) {
+            for (Wallet w : book.wallets()) {
+                if (w.archivedAt != null) continue;
+                if (w.walletType == WalletType.BANK) {
+                    wallet = w.id;
+                    return;
+                }
+            }
+        }
+    }
+
     @Override protected void render() {
         FinanceUi.visible(binding.cardReceiptPreview, !unreadable && !reading);
         FinanceUi.visible(binding.groupReviewFields, !unreadable && !reading);
@@ -235,6 +276,9 @@ public final class TransactionReviewActivity extends FinanceActivity {
         if (book != null) {
             if (category == null && ocrCategory != null) {
                 resolveCategory(ocrCategory);
+            }
+            if (wallet == null && ocrWalletHint != null) {
+                resolveWallet(ocrWalletHint);
             }
             if (wallet == null && !book.wallets().isEmpty()) {
                 wallet = book.wallets().get(0).id;
@@ -268,6 +312,11 @@ public final class TransactionReviewActivity extends FinanceActivity {
         // Ví tiền
         Wallet walletObj = book != null ? book.wallet(wallet) : null;
         binding.tvWalletValue.setText(walletObj == null ? "" : walletObj.name);
+        if (ocrWalletHint != null) {
+            binding.tvWalletLabel.setText(R.string.receipt_wallet_suggested_label);
+        } else {
+            binding.tvWalletLabel.setText(R.string.transaction_wallet_label);
+        }
 
         // Ghi chú
         binding.tvNoteValue.setText(note.isEmpty() ? getString(R.string.transaction_note_hint) : note);
@@ -351,6 +400,7 @@ public final class TransactionReviewActivity extends FinanceActivity {
         out.putBoolean(STATE_APPLIED, applied);
         if (ocrDate != null) out.putLong(STATE_OCR_DATE, ocrDate);
         if (ocrCategory != null) out.putString(STATE_OCR_CATEGORY, ocrCategory);
+        if (ocrWalletHint != null) out.putString(STATE_OCR_WALLET, ocrWalletHint);
         out.putInt(STATE_ITEM_COUNT, itemCount);
     }
 }

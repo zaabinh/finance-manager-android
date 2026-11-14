@@ -124,6 +124,7 @@
     <string name="receipt_amount_label">Số tiền trên hóa đơn</string>
     <string name="receipt_category_suggested_label">Danh mục (gợi ý)</string>
     <string name="receipt_date_suggested_label">Thời gian (gợi ý)</string>
+    <string name="receipt_wallet_suggested_label">Ví thanh toán (gợi ý)</string>
     <string name="receipt_confirm_save">Xác nhận &amp; lưu</string>
     <string name="receipt_add_more">Chụp thêm hóa đơn</string>
     <string name="receipt_rescan">Quét lại</string>

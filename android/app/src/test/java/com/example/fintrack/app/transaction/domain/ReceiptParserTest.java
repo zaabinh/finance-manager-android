@@ -149,4 +149,44 @@ public class ReceiptParserTest {
         assertEquals(0, draft.amount);
         assertNull(draft.date);
     }
+
+    // === Các bài test trích xuất phương thức / Ví thanh toán (Wallet Prediction) ===
+
+    @Test
+    public void extractsCashWalletHintWhenPaidByCash() {
+        String receipt = "Highlands Coffee\n" +
+                "Ngày: 26/10/2026 15:45\n" +
+                "TỔNG CỘNG: 65.000 đ\n" +
+                "Hình thức TT: Tiền mặt\n" +
+                "Tiền khách đưa: 100.000 đ\n" +
+                "Tiền thừa: 35.000 đ";
+
+        TransactionParser.Draft draft = TransactionParser.parse(receipt);
+        assertEquals("cash", draft.walletHint);
+    }
+
+    @Test
+    public void extractsBankWalletHintWhenPaidByCardOrTransfer() {
+        String receipt = "Nhà hàng Pizza 4P's\n" +
+                "Ngày: 10/11/2026 19:30\n" +
+                "Tổng tiền: 450.000 VND\n" +
+                "Phương thức thanh toán: Quẹt thẻ POS (Thẻ VISA)";
+
+        TransactionParser.Draft draft = TransactionParser.parse(receipt);
+        assertEquals("bank", draft.walletHint);
+    }
+
+    @Test
+    public void extractsSpecificBankOrEWalletHintWhenBrandMentioned() {
+        String receiptMomo = "Cửa hàng tiện lợi Circle K\n" +
+                "Ngày: 01/11/2026 12:00\n" +
+                "Tổng cộng: 55.000 đ\n" +
+                "Thanh toán qua ví điện tử MoMo";
+        assertEquals("momo", TransactionParser.parse(receiptMomo).walletHint);
+
+        String receiptTechcombank = "Quán cơm Tấm Sài Gòn\n" +
+                "Tổng thanh toán: 40.000 đ\n" +
+                "Hình thức: Chuyển khoản Techcombank";
+        assertEquals("techcombank", TransactionParser.parse(receiptTechcombank).walletHint);
+    }
 }

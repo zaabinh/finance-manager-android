@@ -1,10 +1,12 @@
 package com.example.fintrack.app.ocr.ui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -14,8 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
@@ -29,10 +34,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Màn hình chụp hóa đơn OCR bằng CameraX trực tiếp (In-App Live Viewfinder).
- * Cung cấp khung hình căn chỉnh thời gian thực, bật/tắt đèn Flash, chụp nhanh và chuyển sang xem lại.
+ * Cung cấp: Khung ngắm căn chỉnh thời gian thực, Chạm để lấy nét (Tap-to-Focus),
+ * bật/tắt đèn Flash trợ sáng, chụp nhanh và chuyển sang xem lại.
  */
 public class OcrCameraActivity extends AppCompatActivity {
 
@@ -82,6 +89,7 @@ public class OcrCameraActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setupListeners();
+        setupTapToFocus();
         checkPermissionAndStartCamera();
     }
 
@@ -100,6 +108,55 @@ public class OcrCameraActivity extends AppCompatActivity {
         });
 
         binding.btnFlash.setOnClickListener(v -> toggleTorch());
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupTapToFocus() {
+        binding.viewFinder.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                float x = event.getX();
+                float y = event.getY();
+
+                if (camera != null) {
+                    try {
+                        MeteringPointFactory factory = binding.viewFinder.getMeteringPointFactory();
+                        MeteringPoint point = factory.createPoint(x, y);
+                        FocusMeteringAction action = new FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                                .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                                .build();
+                        camera.getCameraControl().startFocusAndMetering(action);
+                        showFocusIndicator(x, y);
+                    } catch (Exception ignored) {}
+                }
+                v.performClick();
+                return true;
+            }
+            return true;
+        });
+    }
+
+    private void showFocusIndicator(float x, float y) {
+        View indicator = binding.viewFocusIndicator;
+        if (indicator == null) return;
+
+        indicator.setX(x - indicator.getWidth() / 2f);
+        indicator.setY(y - indicator.getHeight() / 2f);
+        indicator.setVisibility(View.VISIBLE);
+        indicator.setScaleX(1.3f);
+        indicator.setScaleY(1.3f);
+        indicator.setAlpha(1.0f);
+
+        indicator.animate()
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setDuration(200)
+                .withEndAction(() -> indicator.animate()
+                        .alpha(0f)
+                        .setDuration(350)
+                        .setStartDelay(600)
+                        .withEndAction(() -> indicator.setVisibility(View.GONE))
+                        .start())
+                .start();
     }
 
     private void checkPermissionAndStartCamera() {

@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 
 /**
  * Trình phân tích văn bản hóa đơn OCR tiếng Việt và quốc tế.
- * Trích xuất: Tổng tiền, Cửa hàng (Merchant/Payee), Thời gian (Date), Danh mục gợi ý (Category prediction), và Ghi chú (Note).
+ * Trích xuất: Tổng tiền, Cửa hàng (Merchant/Payee), Thời gian (Date),
+ * Danh mục gợi ý (Category prediction), Ví thanh toán gợi ý (Wallet prediction), và Ghi chú (Note).
  * Nguyên tắc thận trọng: Tổng tiền không rõ ràng hoặc gây tranh chấp luôn để trống và yêu cầu người dùng xác nhận.
  */
 public final class TransactionParser {
@@ -25,6 +26,7 @@ public final class TransactionParser {
         public final String payee;
         public final Long date; // Epoch millis hoặc null nếu không nhận diện được
         public final String categoryHint; // ID danh mục: food, transport, shopping, bills, other-expense
+        public final String walletHint; // Gợi ý ví/nguồn tiền: cash, bank, momo, vnpay, techcombank,...
         public final String note; // Nội dung ghi chú / tóm tắt các món
         public final int itemCount; // Số lượng mặt hàng ước tính
         public final boolean amountUncertain;
@@ -34,7 +36,7 @@ public final class TransactionParser {
 
         // Constructor tương thích ngược cho các phiên bản và kiểm thử trước
         public Draft(long amount, String payee) {
-            this(amount, payee, null, null, "", 0,
+            this(amount, payee, null, null, null, "", 0,
                     amount <= 0,
                     payee == null || payee.trim().isEmpty(),
                     true,
@@ -43,10 +45,17 @@ public final class TransactionParser {
 
         public Draft(long amount, String payee, Long date, String categoryHint, String note, int itemCount,
                      boolean amountUncertain, boolean payeeUncertain, boolean dateUncertain, boolean categoryUncertain) {
+            this(amount, payee, date, categoryHint, null, note, itemCount,
+                    amountUncertain, payeeUncertain, dateUncertain, categoryUncertain);
+        }
+
+        public Draft(long amount, String payee, Long date, String categoryHint, String walletHint, String note, int itemCount,
+                     boolean amountUncertain, boolean payeeUncertain, boolean dateUncertain, boolean categoryUncertain) {
             this.amount = amount;
             this.payee = payee != null ? payee : "";
             this.date = date;
             this.categoryHint = categoryHint;
+            this.walletHint = walletHint;
             this.note = note != null ? note : "";
             this.itemCount = itemCount;
             this.amountUncertain = amountUncertain;
@@ -58,7 +67,7 @@ public final class TransactionParser {
 
     public static Draft parse(String raw) {
         if (raw == null || raw.trim().isEmpty()) {
-            return new Draft(0, "", null, null, "", 0, true, true, true, true);
+            return new Draft(0, "", null, null, null, "", 0, true, true, true, true);
         }
 
         String[] lines = raw.split("\\r?\\n");
@@ -151,7 +160,10 @@ public final class TransactionParser {
         // 4. Dự đoán Danh mục (Category Prediction)
         String categoryHint = predictCategory(raw, payee);
 
-        // 5. Trích xuất Ghi chú & Số lượng món (Items & Note)
+        // 5. Dự đoán Ví thanh toán (Wallet Prediction)
+        String walletHint = extractWalletHint(lines, raw);
+
+        // 6. Trích xuất Ghi chú & Số lượng món (Items & Note)
         ExtractedItems items = extractItemsAndNote(lines, payee, totalLineIndex);
 
         boolean amountUncertain = (amount <= 0);
@@ -159,7 +171,7 @@ public final class TransactionParser {
         boolean dateUncertain = (date == null);
         boolean categoryUncertain = (categoryHint == null);
 
-        return new Draft(amount, payee, date, categoryHint, items.note, items.count,
+        return new Draft(amount, payee, date, categoryHint, walletHint, items.note, items.count,
                 amountUncertain, payeeUncertain, dateUncertain, categoryUncertain);
     }
 
@@ -341,6 +353,56 @@ public final class TransactionParser {
         if (otherScore > maxScore) { bestCategory = "other-expense"; }
 
         return bestCategory;
+    }
+
+    private static String extractWalletHint(String[] lines, String raw) {
+        String folded = fold(raw);
+
+        // 1. Nhận diện các ví điện tử / ngân hàng số phổ biến tại VN
+        if (folded.contains("momo")) return "momo";
+        if (folded.contains("zalopay")) return "zalopay";
+        if (folded.contains("vnpay") || folded.contains("vietqr")) return "vnpay";
+        if (folded.contains("shopeepay")) return "shopeepay";
+        if (folded.contains("viettelpay") || folded.contains("viettel money")) return "viettelpay";
+
+        // Tên ngân hàng cụ thể
+        if (folded.contains("techcombank")) return "techcombank";
+        if (folded.contains("vietcombank")) return "vietcombank";
+        if (folded.contains("mbbank") || folded.contains("mb bank")) return "mbbank";
+        if (folded.contains("bidv")) return "bidv";
+        if (folded.contains("vietinbank")) return "vietinbank";
+        if (folded.contains("acb")) return "acb";
+        if (folded.contains("tpbank")) return "tpbank";
+        if (folded.contains("vpbank")) return "vpbank";
+
+        // 2. Nhận diện phương thức thanh toán tiền mặt (Cash)
+        for (String line : lines) {
+            String fLine = fold(line);
+            if (fLine.contains("tien mat") || fLine.contains("cash")) {
+                if (fLine.contains("pttt") || fLine.contains("hinh thuc") || fLine.contains("thanh toan")
+                        || fLine.contains("phuong thuc") || fLine.startsWith("tien mat") || fLine.startsWith("cash")) {
+                    return "cash";
+                }
+            }
+        }
+        if (folded.contains("thanh toan tien mat") || folded.contains("pttt: tien mat")
+                || folded.contains("hinh thuc: tien mat") || folded.contains("paid by cash")) {
+            return "cash";
+        }
+
+        // 3. Nhận diện thẻ ngân hàng / chuyển khoản / mã QR (Card / Bank)
+        for (String line : lines) {
+            String fLine = fold(line);
+            if (fLine.contains("the tin dung") || fLine.contains("the ghi no") || fLine.contains("the atm")
+                    || fLine.contains("the visa") || fLine.contains("mastercard") || fLine.contains("the pos")
+                    || fLine.contains("chuyen khoan") || fLine.contains("bank transfer") || fLine.contains("quet the")
+                    || fLine.contains("thanh toan the") || fLine.contains("the noi dia") || fLine.contains("the quoc te")
+                    || fLine.contains("quet qr") || fLine.contains("qr pay") || fLine.contains("ma qr") || fLine.contains("chuyen khoan:")) {
+                return "bank";
+            }
+        }
+
+        return null;
     }
 
     private static int countMatches(String text, String[] keywords) {

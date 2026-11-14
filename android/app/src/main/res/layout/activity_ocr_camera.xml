@@ -16,6 +16,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Ô chỉ báo lấy nét khi chạm (Tap-to-Focus) -->
+    <View
+        android:id="@+id/viewFocusIndicator"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/bg_focus_indicator"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Dark Scrim Dimmer Outside Viewfinder -->
     <View
         android:layout_width="0dp"
