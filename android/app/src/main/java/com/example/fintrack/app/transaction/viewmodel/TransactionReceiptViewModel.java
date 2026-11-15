@@ -34,17 +34,28 @@ public final class TransactionReceiptViewModel extends ViewModel {
     }
 
     public void read(Uri image) {
-        if (draft.getValue() != null) return;
-        draft.setValue(Resource.loading(null));
+        if (draft.getValue() != null && draft.getValue().getStatus() == Resource.Status.SUCCESS) return;
+        draft.postValue(Resource.loading(null));
         executors.computation().execute(() -> {
             try {
                 InputImage input = InputImage.fromFilePath(appContext, image);
                 recognizer.process(input).addOnSuccessListener(text -> {
-                    if (text.getText().trim().isEmpty()) draft.setValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null));
-                    else draft.setValue(Resource.success(TransactionParser.parse(text.getText())));
-                }).addOnFailureListener(error -> draft.setValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null)));
-            } catch (Exception error) { draft.postValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null)); }
+                    if (text == null || text.getText().trim().isEmpty()) {
+                        draft.postValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null));
+                    } else {
+                        TransactionParser.Draft parsed = TransactionParser.parse(text.getText());
+                        draft.postValue(Resource.success(parsed));
+                    }
+                }).addOnFailureListener(error -> draft.postValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null)));
+            } catch (Exception error) { 
+                draft.postValue(Resource.error(AppError.local(AppError.Category.DOMAIN, "OCR_UNREADABLE", null), null)); 
+            }
         });
+    }
+
+    public void rescan(Uri image) {
+        draft.setValue(null);
+        read(image);
     }
 
     @Override 
