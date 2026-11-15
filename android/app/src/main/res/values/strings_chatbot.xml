@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chatbot_title">Đồng Bot</string>
+    <string name="chatbot_subtitle">Trợ lý tài chính AI</string>
+    <string name="chatbot_status_online">Trực tuyến • Sẵn sàng hỗ trợ</string>
+    <string name="chatbot_input_hint">Hỏi Đồng hoặc nhập giao dịch…</string>
+    <string name="chatbot_clear_history">Xóa lịch sử chat</string>
+    <string name="chatbot_clear_confirm_title">Xóa cuộc trò chuyện?</string>
+    <string name="chatbot_clear_confirm_msg">Toàn bộ tin nhắn trước đây sẽ được xóa sạch. Bạn có chắc muốn tiếp tục?</string>
+    <string name="chatbot_clear_confirm_yes">Xóa lịch sử</string>
+    <string name="chatbot_clear_confirm_cancel">Hủy</string>
+    <string name="chatbot_action_create_tx">Tạo giao dịch ngay</string>
+    <string name="chatbot_action_view_budget">Xem chi tiết ngân sách</string>
+    <string name="chatbot_action_view_report">Mở báo cáo tài chính</string>
+    <string name="chatbot_quick_action">Trợ lý AI</string>
+    <string name="chatbot_typing">Đồng Bot đang soạn câu trả lời…</string>
+    <string name="chatbot_send">Gửi tin nhắn</string>
+    <string name="chatbot_welcome_message"><![CDATA[Chào bạn! Tôi là <b>Đồng Bot</b> — trợ lý tài chính thông minh của bạn. 🌿<br/><br/>Tôi có thể hỗ trợ bạn:<br/>• <b>Ghi chép giao dịch nhanh:</b> ví dụ <i>"vừa ăn trưa 45k"</i><br/>• <b>Kiểm tra tình hình tài chính:</b> số dư, hạn mức ngân sách<br/>• <b>Tư vấn tài chính:</b> quy tắc 50/30/20, quỹ khẩn cấp, mẹo tiết kiệm<br/><br/>Hôm nay bạn muốn tôi đồng hành điều gì nào?]]></string>
+
+    <!-- Quick Prompts -->
+    <string name="chatbot_prompt_budget">📊 Ngân sách tháng này?</string>
+    <string name="chatbot_prompt_balance">💰 Kiểm tra số dư ví</string>
+    <string name="chatbot_prompt_sample_tx">🍜 Vừa ăn trưa 45k</string>
+    <string name="chatbot_prompt_50_30_20">💡 Quy tắc 50/30/20 là gì?</string>
+    <string name="chatbot_prompt_emergency">🛡️ Cách lập quỹ khẩn cấp?</string>
+    <string name="chatbot_prompt_saving">📈 Mẹo tiết kiệm hiệu quả?</string>
+</resources>

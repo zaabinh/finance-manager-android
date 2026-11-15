@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app_canvas"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <!-- Top Material Toolbar matching project design system -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarChatbot"
+        style="@style/Widget.App.Toolbar.Back"
+        app:title="@string/chatbot_title"
+        app:subtitle="@string/chatbot_status_online">
+
+        <!-- Nút xóa lịch sử trò chuyện đặt bên phải Toolbar -->
+        <ImageButton
+            android:id="@+id/btnClearHistory"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="@dimen/spacing_8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/chatbot_clear_history"
+            android:src="@drawable/ic_trash_red"
+            app:tint="@color/text_secondary" />
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <!-- Top Divider Line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider_light" />
+
+    <!-- Chat Messages RecyclerView (fills remaining space) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChatMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/spacing_8"
+        android:paddingBottom="@dimen/spacing_8"
+        tools:listitem="@layout/item_chat_bot" />
+
+    <!-- Typing Indicator -->
+    <LinearLayout
+        android:id="@+id/layoutTypingIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/spacing_16"
+        android:paddingVertical="@dimen/spacing_4"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_sparkles"
+            app:tint="@color/color_primary" />
+
+        <TextView
+            android:id="@+id/tvTypingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_8"
+            android:text="@string/chatbot_typing"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="italic" />
+    </LinearLayout>
+
+    <!-- Quick Prompt Suggestions Horizontal Scroll -->
+    <HorizontalScrollView
+        android:id="@+id/scrollQuickPrompts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/spacing_12"
+        android:paddingVertical="@dimen/spacing_8"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/layoutQuickPrompts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chipPromptBudget"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_budget"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipPromptBalance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_balance"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipPromptSampleTx"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_sample_tx"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipPrompt503020"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_50_30_20"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipPromptEmergency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_8"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_emergency"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipPromptSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_prompt_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:text="@string/chatbot_prompt_saving"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Divider above Input Bar -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider_light" />
+
+    <!-- Bottom Message Input Bar -->
+    <LinearLayout
+        android:id="@+id/layoutInputBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_card_surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/spacing_12"
+        android:paddingVertical="@dimen/spacing_12">
+
+        <!-- Voice Input Mic Button -->
+        <ImageButton
+            android:id="@+id/btnVoiceInput"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/quick_action_voice"
+            android:padding="10dp"
+            android:src="@drawable/ic_mic"
+            app:tint="@color/color_primary" />
+
+        <!-- Text Input Field -->
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/spacing_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_field"
+            android:hint="@string/chatbot_input_hint"
+            android:imeOptions="actionSend"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLines="4"
+            android:minHeight="44dp"
+            android:paddingHorizontal="@dimen/spacing_16"
+            android:paddingVertical="10dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"
+            android:textSize="15sp" />
+
+        <!-- Send Message Button -->
+        <ImageButton
+            android:id="@+id/btnSend"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_avatar"
+            android:contentDescription="@string/chatbot_send"
+            android:padding="10dp"
+            android:src="@drawable/ic_send"
+            app:tint="@color/color_primary" />
+
+    </LinearLayout>
+
+</LinearLayout>

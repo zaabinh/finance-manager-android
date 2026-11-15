@@ -189,6 +189,11 @@ public final class FinanceUi {
                         public void onVoiceInputClick() {
                             activity.startActivity(new Intent(activity, com.example.fintrack.app.voice.ui.VoiceTransactionActivity.class));
                         }
+
+                        @Override
+                        public void onChatbotClick() {
+                            activity.startActivity(new Intent(activity, com.example.fintrack.app.chatbot.ui.ChatbotActivity.class));
+                        }
                     }
             );
             fabAdd.setOnClickListener(v -> fabHelper.showSpeedDial());

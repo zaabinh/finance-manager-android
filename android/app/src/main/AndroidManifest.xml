@@ -160,6 +160,12 @@
             android:name=".app.voice.ui.VoiceTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- AI Financial Chatbot Screen -->
+        <activity
+            android:name=".app.chatbot.ui.ChatbotActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
