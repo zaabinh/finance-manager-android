@@ -10,6 +10,7 @@ public class FabSpeedDialHelper {
         void onManualInputClick();
         void onOcrScanClick();
         void onVoiceInputClick();
+        void onChatbotClick();
     }
 
     private final View speedDialRoot;
@@ -17,6 +18,7 @@ public class FabSpeedDialHelper {
     private final View btnManualInput;
     private final View btnOcrScan;
     private final View btnVoiceInput;
+    private final View btnChatbotInput;
     private final View btnFabClose;
     private final OnSpeedDialActionListener listener;
 
@@ -26,6 +28,7 @@ public class FabSpeedDialHelper {
         this.btnManualInput = rootContainer.findViewById(R.id.btnManualInput);
         this.btnOcrScan = rootContainer.findViewById(R.id.btnOcrScan);
         this.btnVoiceInput = rootContainer.findViewById(R.id.btnVoiceInput);
+        this.btnChatbotInput = rootContainer.findViewById(R.id.btnChatbotInput);
         this.btnFabClose = rootContainer.findViewById(R.id.btnFabClose);
         this.listener = listener;
 
@@ -64,6 +67,15 @@ public class FabSpeedDialHelper {
                 hideSpeedDial();
                 if (listener != null) {
                     listener.onVoiceInputClick();
+                }
+            });
+        }
+
+        if (btnChatbotInput != null) {
+            btnChatbotInput.setOnClickListener(v -> {
+                hideSpeedDial();
+                if (listener != null) {
+                    listener.onChatbotClick();
                 }
             });
         }

@@ -175,6 +175,7 @@ public class HomeDashboardActivity extends AppCompatActivity {
             updateBalanceDisplay();
         });
         binding.flNotification.setOnClickListener(v -> startActivity(new Intent(this, NotificationActivity.class)));
+        binding.flChatbot.setOnClickListener(v -> startActivity(new Intent(this, com.example.fintrack.app.chatbot.ui.ChatbotActivity.class)));
         binding.btnActionRecord.setOnClickListener(v -> startActivity(new Intent(this, TransactionFormActivity.class)));
         binding.btnActionAddWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletAddActivity.class)));
         binding.btnActionScan.setOnClickListener(v -> startActivity(new Intent(this, TransactionImportActivity.class)));
