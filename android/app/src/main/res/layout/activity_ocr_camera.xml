@@ -6,7 +6,46 @@
     android:background="#121212"
     android:fitsSystemWindows="true">
 
-    <!-- Header Toolbar -->
+    <!-- CameraX Live Preview View -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Ô chỉ báo lấy nét khi chạm (Tap-to-Focus) -->
+    <View
+        android:id="@+id/viewFocusIndicator"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/bg_focus_indicator"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Dark Scrim Dimmer Outside Viewfinder -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#4D000000"
+        app:layout_constraintBottom_toTopOf="@id/frameReceiptTarget"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#4D000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frameReceiptTarget" />
+
+    <!-- Header Toolbar Overlay -->
     <RelativeLayout
         android:id="@+id/rlHeader"
         android:layout_width="match_parent"
@@ -36,31 +75,50 @@
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_title_section"
             android:textStyle="bold" />
+
+        <!-- Nút bật/tắt đèn Flash -->
+        <ImageView
+            android:id="@+id/btnFlash"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="6dp"
+            android:src="@drawable/ic_flash_off"
+            app:tint="@color/white" />
     </RelativeLayout>
 
-    <!-- Camera Target Receipt Frame Overlay -->
+    <!-- Camera Target Receipt Frame Overlay (Viewfinder) -->
     <FrameLayout
+        android:id="@+id/frameReceiptTarget"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="24dp"
+        android:layout_marginHorizontal="28dp"
         android:layout_marginVertical="32dp"
-        android:background="@drawable/bg_currency_box"
+        android:background="@drawable/bg_ocr_viewfinder"
         app:layout_constraintBottom_toTopOf="@id/bottomControls"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rlHeader">
 
-        <!-- Receipt Icon Placeholder in Frame -->
+        <!-- Receipt Guide Instructions -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_badge_neutral"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
 
             <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_receipt"
                 app:tint="@color/color_primary" />
@@ -68,18 +126,58 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Đặt hóa đơn vuông góc trong khung hình"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_body_secondary" />
+                android:text="Căn hóa đơn vuông góc trong khung"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
         </LinearLayout>
     </FrameLayout>
+
+    <!-- Giao diện khi chưa cấp quyền Camera -->
+    <LinearLayout
+        android:id="@+id/layoutPermissionDenied"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:background="@drawable/bg_currency_box"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomControls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_camera"
+            app:tint="@color/status_warning" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/ocr_camera_permission_needed"
+            android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRequestPermission"
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/btn_continue" />
+    </LinearLayout>
 
     <!-- Bottom Controls (Shutter Button, Gallery) -->
     <LinearLayout
         android:id="@+id/bottomControls"
         android:layout_width="match_parent"
         android:layout_height="120dp"
+        android:background="#99000000"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -91,9 +189,9 @@
             android:layout_height="48dp"
             android:layout_marginEnd="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@null"
+            android:contentDescription="@string/receipt_import_library"
             android:padding="12dp"
-            android:src="@drawable/ic_image_placeholder"
+            android:src="@drawable/ic_image"
             app:tint="@color/white" />
 
         <!-- Shutter Capture Button -->
@@ -102,18 +200,30 @@
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:background="@drawable/bg_fab_circle"
-            android:elevation="6dp">
+            android:clickable="true"
+            android:elevation="6dp"
+            android:focusable="true">
 
             <ImageView
+                android:id="@+id/ivShutterIcon"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_gravity="center"
-                android:contentDescription="@null"
+                android:contentDescription="@string/receipt_import_camera"
                 android:src="@drawable/ic_camera"
                 app:tint="@color/white" />
+
+            <ProgressBar
+                android:id="@+id/progressBarCapture"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/white"
+                android:visibility="gone" />
         </FrameLayout>
 
-        <!-- Dummy Spacer -->
+        <!-- Placeholder to balance the layout -->
         <View
             android:layout_width="48dp"
             android:layout_height="48dp"

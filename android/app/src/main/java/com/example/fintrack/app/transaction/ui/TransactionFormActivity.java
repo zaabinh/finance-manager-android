@@ -7,6 +7,7 @@ import com.example.fintrack.app.finance.domain.TransactionType;
 import com.example.fintrack.app.finance.domain.Wallet;
 import com.example.fintrack.app.finance.domain.WalletType;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -75,6 +76,23 @@ public final class TransactionFormActivity extends FinanceActivity {
         binding.fieldDestinationWallet.setOnClickListener(view -> chooseWallet(true));
         binding.fieldDate.setOnClickListener(view -> FinanceUi.dateTime(this, occurredAt, value -> { occurredAt = value; render(); }));
         binding.btnSaveTransaction.setOnClickListener(view -> save());
+
+        if (!editing) {
+            android.view.MenuItem ocrItem = binding.toolbarTransactionForm.getMenu().add(R.string.receipt_import_camera);
+            ocrItem.setIcon(R.drawable.ic_camera);
+            ocrItem.setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS);
+            ocrItem.setOnMenuItemClickListener(item -> {
+                startActivity(new Intent(this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class));
+                finish();
+                return true;
+            });
+            binding.btnQuickOcrScan.setOnClickListener(v -> {
+                startActivity(new Intent(this, com.example.fintrack.app.ocr.ui.OcrCameraActivity.class));
+                finish();
+            });
+        } else {
+            binding.btnQuickOcrScan.setVisibility(View.GONE);
+        }
         if (saved == null && !editing) {
             if (getIntent().hasExtra(EXTRA_AMOUNT)) {
                 long amount = getIntent().getLongExtra(EXTRA_AMOUNT, 0);
