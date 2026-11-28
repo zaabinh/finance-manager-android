@@ -34,6 +34,7 @@ public final class TransactionFormActivity extends FinanceActivity {
     public static final String EXTRA_PREFILL_WALLET_ID = "prefillWalletId";
     public static final String EXTRA_PREFILL_DESTINATION_WALLET_ID = "prefillDestinationWalletId";
     public static final String EXTRA_PREFILL_AMOUNT_MINOR = "prefillAmountMinor";
+    public static final String EXTRA_PREFILL_CATEGORY_ID = "prefillCategoryId";
     private String id, requestId, category, wallet, destination;
     private TransactionPrefill prefill;
     private long occurredAt = System.currentTimeMillis();
@@ -89,7 +90,8 @@ public final class TransactionFormActivity extends FinanceActivity {
         // Intent extras survive rotation, so re-parse until the form has loaded once.
         if (!editing && !initialized) prefill = TransactionPrefill.parse(getIntent().getStringExtra(EXTRA_PREFILL_TYPE),
                 getIntent().getStringExtra(EXTRA_PREFILL_WALLET_ID), getIntent().getStringExtra(EXTRA_PREFILL_DESTINATION_WALLET_ID),
-                getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null);
+                getIntent().hasExtra(EXTRA_PREFILL_AMOUNT_MINOR) ? getIntent().getLongExtra(EXTRA_PREFILL_AMOUNT_MINOR, 0) : null,
+                getIntent().getStringExtra(EXTRA_PREFILL_CATEGORY_ID));
     }
     private void selectType(TransactionType value) {
         if (model.saveLoading()) return;
@@ -161,6 +163,7 @@ public final class TransactionFormActivity extends FinanceActivity {
             } else if (prefill != null) {
                 TransactionPrefill resolved = prefill.resolve(book);
                 type = resolved.type; wallet = resolved.walletId; destination = resolved.destinationWalletId;
+                if (resolved.categoryId != null) category = resolved.categoryId;
                 if (resolved.amountMinor != null) binding.amountInput.etAmount.setText(Long.toString(resolved.amountMinor));
                 prefill = null;
             }

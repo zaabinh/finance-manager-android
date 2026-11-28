@@ -11,7 +11,18 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarVoice"
         style="@style/Widget.App.Toolbar.Back"
-        app:title="@string/voice_input_title" />
+        app:title="@string/voice_input_title">
+
+        <ImageButton
+            android:id="@+id/btnVoiceHelp"
+            android:layout_width="@dimen/touch_target_min"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/voice_help_title"
+            android:src="@drawable/ic_info"
+            app:tint="@color/text_primary" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -39,8 +50,9 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="480dp">
 
-                <!-- Instruction Card -->
+                <!-- Conversational Guidance Card -->
                 <LinearLayout
+                    android:id="@+id/cardInstruction"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_white"
@@ -48,17 +60,19 @@
                     android:padding="@dimen/spacing_16">
 
                     <TextView
+                        android:id="@+id/tvVoiceGuidance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/voice_input_subtitle"
+                        android:text="@string/voice_guidance_question"
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvRotatingHint"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_4"
-                        android:text="@string/voice_input_hint_example"
+                        android:text="@string/voice_rotating_hint_1"
                         android:textAppearance="@style/TextAppearance.App.BodySecondary"
                         android:textColor="@color/color_primary" />
                 </LinearLayout>
@@ -67,7 +81,7 @@
                 <FrameLayout
                     android:layout_width="220dp"
                     android:layout_height="220dp"
-                    android:layout_marginTop="@dimen/spacing_32">
+                    android:layout_marginTop="@dimen/spacing_24">
 
                     <!-- Outer Animated Pulse Ring -->
                     <View
@@ -123,6 +137,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_16"
+                    android:gravity="center"
                     android:text="@string/voice_state_idle"
                     android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
@@ -140,6 +155,72 @@
                     android:visibility="gone"
                     tools:text="&quot;Ăn trưa 45 nghìn&quot;"
                     tools:visibility="visible" />
+
+                <!-- Error fallback actions container (Shown on recognition error) -->
+                <LinearLayout
+                    android:id="@+id/layoutVoiceError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_16"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/tvVoiceErrorMessage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/voice_error_no_match"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/status_error" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnRetryOnError"
+                            style="@style/Widget.App.Button.Secondary"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_8"
+                            android:layout_weight="1"
+                            android:text="@string/voice_btn_retry" />
+
+                        <Button
+                            android:id="@+id/btnManualFromVoice"
+                            style="@style/Widget.App.Button.Primary"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/spacing_8"
+                            android:layout_weight="1"
+                            android:text="@string/voice_btn_manual" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnSystemSpeechFromError"
+                        style="@style/Widget.App.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/voice_btn_try_system_speech"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/tvVoiceTip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:gravity="center"
+                        android:text="@string/voice_hint_speak_clearly"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/text_secondary" />
+                </LinearLayout>
 
                 <!-- Permission Rationale Card (if mic permission not granted) -->
                 <LinearLayout
@@ -167,12 +248,125 @@
                         android:text="@string/voice_permission_grant" />
                 </LinearLayout>
 
+                <!-- Interactive Example Prompts (Tap to Try) -->
+                <LinearLayout
+                    android:id="@+id/layoutExamplePrompts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_20"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/voice_examples_header"
+                        android:textAppearance="@style/TextAppearance.App.Label"
+                        android:textColor="@color/text_secondary" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipPromptLunch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_lunch"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptCoffee"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_coffee"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptGas"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_gas"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptSalary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_salary"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptTransfer"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_transfer"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPromptYesterday"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_8"
+                                android:text="@string/voice_prompt_yesterday"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+
                 <!-- Parsed Result Card (Visible upon recognition) -->
                 <LinearLayout
                     android:id="@+id/cardRecognitionResult"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_24"
+                    android:layout_marginTop="@dimen/spacing_20"
                     android:background="@drawable/bg_card_white"
                     android:orientation="vertical"
                     android:padding="@dimen/spacing_16"
@@ -185,7 +379,69 @@
                         android:text="@string/voice_result_title"
                         android:textAppearance="@style/TextAppearance.App.TitleSection" />
 
-                    <!-- Type Selector -->
+                    <!-- Conversational Guidance & Supplement Prompt -->
+                    <LinearLayout
+                        android:id="@+id/layoutConversationalPrompt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:background="@drawable/bg_card_outlined"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_12"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ivConversationalIcon"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_mic"
+                                app:tint="@color/color_primary" />
+
+                            <TextView
+                                android:id="@+id/tvConversationalQuestion"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:layout_weight="1"
+                                android:text="Bạn đã chi bao nhiêu cho 'Ăn sáng'?"
+                                android:textAppearance="@style/TextAppearance.App.BodyPrimary"
+                                android:textColor="@color/color_primary"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvConversationalHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_4"
+                            android:text="Chạm nút dưới để nói số tiền (vd: '35 nghìn', '50k') hoặc chọn số tiền nhanh bên dưới:"
+                            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                            android:textColor="@color/text_secondary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSpeakSupplement"
+                            style="@style/Widget.App.Button.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="@dimen/spacing_8"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingHorizontal="@dimen/spacing_12"
+                            android:text="@string/voice_action_speak_amount"
+                            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                            app:icon="@drawable/ic_mic"
+                            app:iconSize="16dp"
+                            app:iconTint="@color/color_primary" />
+                    </LinearLayout>
+
+                    <!-- Type Selector (Chi tiêu, Thu nhập, Chuyển khoản) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/segmented_height"
@@ -205,6 +461,12 @@
                             style="@style/Widget.App.Button.Segment"
                             android:layout_marginStart="@dimen/spacing_4"
                             android:text="@string/transaction_type_income" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTypeTransfer"
+                            style="@style/Widget.App.Button.Segment"
+                            android:layout_marginStart="@dimen/spacing_4"
+                            android:text="@string/transaction_type_transfer" />
                     </LinearLayout>
 
                     <!-- Amount Field -->
@@ -230,6 +492,233 @@
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary"
                         android:textStyle="bold" />
 
+                    <!-- Notice when amount is missing from voice input -->
+                    <TextView
+                        android:id="@+id/tvAmountMissingNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:text="@string/voice_amount_missing_notice"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/color_primary"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <!-- Preset Amount Chips (Visible when amount is missing / 0) -->
+                    <HorizontalScrollView
+                        android:id="@+id/layoutAmountPresets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipPreset10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset20k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_20k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset30k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_30k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset50k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_50k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/color_primary"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/chipPreset100k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_100k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset200k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_200k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipPreset500k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_preset_500k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Quick Amount Adjustment Chips -->
+                    <HorizontalScrollView
+                        android:id="@+id/layoutAmountAdjustment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipAdd10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd20k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_20k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd50k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_50k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipMinus10k"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_minus_10k"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/chipAdd000"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_add_000"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/color_primary" />
+
+                            <TextView
+                                android:id="@+id/chipRemove0"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:text="@string/voice_chip_remove_0"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
                     <!-- Note / Payee Field -->
                     <TextView
                         android:layout_width="match_parent"
@@ -252,21 +741,224 @@
                         android:singleLine="true"
                         android:textAppearance="@style/TextAppearance.App.BodyPrimary" />
 
+                    <!-- Category Selector Row (Hidden for TRANSFER) -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultCategory"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12">
+
+                        <ImageView
+                            android:id="@+id/ivResultCategoryIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_category" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultCategoryLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_category_suggested_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultCategoryValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transaction_category_placeholder"
+                                tools:text="Ăn uống" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
+                    <!-- Quick Alternative Category Suggestion Chips -->
+                    <HorizontalScrollView
+                        android:id="@+id/scrollCategoryChips"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_8"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:id="@+id/layoutCategoryChips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/chipCategory1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Ăn uống"
+                                tools:visibility="visible" />
+
+                            <TextView
+                                android:id="@+id/chipCategory2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Đi lại"
+                                tools:visibility="visible" />
+
+                            <TextView
+                                android:id="@+id/chipCategory3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_8"
+                                android:background="@drawable/bg_chip_outline"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingHorizontal="@dimen/spacing_12"
+                                android:paddingVertical="@dimen/spacing_4"
+                                android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                                android:textColor="@color/text_primary"
+                                android:visibility="gone"
+                                tools:text="Mua sắm"
+                                tools:visibility="visible" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Source Wallet Selector Row -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultWallet"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12">
+
+                        <ImageView
+                            android:id="@+id/ivResultWalletIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_wallet" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultWalletLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_wallet_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultWalletValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transaction_wallet_placeholder"
+                                tools:text="Tiền mặt" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
+                    <!-- Destination Wallet Selector Row (Visible only for TRANSFER) -->
+                    <LinearLayout
+                        android:id="@+id/fieldResultDestinationWallet"
+                        style="@style/Widget.App.FieldSelector"
+                        android:layout_marginTop="@dimen/spacing_12"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <ImageView
+                            android:id="@+id/ivResultDestinationWalletIcon"
+                            style="@style/Widget.App.FieldSelector.Icon"
+                            android:src="@drawable/ic_wallet" />
+
+                        <LinearLayout style="@style/Widget.App.FieldSelector.Content">
+
+                            <TextView
+                                android:id="@+id/tvResultDestinationWalletLabel"
+                                style="@style/Widget.App.FieldSelector.Label"
+                                android:text="@string/voice_destination_wallet_label" />
+
+                            <TextView
+                                android:id="@+id/tvResultDestinationWalletValue"
+                                style="@style/Widget.App.FieldSelector.Value"
+                                android:hint="@string/transfer_destination_wallet_placeholder"
+                                tools:text="Tiết kiệm" />
+                        </LinearLayout>
+
+                        <ImageView style="@style/Widget.App.FieldSelector.Chevron" />
+                    </LinearLayout>
+
                     <!-- Action Buttons -->
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressAutoSave"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="@dimen/spacing_16"
+                        android:max="5000"
+                        android:progress="5000"
+                        app:indicatorColor="@color/color_primary"
+                        app:trackColor="@color/divider_light"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
                     <Button
                         android:id="@+id/btnConfirmTransaction"
                         style="@style/Widget.App.Button.Primary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/spacing_16"
+                        android:layout_marginTop="@dimen/spacing_8"
                         android:text="@string/voice_btn_confirm" />
 
+                    <TextView
+                        android:id="@+id/tvAutoSaveNotice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
+                        android:gravity="center"
+                        android:text="@string/voice_autosave_notice"
+                        android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                        android:textColor="@color/color_primary"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutAutoSaveToggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="@dimen/spacing_2"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/cbAutoSaveEnable"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="@string/voice_autosave_enable_label"
+                            android:textAppearance="@style/TextAppearance.App.BodySecondary"
+                            android:textColor="@color/text_secondary" />
+                    </LinearLayout>
+
                     <Button
-                        android:id="@+id/btnRetryVoice"
+                        android:id="@+id/btnEditMore"
                         style="@style/Widget.App.Button.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_8"
+                        android:text="@string/voice_btn_edit_more" />
+
+                    <Button
+                        android:id="@+id/btnRetryVoice"
+                        style="@style/Widget.App.Button.Tertiary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_4"
                         android:text="@string/voice_btn_retry" />
                 </LinearLayout>
 
